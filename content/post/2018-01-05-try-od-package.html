@@ -1,0 +1,47 @@
+---
+title: try od package
+author: Sheng Luan
+date: '2018-01-03'
+slug: try-od-package
+categories:
+  - 试验设计
+  - 最优化
+tags:
+  - od
+  - R
+---
+
+
+
+<ul>
+<li><a href="https://asreml.org/optimal-design/">od</a>包是一个可以给出数量遗传学<strong>优化试验设计</strong>的包。试着通过实例来理解背后的设计原理。</li>
+</ul>
+<p><a href="https://asreml.org/resources/od/od_0.75.zip">windows</a>包没有自带数据，从<a href="https://asreml.org/resources/od/od_0.75_R_linux-intel64.tar.gz">linux</a>包中把数据提出来。</p>
+<p>关于od包背后的设计原理，参考作者的博士论文：On The Optimal Design of Experiments Under the Linear Mixed Model。</p>
+<div id="section" class="section level2">
+<h2>1. 加载数据文件</h2>
+<p>genex是一个作物遗传改良的实验数据，包括213个品种。实验设计为部分重复设计，包括2个Block,每个block内有48行×3列。部分品种有2次实验记录。
+genex.Ainv 包括了213个品种间的加性遗传相关矩阵。注意od包要求genex.Ainv数据框包括一个属性rowNames,存储row列中整数对应的品种名。</p>
+<pre class="r"><code>require(data.table)</code></pre>
+<pre><code>## Loading required package: data.table</code></pre>
+<pre class="r"><code>genex &lt;- fread(file=&quot;datasets/genex.csv&quot;,stringsAsFactors = TRUE)
+genex[,&quot;:=&quot;(Row=as.factor(Row),Block=as.factor(Block),Column=as.factor(Column))]
+genex.Ainv &lt;- fread(file=&quot;datasets/genex.Ainv.csv&quot;,stringsAsFactors = TRUE)
+genex.Ainv.rowNames &lt;- fread(file=&quot;datasets/genex.Ainv.rowNames.csv&quot;,sep=&quot;,&quot;,stringsAsFactors = FALSE,header = FALSE)
+attr(genex.Ainv,which = &quot;rowNames&quot;) &lt;- genex.Ainv.rowNames$V1</code></pre>
+<pre class="r"><code>require(od)
+genex.G &lt;- od.init(`ped(Entry)` = 1, `ide(Entry)` = 0.1, Block = 0.1,Column = 0.4, Row = 0.2)
+genex.R &lt;- od.init(`Column:Row|Column` = 0.2, `Column:Row|Row` = 0.5)
+genex.od &lt;- od(random = ~ped(Entry) + ide(Entry) + Block + Column + Row, 
+               rcov = ~ar1(Column):ar1(Row), 
+               permute = ~ped(Entry) |ide(Entry),
+               swap = ~Block, Gstart = genex.G, 
+               Rstart = genex.R,
+               ginv = list(Entry = genex.Ainv), 
+               geneticEffects = &quot;total&quot;,
+               search = &quot;tabu&quot;, 
+               maxit = 5, 
+               data = genex)
+save.image()</code></pre>
+<pre class="r"><code>genex.od$design</code></pre>
+</div>

@@ -1,0 +1,97 @@
+---
+title: data.table学习笔记2
+author: Sheng Luan
+date: '2017-07-07'
+categories:
+  - R
+  - Data.table
+  - 数据清洗
+tags:
+  - ASReml
+  - Data.table
+slug: data-table-note-2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(data.table)
+flights <- fread("datasets/flights14.csv")
+```
+* data.table的特点：**减小计算复杂度**，降低**计算时间**。  
+* 这一部分笔记主要讲述如何更新数据集，而不产生新的数据拷贝。  
+* 主要用到的符号是":="，类似于指针功能，通过引用更新列。
+* 本章的操作，实际上是把data.table作为一个数据库在操作。
+
+# 1.语义引用
+
+`:=`两种用法:
+
+左右相等方式
+```
+DT[, c("colA", "colB", ...) := list(valA, valB, ...)]
+
+# when you have only one column to assign to you 
+# can drop the quotes and list(), for convenience
+DT[, colA := valA]
+```
+函数方式
+```
+DT[, `:=`(colA = valA, # valA is assigned to colA
+      colB = valB, # valB is assigned to colB
+      ...
+)]
+```
+
+* 左右相等方式比较容易编码，特别是，事先不知道需要被赋值的列的时候。
+* 相对而言，函数方式更加趁手，可以少写代码。
+* 操作符“:=”没有返回值。
+* 既然参数j里面可以使用操作符“:=”，那么，就像上一讲中学习到的内容，我们可以和参数i和参数by一起，做些聚合的运算
+
+# 2. 添加／更新／删除列
+## 2.1 添加列
+
+增加两列，计算航班的速度和延迟时间。注意，":=="不返回任何值，为了方便查看，加入`[]`。
+```{r}
+flights[,":="(speed = distance / (air_time / 60),delay = arr_delay+dep_delay)][]
+```
+
+## 2.2 更新列
+观察 fligths 里的 hour列。
+```{r}
+flights[,sort(unique(hour))]
+```
+0和24同时存在，二者其实是等同的。因此，可以把24换为0。
+```{r}
+flights[hour == 24L,hour := 0L]
+flights[,sort(unique(hour))]
+```
+
+## 2.3删除列
+譬如删除speed列
+```{r}
+flights[,speed := NULL,]
+str(flights)
+```
+# 3.在分组的情况下使用":="
+
+感觉分组情况下，就地更新列，并不符合常规。这样对数据集的改动太大了。这里其实不是我理解的意思是，**并不是用分组后的统计结果替代原数据集**。而是根据分组统计后的结果，更新列。
+譬如，从origin到dest，延迟时间最长为多少？
+```{r}
+flights[, max_delay_time := max(dep_delay+arr_delay), keyby=.(origin, dest)]
+head(flights)
+```
+从结果可以看到，新增加了一列`max_delay_time`，而且从EWR-ALB区间，该列值为618，为最大值。
+
+# 4. 对多列数据进行操作
+添加了两列：统计每个月，最长的出发延迟时间、到达延迟时间
+```{r}
+in_cols  = c("dep_delay", "arr_delay")
+out_cols = c("max_dep_delay", "max_arr_delay")
+flights[, c(out_cols) := lapply(.SD, max), by = month, .SDcols = in_cols]
+head(flights)
+```
+
+另外一种形式
+```{r}
+flights[,c("max_dep_delay", "max_arr_delay") := lapply(.SD, max),.SDcols = c("dep_delay", "arr_delay")]
+```

@@ -1,0 +1,48 @@
+---
+title: 抛硬币测试与温度转换
+author: Sheng Luan
+date: '2018-02-08'
+slug: coin-test
+categories:
+  - 编程
+tags:
+  - pyhton
+---
+
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(engine = 'python')
+```
+
+栾佳硕的作业，计算硬币抛100万次，连续正面朝上10次的有多少次？
+
+```{python ch1}
+# -*- coding: utf-8 -*-
+import random
+
+counter1 = 0
+counter2 = 0
+for i in range(1000000):
+    coin = random.choice([0,1]) #假定1表示正面
+    if coin == 1:
+        counter1 += 1
+    else:
+        counter1 = 0
+    if counter1 == 10:
+        counter2 += 1
+        counter1 = 0
+    
+print("抛掷硬币1000000次，其中连续10次正面朝上的次数为%i" % counter2)
+```
+
+写一个函数，把摄氏度转为华氏度。
+
+```{python ch2}
+def convertC2F(C):
+    F = 32 + C * 1.8
+    return F
+c1 = 30    
+f1 = convertC2F(c1)    
+print("摄氏度%.2f等于华氏度%.2f" % (c1,f1))
+```
+

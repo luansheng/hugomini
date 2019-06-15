@@ -1,0 +1,411 @@
+---
+title: data.table学习笔记5
+author: Sheng Luan
+date: '2017-09-03'
+categories:
+  - Data.table
+  - R
+  - 数据清洗
+tags:
+  - Data.table
+  - R
+slug: data-table-note-5
+---
+
+
+
+<ul>
+<li>data.table的特点：<strong>减小计算复杂度</strong>，降低<strong>计算时间</strong>。</li>
+</ul>
+<div id="dfdata.framedtdata.table" class="section level2">
+<h2>1. 1建立两个数据集：DF（data.frame）和DT（data.table）</h2>
+<pre class="r"><code>DF = data.frame(x=rep(c(&quot;b&quot;,&quot;a&quot;,&quot;c&quot;),each=3), y=c(1,3,6), v=1:9) #data frame类型数据集
+DT = data.table(x=rep(c(&quot;b&quot;,&quot;a&quot;,&quot;c&quot;),each=3), y=c(1,3,6), v=1:9) #data.table类型数据集</code></pre>
+</div>
+<div id="dfdtidentical" class="section level2">
+<h2>1.2 比较DF和DT,注意函数identical，是比较两个对象的安全方式。</h2>
+<p>DF和DT本质上都是list类型？</p>
+<pre class="r"><code>DF</code></pre>
+<pre><code>##   x y v
+## 1 b 1 1
+## 2 b 3 2
+## 3 b 6 3
+## 4 a 1 4
+## 5 a 3 5
+## 6 a 6 6
+## 7 c 1 7
+## 8 c 3 8
+## 9 c 6 9</code></pre>
+<pre class="r"><code>DT</code></pre>
+<pre><code>##    x y v
+## 1: b 1 1
+## 2: b 3 2
+## 3: b 6 3
+## 4: a 1 4
+## 5: a 3 5
+## 6: a 6 6
+## 7: c 1 7
+## 8: c 3 8
+## 9: c 6 9</code></pre>
+<pre class="r"><code>identical(dim(DT),dim(DF)) #比较维数是否相同</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>identical(DF$a,DT$a) #比较a列是否相同</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.list(DF) #检测是否是list类型</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.list(DT) #同上</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.data.frame(DT) #data.table是否是data.frame类型</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>tables() #用来统计全局环境中有多少个data.table。</code></pre>
+<pre><code>##    NAME NROW NCOL MB  COLS KEY
+## 1:   DT    9    3  0 x,y,v    
+## Total: 0MB</code></pre>
+</div>
+<div id="section" class="section level2">
+<h2>1.3 基本数据提取操作</h2>
+<pre class="r"><code>DT[2] #提取第2行</code></pre>
+<pre><code>##    x y v
+## 1: b 3 2</code></pre>
+<pre class="r"><code>DT[3:2] #提取第3行和第2行</code></pre>
+<pre><code>##    x y v
+## 1: b 6 3
+## 2: b 3 2</code></pre>
+<pre class="r"><code>DT[order(x)] #根据x列排序DT数据集</code></pre>
+<pre><code>##    x y v
+## 1: a 1 4
+## 2: a 3 5
+## 3: a 6 6
+## 4: b 1 1
+## 5: b 3 2
+## 6: b 6 3
+## 7: c 1 7
+## 8: c 3 8
+## 9: c 6 9</code></pre>
+<pre class="r"><code>DT[order(x),] #同上</code></pre>
+<pre><code>##    x y v
+## 1: a 1 4
+## 2: a 3 5
+## 3: a 6 6
+## 4: b 1 1
+## 5: b 3 2
+## 6: b 6 3
+## 7: c 1 7
+## 8: c 3 8
+## 9: c 6 9</code></pre>
+<pre class="r"><code>DT[y&gt;2] #提取y&gt;2的所有数据行</code></pre>
+<pre><code>##    x y v
+## 1: b 3 2
+## 2: b 6 3
+## 3: a 3 5
+## 4: a 6 6
+## 5: c 3 8
+## 6: c 6 9</code></pre>
+<pre class="r"><code>DT[y&gt;2 &amp; v&gt;5] #提取满足条件y&gt;2 并且v&gt;5的所有数据行</code></pre>
+<pre><code>##    x y v
+## 1: a 6 6
+## 2: c 3 8
+## 3: c 6 9</code></pre>
+<pre class="r"><code>DT[!2:4] #剔除2,3,4行后的数据集</code></pre>
+<pre><code>##    x y v
+## 1: b 1 1
+## 2: a 3 5
+## 3: a 6 6
+## 4: c 1 7
+## 5: c 3 8
+## 6: c 6 9</code></pre>
+<pre class="r"><code>DT[-(2:4)] #同上</code></pre>
+<pre><code>##    x y v
+## 1: b 1 1
+## 2: a 3 5
+## 3: a 6 6
+## 4: c 1 7
+## 5: c 3 8
+## 6: c 6 9</code></pre>
+</div>
+<div id="section-1" class="section level2">
+<h2>1.4 选择列，计算列</h2>
+<pre class="r"><code>DT[,v] #选择v列返回向量</code></pre>
+<pre><code>## [1] 1 2 3 4 5 6 7 8 9</code></pre>
+<pre class="r"><code>DT[,list(v)] #同上</code></pre>
+<pre><code>##    v
+## 1: 1
+## 2: 2
+## 3: 3
+## 4: 4
+## 5: 5
+## 6: 6
+## 7: 7
+## 8: 8
+## 9: 9</code></pre>
+<pre class="r"><code>DT[,.(v)] #同上，.()等同于list()</code></pre>
+<pre><code>##    v
+## 1: 1
+## 2: 2
+## 3: 3
+## 4: 4
+## 5: 5
+## 6: 6
+## 7: 7
+## 8: 8
+## 9: 9</code></pre>
+<pre class="r"><code>DT[,sum(v)] #计算v列的和，返回一个向量</code></pre>
+<pre><code>## [1] 45</code></pre>
+<pre class="r"><code>DT[,.(sum(v))] #同上，但是返回一个data.table类型，列名V1</code></pre>
+<pre><code>##    V1
+## 1: 45</code></pre>
+<pre class="r"><code>DT[,.(sv=sum(v))] #同上，命名为sv</code></pre>
+<pre><code>##    sv
+## 1: 45</code></pre>
+<pre class="r"><code>DT[,.(v,v*2)] #生成一个新的数据集，包括v和v*2两列</code></pre>
+<pre><code>##    v V2
+## 1: 1  2
+## 2: 2  4
+## 3: 3  6
+## 4: 4  8
+## 5: 5 10
+## 6: 6 12
+## 7: 7 14
+## 8: 8 16
+## 9: 9 18</code></pre>
+</div>
+<div id="section-2" class="section level2">
+<h2>1.5 同时筛选行列</h2>
+<pre class="r"><code>DT[2:3,sum(v)] #返回一个向量</code></pre>
+<pre><code>## [1] 5</code></pre>
+<pre class="r"><code>DT[2:3,.(sum(v))] #返回一个data.table,列命名为V1</code></pre>
+<pre><code>##    V1
+## 1:  5</code></pre>
+<pre class="r"><code>DT[2:3,.(sv=sum(v))] #返回一个data.table，列命名为sv</code></pre>
+<pre><code>##    sv
+## 1:  5</code></pre>
+<pre class="r"><code>DT[2:5,cat(v,&quot;\n&quot;)] #v列2-5行，通过cat连接输出为一个字符串，不明白为什么有一个NULL</code></pre>
+<pre><code>## 2 3 4 5</code></pre>
+<pre><code>## NULL</code></pre>
+</div>
+<div id="data.frame" class="section level2">
+<h2>1.6 通过data.frame的方式提取数据</h2>
+<pre class="r"><code>DT[,2,with=FALSE] #提取2列的数据，with参数，控制列是否可以运算</code></pre>
+<pre><code>##    y
+## 1: 1
+## 2: 3
+## 3: 6
+## 4: 1
+## 5: 3
+## 6: 6
+## 7: 1
+## 8: 3
+## 9: 6</code></pre>
+<pre class="r"><code>DT[,sum(2),with=FALSE] #with=FALSE，表示列不可运算，返回与上式相同的结果</code></pre>
+<pre><code>##    y
+## 1: 1
+## 2: 3
+## 3: 6
+## 4: 1
+## 5: 3
+## 6: 6
+## 7: 1
+## 8: 3
+## 9: 6</code></pre>
+<pre class="r"><code>DT[,sum(v),with=TRUE] #v列之和</code></pre>
+<pre><code>## [1] 45</code></pre>
+<pre class="r"><code>#DT[,sum(v),with=FALSE] #这种格式错误，不能操作v列
+DT[[&quot;v&quot;]] #提取v列更快的方式</code></pre>
+<pre><code>## [1] 1 2 3 4 5 6 7 8 9</code></pre>
+</div>
+<div id="section-3" class="section level2">
+<h2>1.7 组操作</h2>
+<pre class="r"><code>DT[,sum(v),by=x] #依据x列分组，求v列和</code></pre>
+<pre><code>##    x V1
+## 1: b  6
+## 2: a 15
+## 3: c 24</code></pre>
+<pre class="r"><code>DT[,sum(v),keyby=x] #依据x列分组，求v列和，结果按照x列排序</code></pre>
+<pre><code>##    x V1
+## 1: a 15
+## 2: b  6
+## 3: c 24</code></pre>
+<pre class="r"><code>DT[,sum(v),keyby=x][order(x)] #结果同上，但是链式表达式操作</code></pre>
+<pre><code>##    x V1
+## 1: a 15
+## 2: b  6
+## 3: c 24</code></pre>
+</div>
+<div id="section-4" class="section level2">
+<h2>1.8 快速数据集提取，二级索引形式</h2>
+<pre class="r"><code>DT[&quot;a&quot;,on=&quot;x&quot;] #on开启二级索引形式</code></pre>
+<pre><code>##    x y v
+## 1: a 1 4
+## 2: a 3 5
+## 3: a 6 6</code></pre>
+<pre class="r"><code>DT[&quot;a&quot;,on=.(x)] #更加方便的形式，不用写双引号</code></pre>
+<pre><code>##    x y v
+## 1: a 1 4
+## 2: a 3 5
+## 3: a 6 6</code></pre>
+<pre class="r"><code>DT[.(&quot;a&quot;),on=.(x)] #作用同上</code></pre>
+<pre><code>##    x y v
+## 1: a 1 4
+## 2: a 3 5
+## 3: a 6 6</code></pre>
+<pre class="r"><code>DT[x==&quot;a&quot;] #on 传统形式，然而内部进行了优化，速度同上</code></pre>
+<pre><code>##    x y v
+## 1: a 1 4
+## 2: a 3 5
+## 3: a 6 6</code></pre>
+<pre class="r"><code>DT[x!=&quot;b&quot; | y!=3] #没有进行优化</code></pre>
+<pre><code>##    x y v
+## 1: b 1 1
+## 2: b 6 3
+## 3: a 1 4
+## 4: a 3 5
+## 5: a 6 6
+## 6: c 1 7
+## 7: c 3 8
+## 8: c 6 9</code></pre>
+<pre class="r"><code>DT[.(&quot;b&quot;,3),on=c(&quot;x&quot;,&quot;y&quot;)] #二级索引优化</code></pre>
+<pre><code>##    x y v
+## 1: b 3 2</code></pre>
+<pre class="r"><code>DT[.(&quot;b&quot;,3),on=.(x,y)] #二级索引，简化去除引号</code></pre>
+<pre><code>##    x y v
+## 1: b 3 2</code></pre>
+<pre class="r"><code>DT[.(&quot;b&quot;,1:2),on=.(x,y)] #不匹配的返回NA</code></pre>
+<pre><code>##    x y  v
+## 1: b 1  1
+## 2: b 2 NA</code></pre>
+<pre class="r"><code>DT[.(&quot;b&quot;,1:2),on=.(x,y),nomatch=0] #不匹配的行，不返回</code></pre>
+<pre><code>##    x y v
+## 1: b 1 1</code></pre>
+<pre class="r"><code>DT[.(&quot;b&quot;,1:2),on=.(x,y),roll=Inf] #不匹配的行，返回前边行对应的值</code></pre>
+<pre><code>##    x y v
+## 1: b 1 1
+## 2: b 2 1</code></pre>
+<pre class="r"><code>DT[.(&quot;b&quot;,1:2),on=.(x,y),roll=-Inf] #不匹配的行，返回后边行对应的值</code></pre>
+<pre><code>##    x y v
+## 1: b 1 1
+## 2: b 2 2</code></pre>
+<pre class="r"><code>DT[.(&quot;b&quot;),sum(v*y),on=&quot;x&quot;] #提取x==&quot;b&quot;的行，计算v*y的值，然后求和</code></pre>
+<pre><code>## [1] 25</code></pre>
+</div>
+<div id="section-5" class="section level2">
+<h2>1.9 综合以上所有技能</h2>
+<pre class="r"><code>DT[x!=&quot;a&quot;,sum(v),by=x] #对照</code></pre>
+<pre><code>##    x V1
+## 1: b  6
+## 2: c 24</code></pre>
+<pre class="r"><code>DT[!&quot;a&quot;,sum(v),by=.EACHI,on=&quot;x&quot;] #结果同上，速度更快 .EACHI的意思就是对i中的每一个水平分组分组</code></pre>
+<pre><code>##    x V1
+## 1: b  6
+## 2: c 24</code></pre>
+<pre class="r"><code>DT[c(&quot;b&quot;,&quot;c&quot;),sum(v),by=.EACHI,on=.(x)]</code></pre>
+<pre><code>##    x V1
+## 1: b  6
+## 2: c 24</code></pre>
+</div>
+<div id="section-6" class="section level2">
+<h2>1.10 合并数据集</h2>
+<pre class="r"><code>DT #原始数据集</code></pre>
+<pre><code>##    x y v
+## 1: b 1 1
+## 2: b 3 2
+## 3: b 6 3
+## 4: a 1 4
+## 5: a 3 5
+## 6: a 6 6
+## 7: c 1 7
+## 8: c 3 8
+## 9: c 6 9</code></pre>
+<pre class="r"><code>X = data.table(x=c(&quot;c&quot;,&quot;b&quot;),v=8:7,foo=c(4,2)) #X作为拟要合并的数据集
+X</code></pre>
+<pre><code>##    x v foo
+## 1: c 8   4
+## 2: b 7   2</code></pre>
+<pre class="r"><code>X[DT,on=&quot;x&quot;] #以DT数据集中x列为主，筛选与之匹配的X中的行，left join</code></pre>
+<pre><code>##    x  v foo y i.v
+## 1: b  7   2 1   1
+## 2: b  7   2 3   2
+## 3: b  7   2 6   3
+## 4: a NA  NA 1   4
+## 5: a NA  NA 3   5
+## 6: a NA  NA 6   6
+## 7: c  8   4 1   7
+## 8: c  8   4 3   8
+## 9: c  8   4 6   9</code></pre>
+<pre class="r"><code>DT[X,on=&quot;x&quot;] #以X数据集中x列为主，筛选与之匹配的DT行 right join</code></pre>
+<pre><code>##    x y v i.v foo
+## 1: c 1 7   8   4
+## 2: c 3 8   8   4
+## 3: c 6 9   8   4
+## 4: b 1 1   7   2
+## 5: b 3 2   7   2
+## 6: b 6 3   7   2</code></pre>
+<pre class="r"><code>DT[X,on=&quot;x&quot;,nomatch=0] #返回双方共有的行 inner join</code></pre>
+<pre><code>##    x y v i.v foo
+## 1: c 1 7   8   4
+## 2: c 3 8   8   4
+## 3: c 6 9   8   4
+## 4: b 1 1   7   2
+## 5: b 3 2   7   2
+## 6: b 6 3   7   2</code></pre>
+<pre class="r"><code>DT[!X,on=&quot;x&quot;] #返回的是X中没有的DT数据集中的行</code></pre>
+<pre><code>##    x y v
+## 1: a 1 4
+## 2: a 3 5
+## 3: a 6 6</code></pre>
+<pre class="r"><code>DT[X,on=.(y&lt;=foo)] #从此一下的表达式不是特别理解</code></pre>
+<pre><code>##    x y v i.x i.v
+## 1: b 4 1   c   8
+## 2: b 4 2   c   8
+## 3: a 4 4   c   8
+## 4: a 4 5   c   8
+## 5: c 4 7   c   8
+## 6: c 4 8   c   8
+## 7: b 2 1   b   7
+## 8: a 2 4   b   7
+## 9: c 2 7   b   7</code></pre>
+<pre class="r"><code>DT[X,on=.(y&gt;=foo)]</code></pre>
+<pre><code>##    x y v i.x i.v
+## 1: b 4 3   c   8
+## 2: a 4 6   c   8
+## 3: c 4 9   c   8
+## 4: b 2 2   b   7
+## 5: b 2 3   b   7
+## 6: a 2 5   b   7
+## 7: a 2 6   b   7
+## 8: c 2 8   b   7
+## 9: c 2 9   b   7</code></pre>
+<pre class="r"><code>DT[X,on=.(x,y&lt;=foo)]</code></pre>
+<pre><code>##    x y v i.v
+## 1: c 4 7   8
+## 2: c 4 8   8
+## 3: b 2 1   7</code></pre>
+<pre class="r"><code>DT[X,.(x,y,x.y,v),on=.(x,y&gt;foo)]</code></pre>
+<pre><code>##    x y x.y v
+## 1: c 4   6 9
+## 2: b 2   3 2
+## 3: b 2   6 3</code></pre>
+<pre class="r"><code>DT[X,on=&quot;x&quot;,mult=&quot;first&quot;]</code></pre>
+<pre><code>##    x y v i.v foo
+## 1: c 1 7   8   4
+## 2: b 1 1   7   2</code></pre>
+<pre class="r"><code>DT[X,on=&quot;x&quot;,mult=&quot;last&quot;]</code></pre>
+<pre><code>##    x y v i.v foo
+## 1: c 6 9   8   4
+## 2: b 6 3   7   2</code></pre>
+<pre class="r"><code>DT[X,sum(v),by=.EACHI,on=&quot;x&quot;]</code></pre>
+<pre><code>##    x V1
+## 1: c 24
+## 2: b  6</code></pre>
+<pre class="r"><code>DT[X,sum(v)*foo,by=.EACHI,on=&quot;x&quot;]</code></pre>
+<pre><code>##    x V1
+## 1: c 96
+## 2: b 12</code></pre>
+<pre class="r"><code>DT[X,sum(v)*i.v,by=.EACHI,on=&quot;x&quot;]</code></pre>
+<pre><code>##    x  V1
+## 1: c 192
+## 2: b  42</code></pre>
+<pre class="r"><code>DT[X, on=.(x, v&gt;=v), sum(y)*foo, by=.EACHI]</code></pre>
+<pre><code>##    x v V1
+## 1: c 8 36
+## 2: b 7 NA</code></pre>
+</div>

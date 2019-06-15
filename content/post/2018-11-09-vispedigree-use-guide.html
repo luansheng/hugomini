@@ -1,0 +1,365 @@
+---
+title: Drawing an animal pedigree using the visPedigree package
+author: Sheng Luan
+date: '2018-11-09'
+categories:
+  - visualization
+  - rblog
+tags:
+  - Data.table
+  - igraph
+  - R
+  - rblog
+slug: vispedigree-use-guide
+header:
+  caption: ''
+  image: ''
+---
+
+
+
+<p>Pedigree plays an important role in the animal selective breeding program. On the one hand, the accuracy of estimated breeding value can be improved by pedigree information. On the other hand, the use of pedigree information can also control inbreeding and avoid depression of traits.
+Therefore, the reliable and accurate pedigree records are very important for a selective breeding program. In addition, a pedigree is usually saved in the form of three columns: individual, sire, and dam, which makes it difficult to visually view individual ancestor and offspring individuals. Therefore, it is very important to visualize the pedigree of individuals. In the Windows platform, Professor Yang Da’s team from the University of Minnesota developed a software <a href="https://animalgene.umn.edu/pedigraph">pedigraph</a> that can be used to display individual pedigrees. It can display a pedigree included many individuals. It is very powerful, but it needs be configured by a parameter file. Professor Brian Kinghorn in the University of New England developed the software <a href="https://bkinghor.une.edu.au/pedigree.htm">pedigree viewer</a>, which can trim and prune the pedigree, and visually display the individuals’ pedigrees in a window. But if the number of individuals is very large, the individuals will overlap each other. So the function about pedigree display needs to be further optimized. Under the R environment, packages such as pedigree, nadiv, optiSel, etc. all have the function of pedigree preparation. We also can use packages like kinship2 and synbreed to draw a pedigree tree. However, the drawing pedigree tree will be overlapped greatly when the number of individuals is large.</p>
+<p>Therefore, we developed the <a href="https://github.com/luansheng/visPedigree">visPedigree</a> package based on data.table with strong data cleaning and igraph with excellent drawing of social network, which further enhanced the function of tidying and visualizing pedigree. Using this package, we can trace and prune the ancestors and descendants of any individual before and after different generations. This package also can help us automatically optimize the layout of the pedigree tree and quickly display the pedigree including a large number of individuals (the number of individuals in each generation &gt; 10000) by reducing the full-sib individuals in the pedigree and outlining the pedigree. The main contents are as follows：</p>
+<ol style="list-style-type: decimal">
+<li><a href="#1">Installation of the visPedigree package</a><br />
+</li>
+<li><a href="#2">The specification of pedigree format</a><br />
+</li>
+<li><a href="#3">Checking and tidying pedigree</a><br />
+3.1 <a href="#3.1">Introduction</a><br />
+3.2 <a href="#3.2">Tracing the pedigree of a specific individual</a><br />
+3.3 <a href="#3.3">Creating an integer pedigree</a><br />
+</li>
+<li><a href="#4">Drawing the pedigree graph</a><br />
+4.1 <a href="#4.1">A simple pedigree graph</a><br />
+4.2 <a href="#4.2">A reduced pedigree graph</a><br />
+4.3 <a href="#4.3">An outlined pedigree graph</a><br />
+4.4 <a href="#4.4">How to use this package in a selective breeding program</a><br />
+4.4.1 <a href="#4.4.1">Analysis of founders for an individual</a><br />
+4.4.2 <a href="#4.4.2">The contribution of different families in a selective breeding program</a></li>
+</ol>
+<div id="installation-of-the-vispedigree-package" class="section level2">
+<h2><a id="1">1. Installation of the visPedigree package</a></h2>
+<p>The visPedigree package has not been released in cran, but it can be installed from github(<a href="https://github.com" class="uri">https://github.com</a>) using the devtools package.</p>
+<p>In this blog, all R scripts are runned in Rstudio. If the devtools package is not found in the library, please install it first, then load it.</p>
+<pre class="r"><code>suppressPackageStartupMessages(is_installed &lt;- require(devtools))</code></pre>
+<pre><code>## Warning: package &#39;devtools&#39; was built under R version 3.5.3</code></pre>
+<pre class="r"><code>if (!is_installed) {
+  install.packages(&quot;devtools&quot;)  
+  suppressPackageStartupMessages(require(devtools))  
+}</code></pre>
+<p>If the visPedigree package is not found in the library, please install it from github, then load it. The package is developed and depends on data.table and igraph packages. If these two packages are not installed, they will be installed together.</p>
+<pre class="r"><code>suppressPackageStartupMessages(is_installed &lt;- require(visPedigree))
+if (!is_installed) {
+  install_github(&quot;luansheng/visPedigree&quot;)  
+  suppressPackageStartupMessages(require(visPedigree))
+}</code></pre>
+<p>In China, you can try another method to install quickly visPedigree and avoid the slow internet for github.</p>
+<ul>
+<li>Access <a href="https://github.com/luansheng/visPedigree">the github link</a> of visPedigree package.</li>
+<li>Click <strong>Clone or download</strong> list box，and Click <strong>Download ZIP</strong>, download the installation of visPedigree package and save it to a english file folder in the computer, such as <code>c:/visPedigree</code>. The downloaded installation package will be visPedigree-master.zip.
+<div align="center">
+<p><img src="/post/images/Downloadgithub.png"  height= "300" width="100%" ></p>
+</div></li>
+<li>Open Rstudio, change to the working directory <code>c:/visPedigree</code>.</li>
+<li>Install it using the <code>devtools::install_local()</code> function.</li>
+</ul>
+<pre class="r"><code>setwd(&quot;c:/visPedigree&quot;)
+install_local(&quot;visPedigree-master.zip&quot;)</code></pre>
+</div>
+<div id="pedigree-format-specification" class="section level2">
+<h2><a id="2">2 Pedigree format specification</a></h2>
+<p>The first three columns of pedigree data must be in the order of individual, sire, and dam IDs. Names of the three columns can be assigned as you would like, but their orders must be not changed in the pedigree. Individual ID should not be coded as "“,” “,”0“, asterisk, and”NA“, otherwise these individuals will be deleted from the pedigree. Missing parents should be denoted by either”NA“,”0“, asterisk. Space and”" will also be recoded as missing parents, but not be recommended. More columns, such as sex, generation can be included in the pedigree file.</p>
+<p>The fread function in the data.table package is used to read the pedigree information from a file. This function is very powerful and can automatically recognize various delimiters in text.</p>
+<pre class="r"><code>ped_2 &lt;- data.table::fread(file=&quot;datasets/ped2.csv&quot;,
+                           sep=&quot;,&quot;,
+                           header = TRUE,
+                           stringsAsFactors = FALSE)
+head(ped_2)</code></pre>
+<pre><code>##          ID Sire Dam  Sex Cand
+## 1: X0YY0500    0   0 Male    0
+## 2: X0YY0600    0   0 Male    0
+## 3: X0YY0700    0   0 Male    0
+## 4: X0YY1200    0   0 Male    0
+## 5: X0YX0300    0   0 Male    0
+## 6: X0YX0400    0   0 Male    0</code></pre>
+</div>
+<div id="checking-and-tidying-pedigree" class="section level2">
+<h2><a id="3">3 Checking and tidying pedigree</a></h2>
+<div id="introduction" class="section level3">
+<h3><a id="3.1">3.1 Introduction</a></h3>
+<p>The pedigree can be checked and tidied through the <code>tidyped()</code> function.</p>
+<p>This function takes a pedigree, checks duplicated, bisexual individuals, detects pedigree loop, adds missing founders, sorts the pedigree, and traces the pedigree of the candidates.</p>
+<p>If the parameter <strong>cand</strong> contains individuals’ IDs, then only these individuals and their ancestors or descendants will be kept in the pedigree.</p>
+<p>The tracing direction and tracing generation number can be provided when the parameters <strong>trace</strong> and <strong>tracegen</strong> are not NULL.</p>
+<p>Individual virtual generation will be inferred and assigned when the parameter addgen is TRUE.</p>
+<p>Numeric pedigree will be generated when the parameter addnum is TRUE.</p>
+<p>All individuals’ sex will be inferred if there is not sexual information in the pedigree. If the pedigree includes the column Sex, then individuals’ sexes need to be recoded as “male”, “female”, or NA (unknown sex). Missing sexes will be identified from the pedigree structure and be added if possible.</p>
+<p>The visPedigree package comes with multiple datasets. You can check through the following command.</p>
+<pre class="r"><code>data(package=&quot;visPedigree&quot;)</code></pre>
+<p>The following code will show the <strong>simple_ped</strong> dataset. It includes four columns, the first three are individual, sire and dam, and the last one is sex. Missing parents is written as “NA”, “0”, or asterisk. Moreover, the founder individuals were not added in the pedigree. And some parents were sorted after the offspring.</p>
+<pre class="r"><code>head(simple_ped)</code></pre>
+<pre><code>##        ID   Sire    Dam    Sex
+## 1: J4Y326 J3Y620 J3Y771   male
+## 2: J1H419 J0Z938 J0Z167 female
+## 3: J2F588     NA J1Z417 female
+## 4: J1J576 J0Z938 J0Z843   male
+## 5: J1C802 J0Z333 J0C355   male
+## 6: J2Z411 J1X971 J1J134 female</code></pre>
+<pre class="r"><code>tail(simple_ped)</code></pre>
+<pre><code>##        ID   Sire    Dam    Sex
+## 1: J1E852 J0Z848 J0Z624 female
+## 2: J1H604 J0C583 J0Z380 female
+## 3: J5X804 J4Y326 J4E185 female
+## 4: J1I438 J0Z990 J0Z808   male
+## 5: J2C808 J1I975 J1F266   male
+## 6: J1K462 J0C317 J0C450 female</code></pre>
+<pre class="r"><code># The number of individuals in the pedigree dataset
+nrow(simple_ped)</code></pre>
+<pre><code>## [1] 31</code></pre>
+<pre class="r"><code># Individual records with missing parents
+simple_ped[Sire %in% c(&quot;0&quot;,&quot;*&quot;,&quot;NA&quot;,NA) | Dam %in% c(&quot;0&quot;,&quot;*&quot;,&quot;NA&quot;,NA)]</code></pre>
+<pre><code>##        ID   Sire    Dam    Sex
+## 1: J2F588     NA J1Z417 female
+## 2: J1J858 J0Z060      * female
+## 3: J3X697 J2Z903      0 female</code></pre>
+<p>Small test: your try to set female J0Z167 as father of the J2F588. It will find this bisexual problem after running <code>tidyped()</code>.</p>
+<pre class="r"><code>x &lt;- data.table::copy(simple_ped)
+x[ID == &quot;J2F588&quot;,Sire:=&quot;J0Z167&quot;]
+y &lt;- tidyped(x)</code></pre>
+<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced
+## with the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped, addgen): The following individuals are
+## simultaneously bisexual.</code></pre>
+<pre><code>## Warning in checkped(ped, addgen): J0Z167</code></pre>
+<p>Moreover, the tidyped function will also sort the simple_ped pedigree, replace the missing parent with “NA”, put the parents behind the offspring, and add the missing founders’ pedigree.</p>
+<pre class="r"><code>tidy_simple_ped &lt;- tidyped(simple_ped)</code></pre>
+<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced
+## with the missing value NA.</code></pre>
+<pre class="r"><code>head(tidy_simple_ped)</code></pre>
+<pre><code>##       Ind Sire  Dam    Sex Gen IndNum SireNum DamNum
+## 1: J0C032 &lt;NA&gt; &lt;NA&gt; female   1      1       0      0
+## 2: J0C185 &lt;NA&gt; &lt;NA&gt; female   1      2       0      0
+## 3: J0C231 &lt;NA&gt; &lt;NA&gt; female   1      3       0      0
+## 4: J0C317 &lt;NA&gt; &lt;NA&gt;   male   1      4       0      0
+## 5: J0C450 &lt;NA&gt; &lt;NA&gt; female   1      5       0      0
+## 6: J0C561 &lt;NA&gt; &lt;NA&gt;   male   1      6       0      0</code></pre>
+<pre class="r"><code>tail(tidy_simple_ped)</code></pre>
+<pre><code>##       Ind   Sire    Dam    Sex Gen IndNum SireNum DamNum
+## 1: J1C802 J0Z333 J0C355   male   5     54      47     46
+## 2: J4E185 J3L886 J3X697 female   5     55      48     49
+## 3: J4Y326 J3Y620 J3Y771   male   5     56      50     51
+## 4: J1C929 J0Z511 J0Z444   male   6     57      53     52
+## 5: J2Y434 J1C802 J1H419 female   6     58      54     28
+## 6: J5X804 J4Y326 J4E185 female   6     59      56     55</code></pre>
+<pre class="r"><code>nrow(tidy_simple_ped)</code></pre>
+<pre><code>## [1] 59</code></pre>
+<p>In the prepared <strong>tidy_simple_ped</strong>, the founders’ records including gender were added, and the parents were sorted before the offspring. The number of individuals increases from 31 to 59. The column names of the animal, sire and dam are renamed to Ind, Sire, and Dam.The missing parents are uniformly replaced with “NA”, and there will be corresponding prompts after running tidyped() function. New columns including Gen, IndNum, SireNum and DamNum are added by default in the <strong>tidy_simple_ped</strong>. These columns will be generated when setting the parameters addgen and addnum as FALSE.</p>
+<p>If the <strong>simple_ped</strong> dataset does not include the Sex column, it will be added in the <strong>tidy_simple_ped</strong> dataset.</p>
+<pre class="r"><code>tidy_simple_ped_no_gen_num &lt;- tidyped(simple_ped,addgen = FALSE,addnum = FALSE)</code></pre>
+<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced
+## with the missing value NA.</code></pre>
+<pre class="r"><code>head(tidy_simple_ped_no_gen_num)</code></pre>
+<pre><code>##       Ind Sire  Dam  Sex
+## 1: J0Z333 &lt;NA&gt; &lt;NA&gt; male
+## 2: J0Z511 &lt;NA&gt; &lt;NA&gt; male
+## 3: J0Z664 &lt;NA&gt; &lt;NA&gt; male
+## 4: J0Z848 &lt;NA&gt; &lt;NA&gt; male
+## 5: J0Z475 &lt;NA&gt; &lt;NA&gt; male
+## 6: J0Z938 &lt;NA&gt; &lt;NA&gt; male</code></pre>
+<p>After tidying the pedigree, you can use the <strong>fwrite</strong> function of the data.table package to output it for the genetic evaluation software such as ASReml.</p>
+<p>The missing parents should be replaced with 0 When saving a pedigree file.</p>
+<pre class="r"><code>saved_ped &lt;- data.table::copy(tidy_simple_ped)
+saved_ped[is.na(Sire),Sire:=&quot;0&quot;]
+saved_ped[is.na(Dam),Dam:=&quot;0&quot;]
+data.table::fwrite(x=saved_ped,file = &quot;tidysimpleped.csv&quot;,sep=&quot;,&quot;,quote = FALSE)
+head(saved_ped)</code></pre>
+</div>
+<div id="tracing-the-pedigree-of-a-specific-individual" class="section level3">
+<h3><a id="3.2">3.2 Tracing the pedigree of a specific individual</a></h3>
+<p>You should set the cand parameter to trace the pedigree of a specific individual. A new column of <strong>Cand</strong> will be added in the returned dataset. TRUE indicates that the individuals are the specific candidates. Only the candidates and their ancestors and offspring will be kept in the pedigree if this parameter is not NULL.</p>
+<pre class="r"><code>tidy_simple_ped_J5X804_ancestors &lt;- tidyped(ped=tidy_simple_ped_no_gen_num,cand=&quot;J5X804&quot;)
+tail(tidy_simple_ped_J5X804_ancestors)</code></pre>
+<pre><code>##       Ind   Sire    Dam    Sex  Cand Gen IndNum SireNum DamNum
+## 1: J3X697 J2Z903   &lt;NA&gt; female FALSE   4     45      43      0
+## 2: J3Y620 J2C161 J2Z411   male FALSE   4     46      37     42
+## 3: J3Y771 J2G465 J2X544 female FALSE   4     47      40     41
+## 4: J4E185 J3L886 J3X697 female FALSE   5     48      44     45
+## 5: J4Y326 J3Y620 J3Y771   male FALSE   5     49      46     47
+## 6: J5X804 J4Y326 J4E185 female  TRUE   6     50      49     48</code></pre>
+<p>By default, <strong>tidyped()</strong> will trace candidates’ pedigree to ancestors. If you only want to trace back a specific generation number, you can set the tracegen parameter. This parameter can only be used when the trace parameter is not NULL. All generations of the candidates will be traced when the parameter tracegen is NULL.</p>
+<pre class="r"><code>tidy_simple_ped_J5X804_ancestors_2 &lt;- tidyped(ped=tidy_simple_ped_no_gen_num,cand=&quot;J5X804&quot;,tracegen = 2)
+print(tidy_simple_ped_J5X804_ancestors_2)</code></pre>
+<pre><code>##        Ind   Sire    Dam    Sex  Cand Gen IndNum SireNum DamNum
+##  1: J2C161   &lt;NA&gt;   &lt;NA&gt;   male FALSE   1      1       0      0
+##  2: J2C808   &lt;NA&gt;   &lt;NA&gt;   male FALSE   1      2       0      0
+##  3: J2F588   &lt;NA&gt;   &lt;NA&gt; female FALSE   1      3       0      0
+##  4: J2G465   &lt;NA&gt;   &lt;NA&gt;   male FALSE   1      4       0      0
+##  5: J2X544   &lt;NA&gt;   &lt;NA&gt; female FALSE   1      5       0      0
+##  6: J2Z411   &lt;NA&gt;   &lt;NA&gt; female FALSE   1      6       0      0
+##  7: J2Z903   &lt;NA&gt;   &lt;NA&gt;   male FALSE   1      7       0      0
+##  8: J3L886 J2C808 J2F588   male FALSE   2      8       2      3
+##  9: J3X697 J2Z903   &lt;NA&gt; female FALSE   2      9       7      0
+## 10: J3Y620 J2C161 J2Z411   male FALSE   2     10       1      6
+## 11: J3Y771 J2G465 J2X544 female FALSE   2     11       4      5
+## 12: J4E185 J3L886 J3X697 female FALSE   3     12       8      9
+## 13: J4Y326 J3Y620 J3Y771   male FALSE   3     13      10     11
+## 14: J5X804 J4Y326 J4E185 female  TRUE   4     14      13     12</code></pre>
+<p>The above codes will trace the pedigree of the J5X804 to ancestors for two generations.</p>
+<p>If you want to trace the descendants of an individual, you can get it by setting the trace parameter as <strong>down</strong>.</p>
+<p>There are three options for the <strong>trace</strong> parameter:</p>
+<ul>
+<li>“up”-trace candidates’ pedigree to ancestors;</li>
+<li>“down”-trace candidates’ pedigree to descendants;</li>
+<li>“all”-trace candidaes’ pedigree to ancestors and descendants simultaneously.</li>
+</ul>
+<pre class="r"><code>tidy_simple_ped_J0Z990_offspring &lt;- tidyped(ped=tidy_simple_ped_no_gen_num,cand=&quot;J0Z990&quot;,trace=&quot;down&quot;)
+print(tidy_simple_ped_J0Z990_offspring)</code></pre>
+<pre><code>##       Ind   Sire    Dam    Sex  Cand Gen IndNum SireNum DamNum
+## 1: J0Z990   &lt;NA&gt;   &lt;NA&gt;   male  TRUE   1      1       0      0
+## 2: J1I438 J0Z990   &lt;NA&gt;   male FALSE   2      2       1      0
+## 3: J2G465 J1I438   &lt;NA&gt;   male FALSE   3      3       2      0
+## 4: J3Y771 J2G465   &lt;NA&gt; female FALSE   4      4       3      0
+## 5: J4Y326   &lt;NA&gt; J3Y771   male FALSE   5      5       0      4
+## 6: J5X804 J4Y326   &lt;NA&gt; female FALSE   6      6       5      0</code></pre>
+<p>Tracing down to the descendants of J0Z990, a total of 5 descendants can be found.</p>
+</div>
+<div id="creating-an-integer-pedigree" class="section level3">
+<h3><a id="3.3">3.3 Creating an integer pedigree</a></h3>
+<p>Some programs require an integer pedigree for genetic evaluation. Individuals will need to be numbered consecutively when calculating the additive genetic correlation matrix.</p>
+<p>By default, the <strong>tidyped</strong> function will add three columns (IndNum, SireNum, and DamNum) in the returned dataset. If you don’t need it, you can set <code>addnum=FALSE</code> to turn it off.</p>
+</div>
+</div>
+<div id="drawing-the-pedigree" class="section level2">
+<h2><a id="4">4 Drawing the pedigree</a></h2>
+<p>The <strong>visped()</strong> function takes a pedigree tidied by the <strong>tidyped()</strong> function, outputs a hierarchical graph for all individuals in the pedigree. The graph can be shown on the defaulted graphic device and be saved in a pdf file. The graph in the pdf file is a vector drawing, is legible and isn’t overlapped. It is especially useful when the number of individuals is big and the width of individual label is long in one generation. This function can draw the graph of a very large pedigree (&gt; 10,000 individuals per generation) by compacting the full-sib individuals. It is very effective for drawing the pedigree of aquatic animal, which usually including many full-sib families per generation in the nucleus breeding population. The outline of a pedigree without individuals’ label is still shown if the width of a pedigree graph is longer than the maximum width (200 inches) of the pdf file. It is useful to help breeders quickly browse the process of constructing nucleus breeding population to see if there is the introduction of blood.</p>
+<p><strong>Important hints：</strong>It is strongly recommended to set the <strong>cand</strong> parameters when tidying a pedigree. After the pedigree is pruned by setting the cand parameter to the specific individuals, the generation number the individuals belonged to is more accurately inferred, and the layout of the individuals in the drawing pedigree tree will be more reasonable.</p>
+<p>A small pedigree is drawn in the following figure. Legible vector figure is saved in a <a href="/post/doc/smallped.pdf">pdf file</a>.</p>
+<pre class="r"><code>tidy_small_ped &lt;-
+  tidyped(ped = small_ped,
+  cand = c(&quot;Y&quot;,&quot;Z1&quot;,&quot;Z2&quot;))
+visped(tidy_small_ped, compact = TRUE, file=&quot;doc/smallped.pdf&quot;)</code></pre>
+<pre><code>## The vector drawing of the pedigree is saved in the D:/luansheng/Documents/OneDrive/HugoMini/content/post/doc/smallped.pdf file</code></pre>
+<pre><code>## The cex for individual label is 0.7.</code></pre>
+<pre><code>## Please decrease or increase the value of the parameter cex if the label&#39;s width is longer or shorter than that of the circle or square in the graph.</code></pre>
+<p><img src="/post/2018-11-09-vispedigree-use-guide_files/figure-html/smallped-1.png" width="100%" />
+In the above graph, two shapes and three colors are used. Circle is for individual, and square is for family. Dark sky blue means male, dark golden rod means female, and dark olive green means unknown sex. For example, one circle with dark sky blue means a male individual; one square with dark golden rod means all female individuals in a full-sib family when compact = TRUE. The ancestors are drawn at the top and descendants are drawn at the bottom in the pedigree graph. The parents and offspring are connected by a dummy node. The colors of lines from the offspring to the dummy nodes are dark grey, and the colors of lines from the dummy nodes to the sire and dam are the same with the colors of parents.</p>
+<div id="a-simple-pedigree-graph" class="section level3">
+<h3><a id="4.1">4.1 A simple pedigree graph</a></h3>
+<p>The graph of the trimmed <strong>simple_ped</strong> pedigree is drawn and displayed on the default graphics device of R or Rstudio. The <strong>addgen</strong> and <strong>addnum</strong> parameters need to be set to TRUE when tidying the pedigree using the <strong>tidyped</strong> function.</p>
+<pre class="r"><code>visped(tidy_simple_ped)</code></pre>
+<pre><code>## The cex for individual label is 0.7.</code></pre>
+<pre><code>## Please decrease or increase the value of the parameter cex if the label&#39;s width is longer or shorter than that of the circle or square in the graph.</code></pre>
+<pre><code>## It is recommended that the pedigree graph is saved in the pdf file using the parameter file</code></pre>
+<pre><code>## The graph in the pdf file is a vector drawing: shapes, labels and lines are legible; shapes and labels isn&#39;t overlapped.</code></pre>
+<p><img src="/post/2018-11-09-vispedigree-use-guide_files/figure-html/vissimpleped-1.png" width="100%" /></p>
+<p>Usually, the figure displayed on the Plots panel of Rstudio has poor definition. The individual IDs will overlap with each other due to the restricted size of the pedigree graph if the number of individuals is large. This problem will be resolved by saving the pedigree graph as vectorgraph in a pdf file. The <strong>visped()</strong> function will not output pedigree graph on the default graphics device by setting <strong>showgraph = FALSE</strong>.</p>
+<pre class="r"><code>suppressMessages(visped(tidy_simple_ped, showgraph = FALSE, file=&quot;doc/simpleped.pdf&quot;))</code></pre>
+<p>After opening the <a href="/post/doc/simpleped.PDF">simpleped.PDF</a> file and you’ll see a high definition pedigree graph.</p>
+</div>
+<div id="a-reduced-pedigree-graph" class="section level3">
+<h3><a id="4.2">4.2 A reduced pedigree graph</a></h3>
+<p>Warning messages will be shown when you try to draw the pedigree graph of the deep_ped dataset.</p>
+<pre class="r"><code>visped(tidyped(deep_ped))</code></pre>
+<pre><code>  Too many individuals (&gt;=3362) in one generation!!! Two choices:
+1. Removing full-sib individuals using the parameter compact = TRUE; or, 
+2. Visualizing all nodes without labels using the parameter outline = TRUE.
+Rerun visped() function!</code></pre>
+<p>The function indicates that too many individuals in one generation to draw a pedigree graph. It is recommended to use the <strong>compact</strong> or <strong>outline</strong> parameters to simplify the pedigree.</p>
+<p>First, let’s try the compact parameter and output it in the deepped1.pdf file. The figure on the default graphic device has serious overlapping problems due to the large number of individuals and the limited plot size.</p>
+<pre class="r"><code>visped(tidyped(deep_ped),compact = TRUE, showgraph=TRUE, file=&quot;doc/deepped1.pdf&quot;)</code></pre>
+<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced
+## with the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped, addgen): Blank and NA are recoded as a missing sex
+## in the Sex column of the pedigree.</code></pre>
+<pre><code>## The vector drawing of the pedigree is saved in the D:/luansheng/Documents/OneDrive/HugoMini/content/post/doc/deepped1.pdf file</code></pre>
+<pre><code>## The cex for individual label is 0.525.</code></pre>
+<pre><code>## Please decrease or increase the value of the parameter cex if the label&#39;s width is longer or shorter than that of the circle or square in the graph.</code></pre>
+<p><img src="/post/2018-11-09-vispedigree-use-guide_files/figure-html/reduceped1-1.png" width="100%" />
+Let’s open the <a href="/post/doc/deepped1.pdf">deepped1.pdf</a> file and view the high-definition pedigree vectorgraph. Most of shapes are square at the bottom, and the internal numbers are the total number of male or female individuals for each family. The individual label is shorter than square or circle, and it is not matched. The individual label can be magnified by increasing the cex parameter. Cex is used to control the size of the individual label (ID) in the graph. The bigger the cex is, the longer the individual label is, and vice versa. The range of cex is generally 0 to 1, can be greater than 1, with 0.1 as a break for each adjustment. The visped function will output warning messages including the cex value which was used for drawing the pedigreed graph.</p>
+<pre class="r"><code>visped(tidyped(deep_ped),compact = TRUE, cex=0.83, showgraph = FALSE, file=&quot;doc/deepped2.pdf&quot;)</code></pre>
+<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced
+## with the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped, addgen): Blank and NA are recoded as a missing sex
+## in the Sex column of the pedigree.</code></pre>
+<pre><code>## The vector drawing of the pedigree is saved in the D:/luansheng/Documents/OneDrive/HugoMini/content/post/doc/deepped2.pdf file</code></pre>
+<pre><code>## The cex for individual label is 0.83.</code></pre>
+<pre><code>## Please decrease or increase the value of the parameter cex if the label&#39;s width is longer or shorter than that of the circle or square in the graph.</code></pre>
+<p>Let’s open the <a href="/post/doc/deepped2.pdf">deepped2.pdf</a> file to view the high-definition pedigree vectorgraph. There is higher matching degree between individual labels and shapes compared to deepped1.pdf. If it doesn’t feel right, you can continue to modify the cex.</p>
+</div>
+<div id="an-outlined-pedigree-graph" class="section level3">
+<h3><a id="4.3">4.3 An outlined pedigree graph</a></h3>
+<p>An outlined pedigree graph will be drawn by setting <code>outline=TRUE</code>. Individual labels will not be shown in the graph. It is very effective for the large pedigree including many individuals.</p>
+<p>In this graph, you can directly observe that there are external individuals introduced in some generations. Please click <a href="/post/doc/deepped3.pdf">here</a> to view the pdf file.</p>
+<pre class="r"><code>suppressMessages(visped(tidyped(deep_ped),compact = TRUE, outline=TRUE, showgraph = TRUE, file=&quot;doc/deepped3.pdf&quot;))</code></pre>
+<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced
+## with the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped, addgen): Blank and NA are recoded as a missing sex
+## in the Sex column of the pedigree.</code></pre>
+<p><img src="/post/2018-11-09-vispedigree-use-guide_files/figure-html/reduceped3-1.png" width="100%" /></p>
+<p>Let’s try to draw another pedigree with big family size. The graph is saved in <a href="/post/doc/bigfullsibped.pdf">here</a>.</p>
+<pre class="r"><code>cand_2007_G8_labels &lt;- big_family_size_ped[(Year == 2007) &amp; (substr(Ind,1,2) == &quot;G8&quot;),Ind]
+cand_2007_G8_tidy_ped &lt;- tidyped(big_family_size_ped,cand=cand_2007_G8_labels)</code></pre>
+<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced
+## with the missing value NA.</code></pre>
+<pre class="r"><code># Use suppressMessages to disable output prompts.
+suppressMessages(visped(cand_2007_G8_tidy_ped,compact = TRUE, outline=TRUE, showgraph = TRUE, file=&quot;doc/bigfullsibped.pdf&quot;))</code></pre>
+<p><img src="/post/2018-11-09-vispedigree-use-guide_files/figure-html/bigfullsibped-1.png" width="100%" /></p>
+</div>
+<div id="how-to-use-this-package-in-a-selective-breeding-program" class="section level3">
+<h3><a id="4.4">4.4 How to use this package in a selective breeding program</a></h3>
+<div id="an-analysis-of-founders-for-an-individual" class="section level4">
+<h4><a id="4.4.1">4.4.1 An analysis of founders for an individual</a></h4>
+<p>Selective breeding is actually a process of enrichment of the desirable minor genes dispersed among multiple founders through successive mating for multiple generations. The support theory behind it is the well-known minor polygene hypothesis.</p>
+<p>We select the individual “K110550H” in the deep_ped dataset to visualize its pedigree. The pdf pedigree is <a href="/post/doc/K110550Hped.pdf">here</a>.</p>
+<pre class="r"><code>suppressWarnings(K110550H_ped &lt;- tidyped(deep_ped,cand=&quot;K110550H&quot;))
+suppressMessages(visped(K110550H_ped,showgraph = TRUE,file=&quot;doc/K110550Hped.pdf&quot;))</code></pre>
+<p><img src="/post/2018-11-09-vispedigree-use-guide_files/figure-html/pedofoneind-1.png" width="100%" />
+As you can see from the figure above, the number of founder individuals (without parents) of the K110550H individual is71.This means that this individual has accumulated a number of favorable genes from the founders, so that the breeding object trait will be improved with great genetic gain.</p>
+</div>
+<div id="the-contribution-of-different-families-in-a-selective-breeding-program" class="section level4">
+<h4><a id="4.4.2">4.4.2 The contribution of different families in a selective breeding program</a></h4>
+<p>When using the optimum contribution theory to optimize mating design, the number of individuals contributed by each family is not same, and the family with a high integrated selection index contributes more individuals. By visualizing pedigree, we can directly see the contribution ratio of different families.</p>
+<p>The below codes will show the composition of the parents of 106 families born in the nucleus breeding population in 2007. Only two generations including parents and grandparents are drawn in the graph by setting the tracegen=2.</p>
+<pre class="r"><code>  suppressWarnings(
+    cand_2007_G8_tidy_ped_ancestor_2 &lt;-
+    tidyped(
+    big_family_size_ped,
+    cand = cand_2007_G8_labels,
+    trace = &quot;up&quot;,
+    tracegen = 2)
+  )
+  sire_label &lt;-
+  unique(cand_2007_G8_tidy_ped_ancestor_2[Ind %in% cand_2007_G8_labels,
+                                          Sire])
+  dam_label &lt;-
+  unique(cand_2007_G8_tidy_ped_ancestor_2[Ind %in% cand_2007_G8_labels,
+                                          Dam])
+  sire_dam_label &lt;- unique(c(sire_label, dam_label))
+  sire_dam_label &lt;- sire_dam_label[!is.na(sire_dam_label)]
+  sire_dam_ped &lt;-
+  cand_2007_G8_tidy_ped_ancestor_2[Ind %in% sire_dam_label]
+  sire_dam_ped &lt;- sire_dam_ped[, FamilyID := paste(Sire, Dam, sep = &quot;&quot;)]
+  family_size &lt;- sire_dam_ped[, .N, by = c(&quot;FamilyID&quot;)]
+  fullsib_family_label &lt;- unique(sire_dam_ped$FamilyID)
+  suppressMessages(
+    visped(
+    cand_2007_G8_tidy_ped_ancestor_2,
+    compact = TRUE,
+    outline = TRUE,
+    showgraph = TRUE
+    )
+  )</code></pre>
+<p><img src="/post/2018-11-09-vispedigree-use-guide_files/figure-html/optiMate-1.png" width="100%" />
+In the above figure, 106 families are shown at the bottom, the parents are shown in the middle, and the grandparents are shown at the top. It can be seen that the parents are composed of 80 sires and 106 dams. The parents are from 54 full-sib families in the generation of grandparent. About 25 parents are from two full-sib families because the optimum contribution theory was used, and account for 13.44% of the total number of parents.</p>
+</div>
+</div>
+</div>

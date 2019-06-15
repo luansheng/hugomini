@@ -1,0 +1,122 @@
+---
+title: 利用hugo展示新发表的论文
+author: Sheng Luan
+date: '2018-06-07'
+categories:
+  - 其他
+tags:
+  - blogdown
+  - Hugo
+slug: how-to-add-new-paper-in-publication
+header:
+  caption: ''
+  image: ''
+---
+
+利用益辉的blogdown包，发post是很简单的。直接点击Addins->New post就可以了。但是如果要在Publications中添加新的文章，点击New post，将Subdirectory文本框内容修改为Publication，也是可以生成一个新的扩展名为md的文档，但是文档的格式是不对的，给出的仍然是post要求的文档格式。
+
+如果你知道publication要求的文档内容标准格式，直接粘贴进来，也是可以的。
+标准格式如下：
+
+```
++++
+title = "How to Generate Publication Markdown"
+date = 2018-06-07T12:36:50+08:00
+draft = false
+
+# Authors. Comma separated list, e.g. `["Bob Smith", "David Jones"]`.
+authors = [""]
+
+# Publication type.
+# Legend:
+# 0 = Uncategorized
+# 1 = Conference proceedings
+# 2 = Journal
+# 3 = Work in progress
+# 4 = Technical report
+# 5 = Book
+# 6 = Book chapter
+publication_types = ["0"]
+
+# Publication name and optional abbreviated version.
+publication = ""
+publication_short = ""
+
+# Abstract and optional shortened version.
+abstract = ""
+abstract_short = ""
+
+# Featured image thumbnail (optional)
+image_preview = ""
+
+# Is this a selected publication? (true/false)
+selected = false
+
+# Projects (optional).
+#   Associate this publication with one or more of your projects.
+#   Simply enter the filename (excluding '.md') of your project file in `content/project/`.
+#   E.g. `projects = ["deep-learning"]` references `content/project/deep-learning.md`.
+projects = []
+
+# Tags (optional).
+#   Set `tags = []` for no tags, or use the form `tags = ["A Tag", "Another Tag"]` for one or more tags.
+tags = []
+
+# Links (optional).
+url_pdf = ""
+url_preprint = ""
+url_code = ""
+url_dataset = ""
+url_project = ""
+url_slides = ""
+url_video = ""
+url_poster = ""
+url_source = ""
+
+# Custom links (optional).
+#   Uncomment line below to enable. For multiple links, use the form `[{...}, {...}, {...}]`.
+# url_custom = [{name = "Custom Link", url = "http://example.org"}]
+
+# Does this page contain LaTeX math? (true/false)
+math = false
+
+# Does this page require source code highlighting? (true/false)
+highlight = true
+
+# Featured image
+# Place your image in the `static/img/` folder and reference its filename below, e.g. `image = "example.jpg"`.
+[header]
+image = ""
+caption = ""
+
++++
+
+```
+
+如果不知道，那么就可以通过另外一种方式建立一个文档，添加你发表的最新文章。
+
+在Rstudio控制台Console下运行命令：
+
+```
+blogdown::hugo_cmd(c("new","publication/how-to-generate-publication-markdown.md"))
+```
+
+那么就会在content/publication文件夹下生成一个名为how-to-generate-publication-markdown.md的文件。 文件名单词间最好用-隔开，扩展名必须为md。
+
+打开该文件，你会发现publication要求的标准格式。
+
+林科院的董雷鸣老师告诉我一个如何在主页展示文章时，不显示大段摘要内容的办法。
+
+需要修改content/home/文件夹下的publications.md和publications_selected.md文件中的一部分内容：
+
+```
+# List format.
+#   0 = Simple
+#   1 = Detailed
+#   2 = APA
+#   3 = MLA
+list_format = 0
+```
+
+把list_format设置为0就可以了。
+

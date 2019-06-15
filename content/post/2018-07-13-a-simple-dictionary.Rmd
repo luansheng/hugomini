@@ -1,0 +1,43 @@
+---
+title: a simple dictionary
+author: Sheng Luan
+date: '2018-07-13'
+slug: a-simple-dictionary
+categories:
+  - 编程
+tags:
+  - ;ython
+header:
+  caption: ''
+  image: ''
+---
+
+栾佳硕的任务：
+
+1.建立一个字典，用来存储英语单词和释义的，要求：用户输入一个单词，他就会输出它的释义。
+
+```{python echo = TRUE}
+#建立简单的英汉词典
+eng_cn_dict = {"love":"爱",
+              "China":"中国；瓷器",
+              "desk":"桌子",
+              "chair":"椅子",
+              "room":"房间",
+              "floor":"地面;一楼",
+              "light":"光线；灯",
+              "cup":"水杯"}
+
+#定义一个查询单词的函数
+def lookup_word(word):
+    if word in eng_cn_dict :
+        print(word + ": " + eng_cn_dict.get(word))
+    else:
+        print(word + "还没有收录到词典中")
+```
+
+查询两个单词，一个已经收录在字典中，一个还没有收录在字典中。
+
+```{python echo = TRUE}
+lookup_word("room")
+lookup_word("boy")
+```

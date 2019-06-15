@@ -1,0 +1,57 @@
+---
+title: 输入5个人的名字，并打印出来
+author: Sheng Luan
+date: '2018-02-06'
+slug: input-five-names
+categories:
+  - 编程
+tags:
+  - python
+---
+
+
+
+<p>栾佳硕给出的作业，输入5个人的名字，并打印出来:</p>
+<p>定义一个元组names，存储输入的用户名字。</p>
+<pre class="python"><code># -*- coding: utf-8 -*-
+names = ()
+counter = 1
+while counter &lt;= 5:
+    tuple1 = (input(&quot;请输入您的名字&quot;),)
+    names += tuple1
+    counter += 1
+    
+for i in names:
+    print(i)</code></pre>
+<p>其他不需要编程的问题：</p>
+<p>1.什么是属性（对象）</p>
+<p>对象的属性，用来描述对象的特征。譬如一尾虾，它的属性可以包括：重量、长度、年龄等。从本质上讲，类是没有属性的，对象才有属性。</p>
+<p>2.如何创建模块？</p>
+<p>Python 模块(Module)，是一个 Python 文件，以 .py 结尾，包含了 Python 对象定义和Python语句。</p>
+<p>模块让你能够有逻辑地组织你的 Python 代码段。</p>
+<p>把相关的代码分配到一个模块里能让你的代码更好用，更易懂。</p>
+<p>模块能定义函数，类和变量，模块里也能包含可执行的代码。</p>
+<p>通过<code>import</code>语句导入自定义的模块。譬如自定义了一个名为shrimp.py的模块，可以这样导入：</p>
+<pre class="python"><code>import shrimp</code></pre>
+<p>如果你只想导入shrimp模块中一个计算体重的<code>get_weight()</code>函数，可以用<code>from ... import</code>语句实现：</p>
+<pre class="python"><code>from shrimp import get_weight</code></pre>
+<p>关于模块的知识，我参考的<a href="http://www.runoob.com/python/python-modules.html">这个网址</a></p>
+<p>3.while循环什么时候结束？</p>
+<p>设定一个条件，当不满足条件的时候，while循环就结束了。譬如下边的例子：当i等于6时，不满足<code>i&lt;=5</code>的条件，就会自动结束。</p>
+<pre class="python"><code>i = 1
+while i &lt;= 5:
+    print(i)
+    i += 1</code></pre>
+<pre><code>## 1
+## 2
+## 3
+## 4
+## 5</code></pre>
+<pre class="python"><code>print(i)</code></pre>
+<pre><code>## 6</code></pre>
+<p>4.Python中计算<code>6*6*6*6</code>的另一种做法是什么？</p>
+<p>这是一个很好的问题，通过查询网络，可以通过<code>**</code>符号实现：</p>
+<pre class="python"><code>print(6*6*6*6)</code></pre>
+<pre><code>## 1296</code></pre>
+<pre class="python"><code>print(6**4)</code></pre>
+<pre><code>## 1296</code></pre>

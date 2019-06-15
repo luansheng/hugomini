@@ -1,0 +1,17 @@
+---
+title: BLUP公式及分解
+author: Sheng Luan
+date: '2017-06-10'
+categories:
+  - lmm
+  - EBV
+tags:
+  - lmm
+slug: lmm-for-ebv-prediction-blup
+---
+
+# 1. BLUP公式
+
+$$
+\begin{bmatrix} X^{'}\hat{R}^{-1}X & X^{'}\hat{R}^{-1}Z \\ Z^{'}\hat{R}^{-1}X & Z^{'}\hat{R}^{-1}Z+\hat{G}^{-1} \end{bmatrix} \begin{bmatrix} \hat{\beta} \\ \hat{u} \end{bmatrix} = \begin{bmatrix} X^{'}\hat{R}^{-1}y \\ Z^{'}\hat{R}^{-1}y \end{bmatrix}
+$$

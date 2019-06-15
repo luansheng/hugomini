@@ -1,0 +1,46 @@
+---
+title: how to judge a number is a prime
+author: Sheng Luan
+date: '2018-07-08'
+slug: how-to-judge-a-number-is-a-prime
+categories:
+  - 编程
+tags:
+  - python
+header:
+  caption: ''
+  image: ''
+---
+
+栾佳硕的作业：
+
+解密题目2：
+
+编写一个程序，让它输出1-200之间的所有质数。（解密点50）
+
+解密点（20/100）
+
+```{python echo = TRUE}
+#定义一个判断数字是否为质数的函数
+def is_prime(number):
+    if number == 1 :
+        return False
+    if number == 2 :
+        return True
+    if number >= 3 :
+        a = True
+        for i in range(2,number):
+            if number % i == 0 :
+                a = False
+                break
+        return a
+
+            
+list1 = []
+number =200
+for i in range(1,number+1) :
+    if is_prime(i) == True :
+        list1.append(i)
+#质数为：
+print(list1)
+```

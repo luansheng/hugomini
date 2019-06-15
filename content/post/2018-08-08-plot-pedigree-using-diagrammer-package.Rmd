@@ -1,0 +1,186 @@
+---
+title: plotting pedigree using DiagrammeR and visNetwork packages
+author: Sheng Luan
+date: '2018-08-08'
+slug: plot-pedigree-using-diagrammer-package
+categories:
+  - 可视化
+tags:
+  - R
+header:
+  caption: ''
+  image: ''
+---
+
+[DiagrammeR](https://github.com/rich-iannone/DiagrammeR)包提供了一个可以直接读取pedigree数据，画图的功能。这个包的问题是，没有一个使用指南，自己摸索起来很麻烦。
+
+从实际测试结果来看，[visNetwork](http://datastorm-open.github.io/visNetwork/)包更加有用，有详细的使用指南，可以跟shiny结合，能够在网页上点击，这是我比较感兴趣的。
+
+## 1.加载DiagrammerR和visNetwork包
+```{r setup, include = TRUE, message = FALSE}
+rm(list = ls())
+require(DiagrammeR)
+require(visNetwork)
+require(data.table)
+require(optiSel)
+knitr::opts_knit$set(fig.height=12, fig.width=12)
+```
+
+## 2.读取系谱数据
+```{r}
+ped_1 <-  fread(file="datasets/ped1.csv")
+#设置Sire和Dam列中0为NA
+ped_1[Sire=="0",Sire:=NA]
+ped_1[Dam=="0",Dam:=NA]
+#利用optisel包中的系谱处理函数，对系谱进行预处理，如果包括性别，列表头用Sex表示
+#addNum=TRUE,生成一个数字化系谱，下边两个包DiagrammeR和visNetwork要求节点从1开始连续编码
+ped_1_pre <-  as.data.table(prePed(ped_1,addNum = TRUE))
+```
+
+
+## 3.生成节点和边数据
+DiagrammeR和visNetwork包需要两种类型数据：节点数据以及edge数据。后者表示节点的走向。
+
+节点数据：id需要连续从1开始编号，label表示该节点的名称。预留一个sex字段，可以据此字段设置雌雄个体不同的形状、颜色等信息。
+```{r}
+node_1 <- data.table(id=ped_1_pre$numIndiv,label=ped_1_pre$Indiv,sex=ped_1_pre$Sex)
+edge_1_sire <- ped_1_pre[,c("numIndiv","numSire")]
+edge_1_dam <- ped_1_pre[,c("numIndiv","numDam")]
+setnames(edge_1_sire,c("numIndiv","numSire"),c("from","to"))
+setnames(edge_1_dam,c("numIndiv","numDam"),c("from","to"))
+edge_1 <- rbind(edge_1_sire,edge_1_dam)
+#edge_1中数据来自optiSel包prePed函数生成的数字系谱，其中默认缺失的个体编号为0，需要处理为NA
+edge_1[to==0,to:=NA]
+#排序
+edge_1[order(from)] 
+```
+
+以下4-6主要是针对DiagrammeR包的操作。
+
+## 4.生成空的图形
+```{r}
+i_graph_1 <-  create_graph()
+i_graph_1 %>% is_graph_empty()
+```
+
+## 5.增加节点数据
+```{r}
+i_graph_1 <- i_graph_1 %>% add_nodes_from_table(table = node_1,label_col = label)
+```
+## 6.增加边数据
+```{r}
+i_graph_1 <- i_graph_1 %>% add_edges_from_table(table = edge_1,from_col = from,to_col = to,from_to_map = id_external)
+```
+
+## 6. 绘图
+
+支持两种图形输出引擎：
+
+第一种采用的是visNetwork。
+```{r}
+i_graph_1 %>% render_graph(output = "visNetwork")
+```
+
+第二种graphviz，是默认的输出引擎。
+
+```{r}
+i_graph_1 %>% render_graph(output = "graph")
+```
+
+从上边两张图可以看出，生成的图形，并不符合我们的要求。理想的系谱树，应该是树状的。
+
+因此尝试设定布局参数为tree。
+```{r tree, out.width = "100%"}
+i_graph_1 %>% render_graph(layout = "tree",output = "graph")
+```
+
+但是也存在一个问题，没有找到如何控制输出树状图大小，以及世代间距离的方法。
+
+DiagrammeR的文档还不是很完善。没有一个指南，使用这个包很麻烦。
+
+补充：其实是有一个使用指南的，在[这里](https://rich-iannone.github.io/DiagrammeR/docs.html)，描述的很详细。
+
+因此尝试直接利用visNetwork包来作图。
+
+## 7.直接利用visNetwork包来绘图
+
+visNetwork做出来的图，很炫。是动态的，可以用鼠标来拖动每个节点。
+
+其中有几个参数很重要：
+
+direction表示图形的绘制方向，DU表示从下到上。
+
+sortMethod表示如何排序，directed表示按照from to的方式排序。
+
+levelSeparation 表示不同层间的距离，这个需要手动尝试。如果不设置，图会很小。
+
+```{r}
+visNetwork(node_1,edge_1) %>%  visEdges(arrows = "to")  %>% visHierarchicalLayout(direction = "DU",sortMethod = "directed",levelSeparation = 250, nodeSpacing = 150)
+```
+
+## 8.visNetwork进阶
+
+### 8.1 雄性和雌性个体设置不同的形状和颜色
+
+雄雌个体节点形状分别设置为square、dot；颜色分别设置为绿色和红色。
+
+```{r}
+node_1[sex=="male",shape:="square"]
+node_1[sex=="female",shape:="dot"]
+node_1[sex=="male",color:="#42c58c"]
+node_1[sex=="female",color:="#e1409b"]
+```
+
+第一种配色：
+
+```{r}
+visNetwork(node_1,edge_1) %>%  visEdges(arrows = "to")  %>% visHierarchicalLayout(direction = "DU",sortMethod = "directed",levelSeparation = 250, nodeSpacing = 150)
+```
+
+第二种配色：
+```{r}
+node_1[sex=="male",color:="#119ecc"]
+node_1[sex=="female",color:="#f4b131"]
+visNetwork(node_1,edge_1) %>%  visEdges(arrows = "to")  %>% visHierarchicalLayout(direction = "DU",sortMethod = "directed",levelSeparation = 250, nodeSpacing = 150)
+```
+
+
+第二种配色，不用树状：
+```{r}
+node_1[sex=="male",color:="#119ecc"]
+node_1[sex=="female",color:="#f4b131"]
+node_1[label=="G010D804",color:="red"]
+visNetwork(node_1,edge_1) %>%  visEdges(arrows = "to") %>% visOptions(highlightNearest = list(enabled=TRUE,degree=2))
+```
+
+第三种配色：
+
+```{r}
+node_1[sex=="male",color:="green"]
+node_1[sex=="female",color:="red"]
+visNetwork(node_1,edge_1) %>%  visEdges(arrows = "to")  %>% visHierarchicalLayout(direction = "DU",sortMethod = "directed",levelSeparation = 250, nodeSpacing = 150)
+```
+
+第四种配色：
+
+```{r}
+node_1[sex=="male",color:="#0c8a7a"]
+node_1[sex=="female",color:="#ff8d7a"]
+visNetwork(node_1,edge_1) %>%  visEdges(arrows = "to")  %>% visHierarchicalLayout(direction = "DU",sortMethod = "directed",levelSeparation = 250, nodeSpacing = 150)
+```
+
+
+### 8.2选择展示的节点
+
+```{r}
+visNetwork(node_1,edge_1) %>%  visEdges(arrows = "to")  %>% visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE) %>%visHierarchicalLayout(direction = "DU",sortMethod = "directed",levelSeparation = 250, nodeSpacing = 150)
+```
+
+### 8.3 选择展示符合特定条件的个体
+
+譬如雌性个体或者雄性个体
+
+```{r}
+visNetwork(node_1,edge_1) %>%  visEdges(arrows = "to")  %>% visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE, selectedBy = "sex") %>% visHierarchicalLayout(direction = "DU",sortMethod = "directed",levelSeparation = 250, nodeSpacing = 150)
+```
+

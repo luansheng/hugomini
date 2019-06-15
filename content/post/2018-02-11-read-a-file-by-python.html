@@ -1,0 +1,27 @@
+---
+title: read a file by python
+author: Sheng Luan
+date: '2018-02-11'
+slug: read-a-file-by-python
+categories:
+  - 编程
+tags:
+  - python
+---
+
+
+
+<p>栾佳硕的任务：</p>
+<p>1.建立一个文件，在文件中写入以下内容：</p>
+<p>Watch the cartoon.</p>
+<p>go fishing.</p>
+<p>(不会了话看编程书）</p>
+<pre class="python"><code>f = open(&quot;datasets/lsj.txt&quot;,&quot;w&quot;)
+f.writelines(&quot;Watch the  cartoon.\ngo fishing&quot;)
+f.close()</code></pre>
+<p>2.把它读出来，并且用format方法显示出来。</p>
+<pre class="python"><code>with open(&quot;datasets/lsj.txt&quot;,&quot;r&quot;) as f:
+    for line in f.readlines():
+        print(line.strip())</code></pre>
+<pre><code>## Watch the  cartoon.
+## go fishing</code></pre>

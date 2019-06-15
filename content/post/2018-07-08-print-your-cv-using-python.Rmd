@@ -1,0 +1,34 @@
+---
+title: print your cv using python
+author: Sheng Luan
+date: '2018-07-08'
+slug: print-your-cv-using-python
+categories:
+  - 编程
+tags:
+  - python
+header:
+  caption: ''
+  image: ''
+---
+栾佳硕的作业：
+
+解密题目一：
+
+定义一个函数，让它输出你的名字，年龄，住址以及爱好，分四行打印出来。然后，调用这个函数。（解密点20）
+
+目前解密点（0/100）
+
+当解密点到达100时，我会告诉你密码。
+
+先把第一题答案发过来，我就会告诉你下一道题。
+
+```{python echo = TRUE}
+def print_cv(name,age,address,hobby):
+    print(name)
+    print(age)
+    print(address)
+    print(hobby)
+    
+print_cv("栾生","40","南京路106号","打羽毛球")    
+```

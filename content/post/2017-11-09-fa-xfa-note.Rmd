@@ -1,0 +1,200 @@
+---
+title: FA和XFA学习笔记
+author: Sheng Luan
+date: '2017-11-09'
+categories:
+  - 统计
+tags:
+  - FA
+  - XFA
+slug: fa-xfa-note
+---
+
+ASReml中有一个XFA方差结构。本文从FA(因子分析)基础入手，做一个有关FA和XFA的学习笔记。目的是，弄清楚在ASReml中如何定义XFA方差结构。以及如何解读生成的方差组分。
+
+## 1.1 因子分析的基本概念
+因子分析(factor analysis)是一种数据简化的技术。它通过研究众**多变量**之间的内部依赖关系（这里指的变量是譬如**体长、体重、头胸甲等性状**，而不是样品编号），探求观测数据中的**基本结构**，并用少数几个**基础变量**（underlying variate）来表示其基本的数据结构。这几个基础变量能够反映原来众多变量的主要信息。原始的变量是可观测的变量，而基础变量是不可观测的潜在变量，称为**因子**。
+
+因子分析实际上是降维的一种方法。
+
+譬如：在企业形象或品牌形象的研究中，消费者可以通过一个有24个指标构成的评价体系，评价百货商场的24个方面的优劣。但消费者主要关心的是三个方面，即商店的环境、商店的服务和商品的价格。因子分析方法可以通过24个变量，找出反映商店环境、商店服务水平和商品价格的4个公共潜在的因子，对商店进行综合评价。而这4个公共因子可以表示为：
+
+$$
+x_{i}=\mu_{i}+\alpha_{i1}F_{1}+\alpha_{i2}F_{2}+\alpha_{i3}F_{3}+\alpha_{i4}F_{4}+\varepsilon_{i}
+$$
+
+下边对上述模型的解释尤为重要,提到了两个非常重要的概念，**公共因子**和**特殊因子**：
+
+其中，$x_{i}$表示每个指标（变量），F1，F2，F3和F4表示不可观测的4个公共因子，24个指标（变量）共享这4个因子，每个指标（变量）中不能被共享的部分，称为特殊因子$\varepsilon_{i}$。
+
+因子分析与主成分分析的异同（最好有实际的例子展示）
+
+* 主成分分析: 初始变量的线性组合表示新的综合变量，即主成分；
+* 因子分析：潜在的基础变量即公共变量和特殊变量的线性组合表示原始变量；
+* 主成分分析仅仅是变量转换，而因子分析需要构造因子分析模型。
+
+## 1.2 因子分析的数学模型
+
+首先来看一个数学模型：
+
+模型的方式表示为：
+
+$$
+X = \mu + AF + \varepsilon
+$$
+
+其中X为观测变量矩阵, A为载荷因子矩阵，F为公共因子矩阵，$\varepsilon$为特殊因子矩阵。
+
+矩阵形式表示为：
+
+$$
+\begin{bmatrix}
+x_{1} \\ 
+x_{2} \\ 
+...   \\
+x_{p}
+\end{bmatrix} 
+= 
+\begin{bmatrix}
+\mu_{1} \\ 
+\mu_{2} \\ 
+...     \\
+\mu_{p}
+\end{bmatrix}
++
+\begin{bmatrix}
+\alpha_{11} & \alpha_{12} & ... & \alpha_{1m} \\ 
+\alpha_{21} & \alpha_{22} & ... & \alpha_{2m} \\ 
+\vdots      & \vdots      & \vdots & \vdots   \\ 
+\alpha_{p1} & \alpha_{p2} & ... & \alpha_{pm}
+\end{bmatrix}
+\begin{bmatrix}
+F_{1} \\ 
+F_{2} \\ 
+...   \\
+F_{m}
+\end{bmatrix}
++
+\begin{bmatrix}
+\varepsilon_{1} \\ 
+\varepsilon_{2} \\ 
+...     \\
+\varepsilon_{p} 
+\end{bmatrix}
+$$
+
+上边这个模型中，$x_{p}$表示第p个可观察的变量，对应到例子中24个指标(p=24)；m表示公共因子的数量，对应到上边的例子，m=4；$a_{pm}$称为因子载荷矩阵，p行m列，对应到例子为24行4列；$\varepsilon_{p}$表示特殊因子，对应到例子中24个指标(p=24)。
+
+## 1.3 因子分析模型的一些性质
+
+* 公共因子和特殊因子之间独立，协方差为0，不相关。
+
+$$
+cov(F,\varepsilon) = 0
+$$
+
+* 公共因子间不相关，每个因子的方差为1。
+
+$$
+D(F) = 
+\begin{bmatrix}
+1 &   &   &   \\ 
+  & 1 &   &   \\ 
+  &   & \ddots &   \\ 
+  &   &   & 1
+\end{bmatrix}
+$$
+
+* 特殊因子间不相关，每个因子的方差可以不等。
+
+$$
+D(\varepsilon) = 
+\begin{bmatrix}
+\sigma^2_{1} &   &   &   \\ 
+  & \sigma^2_{2} &   &   \\ 
+  &   & \ddots &   \\
+  &   &   & \sigma^2_{p} 
+\end{bmatrix}
+$$
+
+* 原始变量协方差结构的分解
+
+$$
+X - \mu =  AF + \varepsilon
+$$
+
+$$
+Var(X-\mu) = AVar(F)A + Var(\varepsilon) \\
+Var(X) = AVar(F)A + Var(\varepsilon)
+$$
+
+上边这个公式非常重要，它表明X的协方差矩阵可以表示用公共因子方差矩阵、载荷系数矩阵和特殊因子矩阵进行表示。这几个矩阵的维度比X的协方差矩阵都要低很多。
+
+## 1.4 XFA (eXtended Factor Analysis model)
+
+XFA实际上是因子分析的一种扩展形式，参见[ASReml的说明文档](https://www.vsni.co.uk/software/asreml/htmlhelp/asreml/facanal.htm)：
+
+譬如xfa1(4)表示，原始变量有4个，公共因子只有1个，载荷系数矩阵为4行×1列，特殊因子为4行×1列。
+当时给ASReml作者Arthur Gilmour的邮件中也是这么理解的：
+
+Now I have known some about XFA and what you have write.
+XFA1 means that we only use the 1 common factor. I also know the number of parameters will be 8 (the first four values are for special or residual variance, the last four values are the coefficient for 1th common factor ) if I have 4 variables.  
+
+在ASReml中定义方差结构时，如果需要提供先验值，以XFA1(4)为例，那么顺序是：4个特殊因子方差值；然后是载荷系数矩阵第1列（4个数，只有1列），如果是xfa2(4)，那么这里会有8个数（因为有2列）。
+
+以直接DGE和间接遗传效应IGE方差组分为例，如果有高（HD）和低（LD）2个密度，那么会存在四个变量：LD.DGE、LD.IGE HD.DGE HD.IGE，在ASReml中可以这样定义：
+
+`str(Dens.AnimalID $Mates Zero.Animal xfa1(4).nrm(AnimalID))`
+
+其中`Mates`表示为(实际上是2个密度的IGE)：
+
+```asreml
+!ASSIGN Mates Dens.Mate1 and(Dens.Mate2) and(Dens.Mate3) and(Dens.Mate4) and(Dens.Mate5) and(Dens.Mate6) and(Dens.Mate7) and(Dens.Mate8) and(Dens.Mate9) and(Dens.Mate10) and(Dens.Mate11) and(Dens.Mate12) and(Dens.Mate13) and(Dens.Mate14) and(Dens.Mate15) and(Dens.Mate16) and(Dens.Mate17) and(Dens.Mate18) and(Dens.Mate19) and(Dens.Mate20) and(Dens.Mate21) and(Dens.Mate22) and(Dens.Mate23) and(Dens.Mate24) and(Dens.Mate25) and(Dens.Mate26) and(Dens.Mate27) and(Dens.Mate28) and(Dens.Mate29) and(Dens.Mate30) and(Dens.Mate31) and(Dens.Mate32) and(Dens.Mate33) and(Dens.Mate34) and(Dens.Mate35) and(Dens.Mate36) and(Dens.Mate37) and(Dens.Mate38) and(Dens.Mate39) and(Dens.Mate40) and(Dens.Mate41) and(Dens.Mate42) and(Dens.Mate43) and(Dens.Mate44) and(Dens.Mate45)
+```
+
+其中Zero.Animal的意思，咨询ASReml的作者Arthur Gilmour：
+
+只是说The design matrix for an XFA terms needs extra empty columns to fit the FACTOR.
+
+ASReml给出的一个结果：
+
+```asreml
+4 XFA_V  0  1  0.257662      0.257662       0.43   0 P  
+4 XFA_V  0  2   0.00000       0.00000       0.00   0 F  
+4 XFA_V  0  3   0.00000       0.00000       0.00   0 F  
+4 XFA_V  0  4  0.676462E-03  0.676462E-03   0.70   0 P  
+4 XFA_L  1  1 -0.650819     -0.650819      -1.80   0 P  
+4 XFA_L  1  2  0.894162      0.894162       4.18   0 P    
+4 XFA_L  1  3  0.468200E-01  0.468200E-01   1.88   0 P  
+4 XFA_L  1  4 -0.126477E-01 -0.126477E-01  -0.90   0 P  
+```
+ 
+前边四个值是特殊因子方差，接下来四个值是因子载荷矩阵第1列的四个值。
+ 
+ASReml提供了从xfa到us结构的转换方法（在VPREDICT部分）：
+
+```asreml
+VPREDICT !DEFINE
+V Gen xfa1(4).nrm(AnimalID) 
+```
+
+转换为us结构后的结果(10个参数，4行×4列下三角)：
+
+```asreml
+ AnimalID               NRM   13176
+  13 Gen                      0.68124       0.42820        
+  14 Gen                     -0.58188       0.33805        
+  15 Gen                      0.79961       0.44647        
+  16 Gen                     -0.30467E-01   0.28622E-01    
+  17 Gen                      0.41867E-01   0.27579E-01
+  18 Gen                      0.21921E-02   0.24696E-02
+  19 Gen                      0.82304E-02   0.11226E-01
+  20 Gen                     -0.11310E-01   0.14198E-01
+  21 Gen                     -0.59218E-03   0.78588E-03
+  22 Gen                      0.83648E-03   0.10994E-02
+```
+
+## todo
+
+ * 因子载荷矩阵，需要详细了解。以及在ASRreml中为什么需要zero。
+ * 关于XFA，在Linear Models for the Prediction of Animal Breeding Values(3nd version)中，有讨论，可以深入看一下。

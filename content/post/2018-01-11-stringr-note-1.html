@@ -1,0 +1,220 @@
+---
+title: 字符串处理包stringr学习笔记-1
+author: Sheng Luan
+date: '2018-01-11'
+slug: stringr-note-1
+categories:
+  - 数据清洗
+tags:
+  - R
+  - stringr
+editor_options: 
+  chunk_output_type: inline
+---
+
+<script src="/rmarkdown-libs/htmlwidgets/htmlwidgets.js"></script>
+<link href="/rmarkdown-libs/str_view/str_view.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/str_view-binding/str_view.js"></script>
+
+
+<pre class="r"><code>suppressPackageStartupMessages(require(stringr))</code></pre>
+<p>R中的字符串处理函数，不但多，而且难记，参数调用方法也不一致。stringr包提供了统一名称的函数调用形式。</p>
+<div id="section" class="section level2">
+<h2>1. 基本处理</h2>
+<div id="section-1" class="section level3">
+<h3>1.1 计算字符串的长度</h3>
+<pre class="r"><code>str_length(&quot;abc&quot;)</code></pre>
+<pre><code>## [1] 3</code></pre>
+<pre class="r"><code>str_length(&quot;你好&quot;)</code></pre>
+<pre><code>## [1] 16</code></pre>
+<pre class="r"><code>str_length(NA)</code></pre>
+<pre><code>## [1] NA</code></pre>
+<pre class="r"><code>str_length(c(&quot;abc&quot;,&quot;ad&quot;,&quot;co&quot;))</code></pre>
+<pre><code>## [1] 3 2 2</code></pre>
+<p><code>str_length</code>等同于R中自带的<code>nchar()</code>函数可以正确的识别中文字的个数，赞一个。</p>
+</div>
+<div id="section-2" class="section level3">
+<h3>1.2 提取子字符串</h3>
+<p>下述函数可以针对向量操作，提取子字符串</p>
+<pre class="r"><code>x &lt;-  c(&quot;abcdefgh&quot;,&quot;dljwowowjj&quot;)
+str_sub(x,2,4) #从第2个位置到第四个位置</code></pre>
+<pre><code>## [1] &quot;bcd&quot; &quot;ljw&quot;</code></pre>
+<pre class="r"><code>str_sub(x,2,-2) #第二个位置到倒数第二个位置</code></pre>
+<pre><code>## [1] &quot;bcdefg&quot;   &quot;ljwowowj&quot;</code></pre>
+</div>
+<div id="section-3" class="section level3">
+<h3>1.3 修改字符串中指定位置的内容</h3>
+<p>修改字符串中某个位置的字符</p>
+<pre class="r"><code>str_sub(x,3,5) &lt;- &quot;XYZ&quot;
+x</code></pre>
+<pre><code>## [1] &quot;abXYZfgh&quot;   &quot;dlXYZwowjj&quot;</code></pre>
+</div>
+<div id="section-4" class="section level3">
+<h3>1.4 重复字符串的内容</h3>
+<pre class="r"><code>str_dup(x,3) #表示每个字符串重复两次</code></pre>
+<pre><code>## [1] &quot;abXYZfghabXYZfghabXYZfgh&quot;       &quot;dlXYZwowjjdlXYZwowjjdlXYZwowjj&quot;</code></pre>
+<pre class="r"><code>str_dup(x,c(2,3)) #表示第一个字符串重复2次，第二个字符串重复3次</code></pre>
+<pre><code>## [1] &quot;abXYZfghabXYZfgh&quot;               &quot;dlXYZwowjjdlXYZwowjjdlXYZwowjj&quot;</code></pre>
+</div>
+<div id="section-5" class="section level3">
+<h3>1.5 填补字符串至一定长度</h3>
+<pre class="r"><code>str_pad(x,str_length(x[2])) #把第一个字符串用空格补充至跟第二字符串一样长</code></pre>
+<pre><code>## [1] &quot;  abXYZfgh&quot; &quot;dlXYZwowjj&quot;</code></pre>
+<pre class="r"><code>str_pad(string = x,width = str_length(x[2]),side = &quot;right&quot;, pad = &quot;?&quot;) #一个标准写法，用？号补充，在填补在右边</code></pre>
+<pre><code>## [1] &quot;abXYZfgh??&quot; &quot;dlXYZwowjj&quot;</code></pre>
+<p>缩写字符串</p>
+<pre class="r"><code>str_trunc(x,3)</code></pre>
+<pre><code>## [1] &quot;...&quot; &quot;...&quot;</code></pre>
+<p>默认的最小缩写字符串长度就是3（“…”），因此直接显示为“…”。</p>
+<p>如果想缩写为2位，可以这样写：</p>
+<pre class="r"><code>str_trunc(x,2,ellipsis = &quot;.&quot;)</code></pre>
+<pre><code>## [1] &quot;a.&quot; &quot;d.&quot;</code></pre>
+</div>
+<div id="section-6" class="section level3">
+<h3>1.6 剔除字符串中的空格</h3>
+<pre class="r"><code>x &lt;- c(&quot;  a   &quot;, &quot;b   &quot;,  &quot;   c&quot;)
+str_trim(x)</code></pre>
+<pre><code>## [1] &quot;a&quot; &quot;b&quot; &quot;c&quot;</code></pre>
+</div>
+<div id="section-7" class="section level3">
+<h3>1.7 大小写转换+本地语言支持</h3>
+<pre class="r"><code>x &lt;- &quot;You are beautiful.&quot;
+str_to_lower(x) #转换为小写</code></pre>
+<pre><code>## [1] &quot;you are beautiful.&quot;</code></pre>
+<pre class="r"><code>str_to_upper(x) #转换为大写</code></pre>
+<pre><code>## [1] &quot;YOU ARE BEAUTIFUL.&quot;</code></pre>
+<pre class="r"><code>str_to_title(x) #首字母大写</code></pre>
+<pre><code>## [1] &quot;You Are Beautiful.&quot;</code></pre>
+<pre class="r"><code>x &lt;- &quot;i love you&quot;
+str_to_upper(x,locale = &quot;tr&quot;) #土耳其语,i带点</code></pre>
+<pre><code>## [1] &quot;I LOVE YOU&quot;</code></pre>
+<pre class="r"><code>#stringi::stri_locale_list() #语言支持列表</code></pre>
+</div>
+<div id="section-8" class="section level3">
+<h3>1.8 排名和排序</h3>
+<p>获得每个元素的排名</p>
+<pre class="r"><code>x &lt;- c(&quot;a&quot;,&quot;y&quot;,&quot;i&quot;,&quot;o&quot;)
+str_order(x)</code></pre>
+<pre><code>## [1] 1 3 4 2</code></pre>
+<pre class="r"><code>y &lt;- c(&quot;ac&quot;,&quot;oa&quot;,&quot;bp&quot;,&quot;oo&quot;)
+str_order(y)</code></pre>
+<pre><code>## [1] 1 3 2 4</code></pre>
+<p>对y中的元素进行排序</p>
+<pre class="r"><code>str_sort(y)</code></pre>
+<pre><code>## [1] &quot;ac&quot; &quot;bp&quot; &quot;oa&quot; &quot;oo&quot;</code></pre>
+<pre class="r"><code>#另外一种实现方式
+y[str_order(y)]</code></pre>
+<pre><code>## [1] &quot;ac&quot; &quot;bp&quot; &quot;oa&quot; &quot;oo&quot;</code></pre>
+<p>降序排列</p>
+<pre class="r"><code>str_sort(x=y,decreasing = TRUE)</code></pre>
+<pre><code>## [1] &quot;oo&quot; &quot;oa&quot; &quot;bp&quot; &quot;ac&quot;</code></pre>
+<p>字符类型的数字，支持按照数字大小排序</p>
+<pre class="r"><code>x &lt;- as.character(c(sample(1:100,5),1000))
+x</code></pre>
+<pre><code>## [1] &quot;18&quot;   &quot;86&quot;   &quot;29&quot;   &quot;48&quot;   &quot;52&quot;   &quot;1000&quot;</code></pre>
+<pre class="r"><code>str_sort(x)</code></pre>
+<pre><code>## [1] &quot;1000&quot; &quot;18&quot;   &quot;29&quot;   &quot;48&quot;   &quot;52&quot;   &quot;86&quot;</code></pre>
+<pre class="r"><code>str_sort(x,numeric =TRUE)</code></pre>
+<pre><code>## [1] &quot;18&quot;   &quot;29&quot;   &quot;48&quot;   &quot;52&quot;   &quot;86&quot;   &quot;1000&quot;</code></pre>
+</div>
+<div id="section-9" class="section level3">
+<h3>1.9 合并字符串</h3>
+<pre class="r"><code>str_c(&quot;I&quot;,&quot;love&quot;,&quot;this&quot;,&quot;world!&quot;,sep = &quot; &quot;)</code></pre>
+<pre><code>## [1] &quot;I love this world!&quot;</code></pre>
+<pre class="r"><code>str_c(c(&quot;2018&quot;,&quot;01&quot;,&quot;18&quot;),collapse = &quot;-&quot;)</code></pre>
+<pre><code>## [1] &quot;2018-01-18&quot;</code></pre>
+</div>
+</div>
+<div id="section-10" class="section level2">
+<h2>2 模式匹配</h2>
+<div id="regular-expression" class="section level3">
+<h3>2.1 正则表达 regular expression</h3>
+<p><code>str_view()</code>和<code>str_view_all()</code>用来展示正则表达式是如何匹配的，是学习正则表达式的好帮手。</p>
+<div id="section-11" class="section level4">
+<h4>2.1.1 基础匹配</h4>
+<pre class="r"><code>x &lt;- c(&quot;apple&quot;, &quot;banana&quot;, &quot;pear&quot;)
+str_view(x, &quot;an&quot;)</code></pre>
+<div id="htmlwidget-1" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1">{"x":{"html":"<ul>\n  <li>apple<\/li>\n  <li>b<span class='match'>an<\/span>ana<\/li>\n  <li>pear<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<p>接下来会稍微复杂一些，加入通配符<code>.</code>，匹配任何字符：</p>
+<pre class="r"><code>str_view(x,&quot;.a.&quot;)</code></pre>
+<div id="htmlwidget-2" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-2">{"x":{"html":"<ul>\n  <li>apple<\/li>\n  <li><span class='match'>ban<\/span>ana<\/li>\n  <li>p<span class='match'>ear<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<p>但是如何匹配字符串中的<code>.</code>呢？我们需要一个逃脱符，也就是反斜杠<code>\</code>，英文是blackflash，<code>\.</code>。</p>
+<p>但是这里有一个问题，那就是在普通字符串处理中，R也定义了<code>\</code>是一个逃脱符，而正则表达式又是通过字符串表达出来的，因此，为了匹配<code>.</code>，需要写为<code>\\.</code>。</p>
+<pre class="r"><code>writeLines(&quot;\\.&quot;)</code></pre>
+<pre><code>## \.</code></pre>
+<pre class="r"><code>str_view(&quot;b.a&quot;,&quot;\\.&quot;)</code></pre>
+<div id="htmlwidget-3" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-3">{"x":{"html":"<ul>\n  <li>b<span class='match'>.<\/span>a<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<p>那么另外一个问题是，如何匹配文字<code>\</code>。根据规则，应该是<code>\\</code>。但是，要想在R中输出<code>\\</code>字符串（两个反斜杠），我们每个前边都需要再加一个反斜杠，这就变成了四个反斜杠<code>\\\\</code>。</p>
+<pre class="r"><code>writeLines(&quot;\\\\&quot;)</code></pre>
+<pre><code>## \\</code></pre>
+<pre class="r"><code>str_view(&quot;a\\b&quot;,&quot;\\\\&quot;) </code></pre>
+<div id="htmlwidget-4" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-4">{"x":{"html":"<ul>\n  <li>a<span class='match'>\\<\/span>b<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="section-12" class="section level4">
+<h4>2.1.2 引导符</h4>
+<p>如何匹配开头或者结尾字符。</p>
+<p><code>^</code>用于匹配开头。</p>
+<p><code>$</code>用于匹配结尾。</p>
+<pre class="r"><code>x &lt;- c(&quot;apple&quot;, &quot;banana&quot;, &quot;pear&quot;)
+str_view(x, &quot;^a&quot;)</code></pre>
+<div id="htmlwidget-5" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-5">{"x":{"html":"<ul>\n  <li><span class='match'>a<\/span>pple<\/li>\n  <li>banana<\/li>\n  <li>pear<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<pre class="r"><code>str_view(x,&quot;a$&quot;)</code></pre>
+<div id="htmlwidget-6" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-6">{"x":{"html":"<ul>\n  <li>apple<\/li>\n  <li>banan<span class='match'>a<\/span><\/li>\n  <li>pear<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<pre class="r"><code>str_view(x,&quot;^pear$&quot;) #匹配完整字符串</code></pre>
+<p><div id="htmlwidget-7" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-7">{"x":{"html":"<ul>\n  <li>apple<\/li>\n  <li>banana<\/li>\n  <li><span class='match'>pear<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+如何匹配文字<code>$^$</code>？</p>
+<pre class="r"><code>str_view(&quot;$^$&quot;,&quot;\\$\\^\\$&quot;)</code></pre>
+<div id="htmlwidget-8" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-8">{"x":{"html":"<ul>\n  <li><span class='match'>$^$<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<p>一个小练习题，从<code>stringr::words</code>900多个单词中找出首字母是y的所有单词：</p>
+<pre class="r"><code>str_view(stringr::words,&quot;^y&quot;,match = TRUE)</code></pre>
+<p><div id="htmlwidget-9" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-9">{"x":{"html":"<ul>\n  <li><span class='match'>y<\/span>ear<\/li>\n  <li><span class='match'>y<\/span>es<\/li>\n  <li><span class='match'>y<\/span>esterday<\/li>\n  <li><span class='match'>y<\/span>et<\/li>\n  <li><span class='match'>y<\/span>ou<\/li>\n  <li><span class='match'>y<\/span>oung<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+结尾是x的所有单词：</p>
+<pre class="r"><code>str_view(stringr::words,&quot;x$&quot;,match = TRUE)</code></pre>
+<div id="htmlwidget-10" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-10">{"x":{"html":"<ul>\n  <li>bo<span class='match'>x<\/span><\/li>\n  <li>se<span class='match'>x<\/span><\/li>\n  <li>si<span class='match'>x<\/span><\/li>\n  <li>ta<span class='match'>x<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<p>列出长度为11的所有单词：</p>
+<pre class="r"><code>str_view(stringr::words,&quot;^.{11}$&quot;,match = TRUE)</code></pre>
+<div id="htmlwidget-11" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-11">{"x":{"html":"<ul>\n  <li><span class='match'>appropriate<\/span><\/li>\n  <li><span class='match'>environment<\/span><\/li>\n  <li><span class='match'>opportunity<\/span><\/li>\n  <li><span class='match'>responsible<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="section-13" class="section level4">
+<h4>2.1.2 匹配不同类型的字符</h4>
+<p><code>.</code>匹配任何字符，其他类型的字符包括：
+* <code>\d</code>匹配任何数字
+* <code>\s</code>匹配空格、制表符、换行符
+* <code>[abc]</code>匹配abc中的任一个字符
+* <code>[^abc]</code> 匹配除了abc以外的任一个字符</p>
+<p>小小练习题。</p>
+<p>查找元音字母打头的单词</p>
+<pre class="r"><code>str_view(stringr::words,&quot;^[aeiou]&quot;,match = TRUE)</code></pre>
+<div id="htmlwidget-12" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-12">{"x":{"html":"<ul>\n  <li><span class='match'>a<\/span><\/li>\n  <li><span class='match'>a<\/span>ble<\/li>\n  <li><span class='match'>a<\/span>bout<\/li>\n  <li><span class='match'>a<\/span>bsolute<\/li>\n  <li><span class='match'>a<\/span>ccept<\/li>\n  <li><span class='match'>a<\/span>ccount<\/li>\n  <li><span class='match'>a<\/span>chieve<\/li>\n  <li><span class='match'>a<\/span>cross<\/li>\n  <li><span class='match'>a<\/span>ct<\/li>\n  <li><span class='match'>a<\/span>ctive<\/li>\n  <li><span class='match'>a<\/span>ctual<\/li>\n  <li><span class='match'>a<\/span>dd<\/li>\n  <li><span class='match'>a<\/span>ddress<\/li>\n  <li><span class='match'>a<\/span>dmit<\/li>\n  <li><span class='match'>a<\/span>dvertise<\/li>\n  <li><span class='match'>a<\/span>ffect<\/li>\n  <li><span class='match'>a<\/span>fford<\/li>\n  <li><span class='match'>a<\/span>fter<\/li>\n  <li><span class='match'>a<\/span>fternoon<\/li>\n  <li><span class='match'>a<\/span>gain<\/li>\n  <li><span class='match'>a<\/span>gainst<\/li>\n  <li><span class='match'>a<\/span>ge<\/li>\n  <li><span class='match'>a<\/span>gent<\/li>\n  <li><span class='match'>a<\/span>go<\/li>\n  <li><span class='match'>a<\/span>gree<\/li>\n  <li><span class='match'>a<\/span>ir<\/li>\n  <li><span class='match'>a<\/span>ll<\/li>\n  <li><span class='match'>a<\/span>llow<\/li>\n  <li><span class='match'>a<\/span>lmost<\/li>\n  <li><span class='match'>a<\/span>long<\/li>\n  <li><span class='match'>a<\/span>lready<\/li>\n  <li><span class='match'>a<\/span>lright<\/li>\n  <li><span class='match'>a<\/span>lso<\/li>\n  <li><span class='match'>a<\/span>lthough<\/li>\n  <li><span class='match'>a<\/span>lways<\/li>\n  <li><span class='match'>a<\/span>merica<\/li>\n  <li><span class='match'>a<\/span>mount<\/li>\n  <li><span class='match'>a<\/span>nd<\/li>\n  <li><span class='match'>a<\/span>nother<\/li>\n  <li><span class='match'>a<\/span>nswer<\/li>\n  <li><span class='match'>a<\/span>ny<\/li>\n  <li><span class='match'>a<\/span>part<\/li>\n  <li><span class='match'>a<\/span>pparent<\/li>\n  <li><span class='match'>a<\/span>ppear<\/li>\n  <li><span class='match'>a<\/span>pply<\/li>\n  <li><span class='match'>a<\/span>ppoint<\/li>\n  <li><span class='match'>a<\/span>pproach<\/li>\n  <li><span class='match'>a<\/span>ppropriate<\/li>\n  <li><span class='match'>a<\/span>rea<\/li>\n  <li><span class='match'>a<\/span>rgue<\/li>\n  <li><span class='match'>a<\/span>rm<\/li>\n  <li><span class='match'>a<\/span>round<\/li>\n  <li><span class='match'>a<\/span>rrange<\/li>\n  <li><span class='match'>a<\/span>rt<\/li>\n  <li><span class='match'>a<\/span>s<\/li>\n  <li><span class='match'>a<\/span>sk<\/li>\n  <li><span class='match'>a<\/span>ssociate<\/li>\n  <li><span class='match'>a<\/span>ssume<\/li>\n  <li><span class='match'>a<\/span>t<\/li>\n  <li><span class='match'>a<\/span>ttend<\/li>\n  <li><span class='match'>a<\/span>uthority<\/li>\n  <li><span class='match'>a<\/span>vailable<\/li>\n  <li><span class='match'>a<\/span>ware<\/li>\n  <li><span class='match'>a<\/span>way<\/li>\n  <li><span class='match'>a<\/span>wful<\/li>\n  <li><span class='match'>e<\/span>ach<\/li>\n  <li><span class='match'>e<\/span>arly<\/li>\n  <li><span class='match'>e<\/span>ast<\/li>\n  <li><span class='match'>e<\/span>asy<\/li>\n  <li><span class='match'>e<\/span>at<\/li>\n  <li><span class='match'>e<\/span>conomy<\/li>\n  <li><span class='match'>e<\/span>ducate<\/li>\n  <li><span class='match'>e<\/span>ffect<\/li>\n  <li><span class='match'>e<\/span>gg<\/li>\n  <li><span class='match'>e<\/span>ight<\/li>\n  <li><span class='match'>e<\/span>ither<\/li>\n  <li><span class='match'>e<\/span>lect<\/li>\n  <li><span class='match'>e<\/span>lectric<\/li>\n  <li><span class='match'>e<\/span>leven<\/li>\n  <li><span class='match'>e<\/span>lse<\/li>\n  <li><span class='match'>e<\/span>mploy<\/li>\n  <li><span class='match'>e<\/span>ncourage<\/li>\n  <li><span class='match'>e<\/span>nd<\/li>\n  <li><span class='match'>e<\/span>ngine<\/li>\n  <li><span class='match'>e<\/span>nglish<\/li>\n  <li><span class='match'>e<\/span>njoy<\/li>\n  <li><span class='match'>e<\/span>nough<\/li>\n  <li><span class='match'>e<\/span>nter<\/li>\n  <li><span class='match'>e<\/span>nvironment<\/li>\n  <li><span class='match'>e<\/span>qual<\/li>\n  <li><span class='match'>e<\/span>special<\/li>\n  <li><span class='match'>e<\/span>urope<\/li>\n  <li><span class='match'>e<\/span>ven<\/li>\n  <li><span class='match'>e<\/span>vening<\/li>\n  <li><span class='match'>e<\/span>ver<\/li>\n  <li><span class='match'>e<\/span>very<\/li>\n  <li><span class='match'>e<\/span>vidence<\/li>\n  <li><span class='match'>e<\/span>xact<\/li>\n  <li><span class='match'>e<\/span>xample<\/li>\n  <li><span class='match'>e<\/span>xcept<\/li>\n  <li><span class='match'>e<\/span>xcuse<\/li>\n  <li><span class='match'>e<\/span>xercise<\/li>\n  <li><span class='match'>e<\/span>xist<\/li>\n  <li><span class='match'>e<\/span>xpect<\/li>\n  <li><span class='match'>e<\/span>xpense<\/li>\n  <li><span class='match'>e<\/span>xperience<\/li>\n  <li><span class='match'>e<\/span>xplain<\/li>\n  <li><span class='match'>e<\/span>xpress<\/li>\n  <li><span class='match'>e<\/span>xtra<\/li>\n  <li><span class='match'>e<\/span>ye<\/li>\n  <li><span class='match'>i<\/span>dea<\/li>\n  <li><span class='match'>i<\/span>dentify<\/li>\n  <li><span class='match'>i<\/span>f<\/li>\n  <li><span class='match'>i<\/span>magine<\/li>\n  <li><span class='match'>i<\/span>mportant<\/li>\n  <li><span class='match'>i<\/span>mprove<\/li>\n  <li><span class='match'>i<\/span>n<\/li>\n  <li><span class='match'>i<\/span>nclude<\/li>\n  <li><span class='match'>i<\/span>ncome<\/li>\n  <li><span class='match'>i<\/span>ncrease<\/li>\n  <li><span class='match'>i<\/span>ndeed<\/li>\n  <li><span class='match'>i<\/span>ndividual<\/li>\n  <li><span class='match'>i<\/span>ndustry<\/li>\n  <li><span class='match'>i<\/span>nform<\/li>\n  <li><span class='match'>i<\/span>nside<\/li>\n  <li><span class='match'>i<\/span>nstead<\/li>\n  <li><span class='match'>i<\/span>nsure<\/li>\n  <li><span class='match'>i<\/span>nterest<\/li>\n  <li><span class='match'>i<\/span>nto<\/li>\n  <li><span class='match'>i<\/span>ntroduce<\/li>\n  <li><span class='match'>i<\/span>nvest<\/li>\n  <li><span class='match'>i<\/span>nvolve<\/li>\n  <li><span class='match'>i<\/span>ssue<\/li>\n  <li><span class='match'>i<\/span>t<\/li>\n  <li><span class='match'>i<\/span>tem<\/li>\n  <li><span class='match'>o<\/span>bvious<\/li>\n  <li><span class='match'>o<\/span>ccasion<\/li>\n  <li><span class='match'>o<\/span>dd<\/li>\n  <li><span class='match'>o<\/span>f<\/li>\n  <li><span class='match'>o<\/span>ff<\/li>\n  <li><span class='match'>o<\/span>ffer<\/li>\n  <li><span class='match'>o<\/span>ffice<\/li>\n  <li><span class='match'>o<\/span>ften<\/li>\n  <li><span class='match'>o<\/span>kay<\/li>\n  <li><span class='match'>o<\/span>ld<\/li>\n  <li><span class='match'>o<\/span>n<\/li>\n  <li><span class='match'>o<\/span>nce<\/li>\n  <li><span class='match'>o<\/span>ne<\/li>\n  <li><span class='match'>o<\/span>nly<\/li>\n  <li><span class='match'>o<\/span>pen<\/li>\n  <li><span class='match'>o<\/span>perate<\/li>\n  <li><span class='match'>o<\/span>pportunity<\/li>\n  <li><span class='match'>o<\/span>ppose<\/li>\n  <li><span class='match'>o<\/span>r<\/li>\n  <li><span class='match'>o<\/span>rder<\/li>\n  <li><span class='match'>o<\/span>rganize<\/li>\n  <li><span class='match'>o<\/span>riginal<\/li>\n  <li><span class='match'>o<\/span>ther<\/li>\n  <li><span class='match'>o<\/span>therwise<\/li>\n  <li><span class='match'>o<\/span>ught<\/li>\n  <li><span class='match'>o<\/span>ut<\/li>\n  <li><span class='match'>o<\/span>ver<\/li>\n  <li><span class='match'>o<\/span>wn<\/li>\n  <li><span class='match'>u<\/span>nder<\/li>\n  <li><span class='match'>u<\/span>nderstand<\/li>\n  <li><span class='match'>u<\/span>nion<\/li>\n  <li><span class='match'>u<\/span>nit<\/li>\n  <li><span class='match'>u<\/span>nite<\/li>\n  <li><span class='match'>u<\/span>niversity<\/li>\n  <li><span class='match'>u<\/span>nless<\/li>\n  <li><span class='match'>u<\/span>ntil<\/li>\n  <li><span class='match'>u<\/span>p<\/li>\n  <li><span class='match'>u<\/span>pon<\/li>\n  <li><span class='match'>u<\/span>se<\/li>\n  <li><span class='match'>u<\/span>sual<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<p>那些单词结尾是“ed”但不是“eed”的单词：</p>
+<pre class="r"><code>str_view(stringr::words,&quot;[^e]ed$&quot;,match = TRUE)</code></pre>
+<div id="htmlwidget-13" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-13">{"x":{"html":"<ul>\n  <li><span class='match'>bed<\/span><\/li>\n  <li>hund<span class='match'>red<\/span><\/li>\n  <li><span class='match'>red<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<p>筛选出结尾是ing或者ise的单词</p>
+<pre class="r"><code>str_view(stringr::words,&quot;ing|ise$&quot;,match = TRUE)</code></pre>
+<div id="htmlwidget-14" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-14">{"x":{"html":"<ul>\n  <li>advert<span class='match'>ise<\/span><\/li>\n  <li>br<span class='match'>ing<\/span><\/li>\n  <li>dur<span class='match'>ing<\/span><\/li>\n  <li>even<span class='match'>ing<\/span><\/li>\n  <li>exerc<span class='match'>ise<\/span><\/li>\n  <li>k<span class='match'>ing<\/span><\/li>\n  <li>mean<span class='match'>ing<\/span><\/li>\n  <li>morn<span class='match'>ing<\/span><\/li>\n  <li>otherw<span class='match'>ise<\/span><\/li>\n  <li>pract<span class='match'>ise<\/span><\/li>\n  <li>ra<span class='match'>ise<\/span><\/li>\n  <li>real<span class='match'>ise<\/span><\/li>\n  <li>r<span class='match'>ing<\/span><\/li>\n  <li>r<span class='match'>ise<\/span><\/li>\n  <li>s<span class='match'>ing<\/span><\/li>\n  <li>s<span class='match'>ing<\/span>le<\/li>\n  <li>surpr<span class='match'>ise<\/span><\/li>\n  <li>th<span class='match'>ing<\/span><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+<p>验证字母q后边是否总是跟着字母u，也就是说查找那些q后边不是u的单词：</p>
+<pre class="r"><code>str_view(words,&quot;q[^u]&quot;,match = TRUE)</code></pre>
+<p><div id="htmlwidget-15" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-15">{"x":{"html":"<ul>\n  <li><\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+结果是没找到。</p>
+<p>验证另外一个字母搭配规则，i在e前或者是在c后边。</p>
+<pre class="r"><code>str_view(words,&quot;ie|ci&quot;,match = TRUE)</code></pre>
+<div id="htmlwidget-16" style="width:960px;height:100%;" class="str_view html-widget"></div>
+<script type="application/json" data-for="htmlwidget-16">{"x":{"html":"<ul>\n  <li>ach<span class='match'>ie<\/span>ve<\/li>\n  <li>asso<span class='match'>ci<\/span>ate<\/li>\n  <li>bel<span class='match'>ie<\/span>ve<\/li>\n  <li>br<span class='match'>ie<\/span>f<\/li>\n  <li><span class='match'>ci<\/span>ty<\/li>\n  <li>cl<span class='match'>ie<\/span>nt<\/li>\n  <li>coun<span class='match'>ci<\/span>l<\/li>\n  <li>de<span class='match'>ci<\/span>de<\/li>\n  <li>de<span class='match'>ci<\/span>sion<\/li>\n  <li>d<span class='match'>ie<\/span><\/li>\n  <li>espe<span class='match'>ci<\/span>al<\/li>\n  <li>exer<span class='match'>ci<\/span>se<\/li>\n  <li>exper<span class='match'>ie<\/span>nce<\/li>\n  <li>f<span class='match'>ie<\/span>ld<\/li>\n  <li>fr<span class='match'>ie<\/span>nd<\/li>\n  <li>l<span class='match'>ie<\/span><\/li>\n  <li>p<span class='match'>ie<\/span>ce<\/li>\n  <li>qu<span class='match'>ie<\/span>t<\/li>\n  <li>s<span class='match'>ci<\/span>ence<\/li>\n  <li>so<span class='match'>ci<\/span>al<\/li>\n  <li>so<span class='match'>ci<\/span>ety<\/li>\n  <li>spe<span class='match'>ci<\/span>al<\/li>\n  <li>spe<span class='match'>ci<\/span>fic<\/li>\n  <li>t<span class='match'>ie<\/span><\/li>\n  <li>v<span class='match'>ie<\/span>w<\/li>\n<\/ul>"},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+</div>

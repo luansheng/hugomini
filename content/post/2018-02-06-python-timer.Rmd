@@ -1,0 +1,29 @@
+---
+title: python 定时器
+author: Sheng Luan
+date: '2018-02-06'
+slug: python-timer
+categories:
+  - 编程
+tags:
+  - python
+---
+
+栾佳硕给出的作业，要求三秒钟打印出一个随机小数:
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(engine = 'python')
+```
+
+
+```{python}
+# -*- coding: utf-8 -*-
+import random
+import time
+seconds = 3
+counter = 1
+while counter <= 5:
+    print("第%i个两位小数是%.2f" %(counter,random.uniform(0,1)))
+    counter += 1
+    time.sleep(seconds)
+```

@@ -1,0 +1,229 @@
+---
+title: data.table学习笔记1
+author: Sheng Luan
+date: '2017-07-03'
+categories:
+  - R
+  - 数据清洗
+tags:
+  - Data.table
+  - R
+slug: data-table-note-1
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+data.table的特点：**减小计算复杂度**，降低**计算时间**。  
+
+# 1.数据
+
+教程中，使用[NYC-flights14数据集](https://raw.githubusercontent.com/wiki/arunsrinivasan/    flights/NYCflights14/flights14.csv)，纽约机场2014年出发的所有航班信息，时间是2014.01-10月份。下载到本地目录，与Rmd代码在同一目录
+data.table中提供了fread()函数，用于快速读取大数据。  
+执行代码前，首先运行`setwd()`或者通过rstudio软件`Session` -> `Set Working Directory` -> `To Source File Location`，将工作目录切换到代码文件和数据文件所在路径。
+```{r}
+require(data.table)
+flights <- fread("datasets/flights14.csv")
+flights
+class(flights)
+```
+# 2.基础
+
+flights的类型显示为data.table和data.frame。也可以通过`as.data.table()`将对象转化为data.table类型。  
+读取形式 语法如下所示：
+
+```
+DT[i, j, by]
+```
+其中i表示行过滤（实际上按照行选择数据集），j表示对列进行选择，by表示根据什么条件进行分组。  
+
+## 2.1行过滤
+
+首先来看一下，如何对行进行过滤。譬如要获得6月份从JFK机场起飞，途径纽约或者终点是纽约的航班信息。  
+```{r}
+flights.JFK <-  flights[origin=="JFK" & month == 6L]
+head(flights.JFK)
+```
+data.table的语法跟dplyr类似，不需要加上数据框名（`flights$origin`）,大幅度简化。  
+另外一种写法`flights.JFK <-  flights[origin=="JFK" & month == 6L,,]`也是可以的。这种写法，在data frame是不行的。  
+## 行排序
+可以利用`order()`函数来完成。
+```{r}
+flights.sort <- flights[order(origin,-dest),]
+head(flights.sort)
+```
+`order()`实际上调用了data.table的快速基数排序函数`forder()`。
+
+## 2.2选择列
+
+```{r}
+flights.arr_delay <- flights[,arr_delay]
+head(flights.arr_delay)
+```
+请注意，返回值是向量。  
+如果想返回值是data.table，需要在列名称前加一个list
+```{r}
+flights.arr_delay.dt <- flights[,list(arr_delay)]
+head(flights.arr_delay.dt)
+```
+`list()`也可以用`.()`代替，提高写作效率。
+```{r}
+flights.arr_delay.dt.2 <- flights[,.(arr_delay)]
+head(flights.arr_delay.dt.2)
+```
+继续选取两列,列变量名称用`.()`包括，返回data.table类型。
+```{r}
+flights.arr_delay.dep_delay <- flights[,.(arr_delay,dep_delay)]
+head(flights.arr_delay.dep_delay)
+```
+另外一种形式：
+```{r}
+flights.arr_delay.dep_delay <- flights[,c("arr_delay","dep_delay"),with=FALSE]
+head(flights.arr_delay.dep_delay)
+class(flights.arr_delay.dep_delay)
+```
+
+直接对列变量重新命名
+```{r}
+flights.new <- flights[,.(delay_arr = arr_delay, delay_dep = dep_delay)]
+```
+
+## 2.3列运算
+
+这是个新概念，理解起来有些困难。先看例子,计算有多少个航班没有延误。  
+具体的计算逻辑是这样的：到达和出发延迟时间均为负值，那么`(arr_delay+dep_delay)<0`如果为真，表示该航班延误了，那么这个表达式的值是TRUE，同时也等于1，再进行sum()求和，实际上获得了延误航班的总数。
+```{r}
+flights.nodelay.num <- flights[,sum((arr_delay+dep_delay)<0)]
+flights.nodelay.num
+```
+从上式中，可以看出,`sum((arr_delay+dep_delay)<0)`实际上是针对数据集的一个操作，只是在`[]`内完成而已。
+
+进一步看下一个例子：计算6月份从JFK机场起飞的航班中，起飞和延误的平均时间:
+```{r}
+flights.JFK.stats <- flights[origin == "JFK" & month == 6L,
+                             .(m_arr=mean(arr_delay),m_dep=mean(dep_delay))]
+flights.JFK.stats
+class(flights.JFK.stats)
+```
+这种操作跟dplyr中的summarise函数的功能是类似的。虽然网上说dplyr更加容易操作和理解，但是就我本人而言，data.table这种操作方式更加简洁，好用。  
+来自 http://blog.csdn.net/smart_xiao_xiong/article/details/51658262 的解释（性能更好的原因，同时提取符合条件的列和行，而不是分步，先行后列）：  
+
+* 我们首先在i参数里，找到所有符合 origin (机场)是"JFK"，并且 month (月份)是 6 这样条件的行。此时，我们还没有subset整个data.table。
+* 现在，我们看看参数j，它只使用了两列。我们需要分别计算这两列的平均值 mean()。这个时候，我们才subset那些符合i参数里条件的列，然后计算它们的平均值。
+因为这三个参数（i，j和by）都被指定在同一个方括号中，data.table能同时接受这三个参数，并在计算之前，选取最优的计算方法，而不是分步骤计算。所以，我们可以避免对整个data.table计算，同时，在计算速度和内存使用量这两方面，取得最优的效果。
+
+如果我们想看一下，从JFK机场起飞的航班一共有多少架次。
+  
+```{r}
+flights.JFK.num <- flights[origin == "JFK" & month == 6L,length(dest)]
+flights.JFK.num
+```
+其实，我只是需要知道符合条件的行数，`length()`中的参数理论上可以是任何一列。data.table中定义了一个内建的变量`.N`，表示当前的分组中对象的数目。因此上边的代码，可以写的更加简洁和可理解。
+```{r}
+flights.JFK.num <- flights[origin == "JFK" & month == 6L, .N]
+flights.JFK.num
+```
+# 3.聚合
+
+## 3.1 分组
+
+获得每个机场起飞航班数
+```{r}
+flights.dep.num.per.airport <- flights[,.(.N),by=.(origin)]
+flights.dep.num.per.airport
+```
+当参数j和by，也就是第2个和第3个参数只有1列时，可以不用`.()`。上述代码可以简化为：
+```{r}
+flights.dep.num.per.airport <- flights[,.N,by=origin]
+flights.dep.num.per.airport
+```
+获取一个制定航空公司在每个机场的起飞航班数，譬如美航（AA）。
+在`i`参数中设置条件过滤需要的行。
+```{r}
+flights.AA.dep.num.per.airport <- flights[carrier == "AA",.(.N),by=.(origin)]
+flights.AA.dep.num.per.airport
+```
+获取AA航空公司在所有机场起飞和降落的航班数
+```{r}
+flights.AA.dep.dest.num.per.airport <- flights[carrier == "AA",.(.N),by=.(origin,dest)]
+flights.AA.dep.dest.num.per.airport
+```
+想进一步分析在所有机场，每个月起降的平均延误时间。
+```{r}
+flights.AA.dep.dest.stats.per.airport <- flights[carrier == "AA",.(.N,MeanArrDelay=mean(arr_delay),MeanDepDelay=mean(dep_delay)),by=.(origin,dest,month)]
+flights.AA.dep.dest.stats.per.airport
+
+```
+分组结果如何按照升降序排列。需要keyby参数代替by。
+```{r}
+flights.AA.dep.dest.stats.per.airport <- flights[carrier == "AA",.(.N,MeanArrDelay=mean(arr_delay),MeanDepDelay=mean(dep_delay)),keyby=.(origin,dest,month)]
+flights.AA.dep.dest.stats.per.airport
+```
+
+## 3.2 管道符 chaining
+
+类似于 %>% ，实现连续操作，避免中间变量的生成。这个是非常强大的操作。
+```{r}
+ans <- flights[carrier == "AA", .N, by=.(origin, dest)][order(origin, -dest)]
+head(ans,10)
+```
+可以多个表达式链接`DT[...][...][...][...]`，另外一种形式，也是可以接受的：  
+```
+DT[...
+][...
+][...
+]
+```
+
+## 3.3 by参数表达式
+
+参数by也可以接受表达式
+譬如，想看一下有多少航班起飞延误但却提前／准时到达的，有多少航班起飞和到达都延误了。
+```{r}
+ans <- flights[, .N, .(dep_delay>0, arr_delay>0)]
+ans
+```
+这也是一个比较牛逼的用法。
+
+## 3.4 对多列同时进行统一运算
+
+譬如有1000列，要对每一列进行均值计算。传统可以通过lapply函数来进行。如果存在分组的情况，该如何操作？data.table提供了`.SD`，表示Subset of Data，本身是一个data.table，包括**通过by分组后的每一组**。
+实例来看一下，对于起飞机场的一个分组
+```{r}
+flights.SD <- flights[,.(origin,dep_time,arr_time,air_time,distance,hour,min)][,.SD,by=origin]
+flights.SD
+```
+每个分组，按照origin整齐排列。
+对于除了分组列外的其他列，统一求平均值，并且保留两位小数。
+```{r}
+flights.SD.mean <- flights[,.(origin,dep_time,arr_time,air_time,distance,hour,min)][,lapply(.SD,mean),by=origin][,round(.SD,2),by=origin]
+flights.SD.mean
+```
+如何进一步获取制定列的均值。答案是通过.SDcols参数。
+```{r}
+flights.SD.mean <- flights[,.(origin,dep_time,arr_time,air_time,distance,hour,min)][,lapply(.SD,mean),.SDcols=c("dep_time","arr_time"),by=origin][,round(.SD,2),by=origin]
+flights.SD.mean
+```
+
+实现类似melt的功能，把多列合并为一列。
+首先生成一个数据集
+```{r}
+DT = data.table(ID = c("b","b","b","a","a","c"), a = 1:6, b = 7:12, c=13:18)
+DT
+```
+然后，把a，b，c三列合并为1列。
+```{r}
+DT.new <- DT[,.(abc=c(a,b,c)),by=ID]
+DT.new
+```
+
+j参数非常强大，也可以a,b,c三列的结果，作为一个列表返回。
+```{r}
+DT.new.list <- DT[,.(abc=list(c(a,b,c))),by=ID]
+DT.new.list
+```
+合并a，b，c三列，作为字符串。
+```{r}
+DT.new.str <- DT[,.(abc=paste(a,b,c,sep = "")),by=ID]
+DT.new.str
+```

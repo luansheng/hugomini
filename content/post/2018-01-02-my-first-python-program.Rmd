@@ -1,0 +1,22 @@
+---
+title: 我的第一个python程序
+author: sheng luan
+date: '2018-01-02'
+slug: my-first-python-program
+categories:
+  - python
+tags:
+  - pyhton
+  - pandas
+---
+
+参考[pandas官网](http://pandas.pydata.org/)，[十分钟教程](http://pandas.pydata.org/pandas-docs/stable/10min.html)
+
+```{python}
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+s = pd.Series([1,3,5,np.nan,6,8])
+print(s)
+```
+

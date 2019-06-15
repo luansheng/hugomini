@@ -1,0 +1,377 @@
+---
+title: 在R中使用windows系统自带的中文字体
+author: Sheng Luan
+date: '2017-12-31'
+slug: using-other-system-chinese-fonts-in-r
+categories:
+  - R
+tags:
+  - font
+  - showtext
+---
+
+
+
+<p>R作图时，如何在图片中使用windows系统自带的其他中文字体？以前尝试过好几次，都没有成功。</p>
+<p>首先安装二个包：</p>
+<ul>
+<li><a href="https://cran.r-project.org/web/packages/sysfonts/index.html">sysfonts</a></li>
+<li><a href="https://cran.r-project.org/web/packages/showtext/index.html">showtext</a></li>
+</ul>
+<p>R中自带的默认字体家族，可以通过sysfonts::font.families()函数查看：</p>
+<pre class="r"><code>require(sysfonts)</code></pre>
+<pre><code>## Loading required package: sysfonts</code></pre>
+<pre class="r"><code>require(showtext)</code></pre>
+<pre><code>## Loading required package: showtext</code></pre>
+<pre><code>## Loading required package: showtextdb</code></pre>
+<pre class="r"><code>font_families()</code></pre>
+<pre><code>## [1] &quot;sans&quot;         &quot;serif&quot;        &quot;mono&quot;         &quot;wqy-microhei&quot;</code></pre>
+<p>R中自带的三种标准字体家族为：<a href="https://baike.baidu.com/item/衬线字体/6820704?fr=aladdin">serif</a>（衬线）、<a href="https://baike.baidu.com/item/无衬线体/2374029">sans</a>（无衬线）和<a href="https://baike.baidu.com/item/等宽字体/8434037?fr=aladdin">mono</a>（等宽）三类。</p>
+<p>如果想使用Windows系统中自带的中文字体，首先查看系统中字体存储路径：</p>
+<pre class="r"><code>font_paths()</code></pre>
+<pre><code>## [1] &quot;C:\\Windows\\Fonts&quot;</code></pre>
+<p>进一步查看有哪些可以利用的字体文件：</p>
+<pre class="r"><code>font_files()</code></pre>
+<pre><code>##                 path             file                   family        face
+## 1   C:/Windows/Fonts        arial.ttf                    Arial     Regular
+## 2   C:/Windows/Fonts      arialbd.ttf                    Arial        Bold
+## 3   C:/Windows/Fonts      arialbi.ttf                    Arial Bold Italic
+## 4   C:/Windows/Fonts       ariali.ttf                    Arial      Italic
+## 5   C:/Windows/Fonts       ariblk.ttf              Arial Black     Regular
+## 6   C:/Windows/Fonts  bahnschrift.ttf              Bahnschrift     Regular
+## 7   C:/Windows/Fonts      calibri.ttf                  Calibri     Regular
+## 8   C:/Windows/Fonts     calibrib.ttf                  Calibri        Bold
+## 9   C:/Windows/Fonts     calibrii.ttf                  Calibri      Italic
+## 10  C:/Windows/Fonts     calibril.ttf            Calibri Light     Regular
+## 11  C:/Windows/Fonts    calibrili.ttf            Calibri Light      Italic
+## 12  C:/Windows/Fonts     calibriz.ttf                  Calibri Bold Italic
+## 13  C:/Windows/Fonts      cambria.ttc                  Cambria     Regular
+## 14  C:/Windows/Fonts     cambriab.ttf                  Cambria        Bold
+## 15  C:/Windows/Fonts     cambriai.ttf                  Cambria      Italic
+## 16  C:/Windows/Fonts     cambriaz.ttf                  Cambria Bold Italic
+## 17  C:/Windows/Fonts      Candara.ttf                  Candara     Regular
+## 18  C:/Windows/Fonts     Candarab.ttf                  Candara        Bold
+## 19  C:/Windows/Fonts     Candarai.ttf                  Candara      Italic
+## 20  C:/Windows/Fonts     Candaral.ttf            Candara Light     Regular
+## 21  C:/Windows/Fonts    Candarali.ttf            Candara Light      Italic
+## 22  C:/Windows/Fonts     Candaraz.ttf                  Candara Bold Italic
+## 23  C:/Windows/Fonts        comic.ttf            Comic Sans MS     Regular
+## 24  C:/Windows/Fonts      comicbd.ttf            Comic Sans MS        Bold
+## 25  C:/Windows/Fonts       comici.ttf            Comic Sans MS      Italic
+## 26  C:/Windows/Fonts       comicz.ttf            Comic Sans MS Bold Italic
+## 27  C:/Windows/Fonts      consola.ttf                 Consolas     Regular
+## 28  C:/Windows/Fonts     consolab.ttf                 Consolas        Bold
+## 29  C:/Windows/Fonts     consolai.ttf                 Consolas      Italic
+## 30  C:/Windows/Fonts     consolaz.ttf                 Consolas Bold Italic
+## 31  C:/Windows/Fonts      constan.ttf               Constantia     Regular
+## 32  C:/Windows/Fonts     constanb.ttf               Constantia        Bold
+## 33  C:/Windows/Fonts     constani.ttf               Constantia      Italic
+## 34  C:/Windows/Fonts     constanz.ttf               Constantia Bold Italic
+## 35  C:/Windows/Fonts       corbel.ttf                   Corbel     Regular
+## 36  C:/Windows/Fonts      corbelb.ttf                   Corbel        Bold
+## 37  C:/Windows/Fonts      corbeli.ttf                   Corbel      Italic
+## 38  C:/Windows/Fonts      corbell.ttf             Corbel Light     Regular
+## 39  C:/Windows/Fonts     corbelli.ttf             Corbel Light      Italic
+## 40  C:/Windows/Fonts      corbelz.ttf                   Corbel Bold Italic
+## 41  C:/Windows/Fonts         cour.ttf              Courier New     Regular
+## 42  C:/Windows/Fonts       courbd.ttf              Courier New        Bold
+## 43  C:/Windows/Fonts       courbi.ttf              Courier New Bold Italic
+## 44  C:/Windows/Fonts        couri.ttf              Courier New      Italic
+## 45  C:/Windows/Fonts         Deng.ttf                 DengXian     Regular
+## 46  C:/Windows/Fonts        Dengb.ttf                 DengXian        Bold
+## 47  C:/Windows/Fonts        Dengl.ttf           DengXian Light     Regular
+## 48  C:/Windows/Fonts       ebrima.ttf                   Ebrima     Regular
+## 49  C:/Windows/Fonts     ebrimabd.ttf                   Ebrima        Bold
+## 50  C:/Windows/Fonts        framd.ttf   Franklin Gothic Medium     Regular
+## 51  C:/Windows/Fonts      framdit.ttf   Franklin Gothic Medium      Italic
+## 52  C:/Windows/Fonts     Gabriola.ttf                 Gabriola     Regular
+## 53  C:/Windows/Fonts       gadugi.ttf                   Gadugi     Regular
+## 54  C:/Windows/Fonts      gadugib.ttf                   Gadugi        Bold
+## 55  C:/Windows/Fonts      georgia.ttf                  Georgia     Regular
+## 56  C:/Windows/Fonts     georgiab.ttf                  Georgia        Bold
+## 57  C:/Windows/Fonts     georgiai.ttf                  Georgia      Italic
+## 58  C:/Windows/Fonts     georgiaz.ttf                  Georgia Bold Italic
+## 59  C:/Windows/Fonts     himalaya.ttf       Microsoft Himalaya     Regular
+## 60  C:/Windows/Fonts     holomdl2.ttf     HoloLens MDL2 Assets     Regular
+## 61  C:/Windows/Fonts       impact.ttf                   Impact     Regular
+## 62  C:/Windows/Fonts      Inkfree.ttf                 Ink Free     Regular
+## 63  C:/Windows/Fonts     javatext.ttf            Javanese Text     Regular
+## 64  C:/Windows/Fonts      l_10646.ttf      Lucida Sans Unicode     Regular
+## 65  C:/Windows/Fonts     LeelaUIb.ttf            Leelawadee UI        Bold
+## 66  C:/Windows/Fonts     LeelawUI.ttf            Leelawadee UI     Regular
+## 67  C:/Windows/Fonts     LeelUIsl.ttf  Leelawadee UI Semilight     Regular
+## 68  C:/Windows/Fonts        lucon.ttf           Lucida Console     Regular
+## 69  C:/Windows/Fonts       malgun.ttf            Malgun Gothic     Regular
+## 70  C:/Windows/Fonts     malgunbd.ttf            Malgun Gothic        Bold
+## 71  C:/Windows/Fonts     malgunsl.ttf  Malgun Gothic Semilight     Regular
+## 72  C:/Windows/Fonts      marlett.ttf                  Marlett     Regular
+## 73  C:/Windows/Fonts      micross.ttf     Microsoft Sans Serif     Regular
+## 74  C:/Windows/Fonts     mingliub.ttc             MingLiU-ExtB     Regular
+## 75  C:/Windows/Fonts      mmrtext.ttf             Myanmar Text     Regular
+## 76  C:/Windows/Fonts     mmrtextb.ttf             Myanmar Text        Bold
+## 77  C:/Windows/Fonts     monbaiti.ttf          Mongolian Baiti     Regular
+## 78  C:/Windows/Fonts     msgothic.ttc                MS Gothic     Regular
+## 79  C:/Windows/Fonts         msjh.ttc       Microsoft JhengHei     Regular
+## 80  C:/Windows/Fonts       msjhbd.ttc       Microsoft JhengHei        Bold
+## 81  C:/Windows/Fonts        msjhl.ttc Microsoft JhengHei Light     Regular
+## 82  C:/Windows/Fonts         msyh.ttc          Microsoft YaHei     Regular
+## 83  C:/Windows/Fonts       msyhbd.ttc          Microsoft YaHei        Bold
+## 84  C:/Windows/Fonts        msyhl.ttc    Microsoft YaHei Light     Regular
+## 85  C:/Windows/Fonts         msyi.ttf       Microsoft Yi Baiti     Regular
+## 86  C:/Windows/Fonts       mvboli.ttf                  MV Boli     Regular
+## 87  C:/Windows/Fonts      Nirmala.ttf               Nirmala UI     Regular
+## 88  C:/Windows/Fonts     NirmalaB.ttf               Nirmala UI        Bold
+## 89  C:/Windows/Fonts     NirmalaS.ttf     Nirmala UI Semilight     Regular
+## 90  C:/Windows/Fonts       ntailu.ttf    Microsoft New Tai Lue     Regular
+## 91  C:/Windows/Fonts      ntailub.ttf    Microsoft New Tai Lue        Bold
+## 92  C:/Windows/Fonts         pala.ttf        Palatino Linotype     Regular
+## 93  C:/Windows/Fonts        palab.ttf        Palatino Linotype        Bold
+## 94  C:/Windows/Fonts       palabi.ttf        Palatino Linotype Bold Italic
+## 95  C:/Windows/Fonts        palai.ttf        Palatino Linotype      Italic
+## 96  C:/Windows/Fonts      phagspa.ttf        Microsoft PhagsPa     Regular
+## 97  C:/Windows/Fonts     phagspab.ttf        Microsoft PhagsPa        Bold
+## 98  C:/Windows/Fonts      segmdl2.ttf        Segoe MDL2 Assets     Regular
+## 99  C:/Windows/Fonts      segoepr.ttf              Segoe Print     Regular
+## 100 C:/Windows/Fonts     segoeprb.ttf              Segoe Print        Bold
+## 101 C:/Windows/Fonts      segoesc.ttf             Segoe Script     Regular
+## 102 C:/Windows/Fonts     segoescb.ttf             Segoe Script        Bold
+## 103 C:/Windows/Fonts      segoeui.ttf                 Segoe UI     Regular
+## 104 C:/Windows/Fonts     segoeuib.ttf                 Segoe UI        Bold
+## 105 C:/Windows/Fonts     segoeuii.ttf                 Segoe UI      Italic
+## 106 C:/Windows/Fonts     segoeuil.ttf           Segoe UI Light     Regular
+## 107 C:/Windows/Fonts    segoeuisl.ttf       Segoe UI Semilight     Regular
+## 108 C:/Windows/Fonts     segoeuiz.ttf                 Segoe UI Bold Italic
+## 109 C:/Windows/Fonts      seguibl.ttf           Segoe UI Black     Regular
+## 110 C:/Windows/Fonts     seguibli.ttf           Segoe UI Black      Italic
+## 111 C:/Windows/Fonts     seguiemj.ttf           Segoe UI Emoji     Regular
+## 112 C:/Windows/Fonts     seguihis.ttf        Segoe UI Historic     Regular
+## 113 C:/Windows/Fonts      seguili.ttf           Segoe UI Light      Italic
+## 114 C:/Windows/Fonts      seguisb.ttf        Segoe UI Semibold     Regular
+## 115 C:/Windows/Fonts     seguisbi.ttf        Segoe UI Semibold      Italic
+## 116 C:/Windows/Fonts     seguisli.ttf       Segoe UI Semilight      Italic
+## 117 C:/Windows/Fonts     seguisym.ttf          Segoe UI Symbol     Regular
+## 118 C:/Windows/Fonts      simfang.ttf                 FangSong     Regular
+## 119 C:/Windows/Fonts       simhei.ttf                   SimHei     Regular
+## 120 C:/Windows/Fonts       simkai.ttf                    KaiTi     Regular
+## 121 C:/Windows/Fonts       simsun.ttc                   SimSun     Regular
+## 122 C:/Windows/Fonts      simsunb.ttf              SimSun-ExtB     Regular
+## 123 C:/Windows/Fonts        Sitka.ttc              Sitka Small     Regular
+## 124 C:/Windows/Fonts       SitkaB.ttc              Sitka Small        Bold
+## 125 C:/Windows/Fonts       SitkaI.ttc              Sitka Small      Italic
+## 126 C:/Windows/Fonts       SitkaZ.ttc              Sitka Small Bold Italic
+## 127 C:/Windows/Fonts      sylfaen.ttf                  Sylfaen     Regular
+## 128 C:/Windows/Fonts       symbol.ttf                   Symbol     Regular
+## 129 C:/Windows/Fonts       tahoma.ttf                   Tahoma     Regular
+## 130 C:/Windows/Fonts     tahomabd.ttf                   Tahoma        Bold
+## 131 C:/Windows/Fonts        taile.ttf         Microsoft Tai Le     Regular
+## 132 C:/Windows/Fonts       taileb.ttf         Microsoft Tai Le        Bold
+## 133 C:/Windows/Fonts teamviewer14.otf             TeamViewer14      Medium
+## 134 C:/Windows/Fonts        times.ttf          Times New Roman     Regular
+## 135 C:/Windows/Fonts      timesbd.ttf          Times New Roman        Bold
+## 136 C:/Windows/Fonts      timesbi.ttf          Times New Roman Bold Italic
+## 137 C:/Windows/Fonts       timesi.ttf          Times New Roman      Italic
+## 138 C:/Windows/Fonts       trebuc.ttf             Trebuchet MS     Regular
+## 139 C:/Windows/Fonts     trebucbd.ttf             Trebuchet MS        Bold
+## 140 C:/Windows/Fonts     trebucbi.ttf             Trebuchet MS Bold Italic
+## 141 C:/Windows/Fonts     trebucit.ttf             Trebuchet MS      Italic
+## 142 C:/Windows/Fonts      verdana.ttf                  Verdana     Regular
+## 143 C:/Windows/Fonts     verdanab.ttf                  Verdana        Bold
+## 144 C:/Windows/Fonts     verdanai.ttf                  Verdana      Italic
+## 145 C:/Windows/Fonts     verdanaz.ttf                  Verdana Bold Italic
+## 146 C:/Windows/Fonts     webdings.ttf                 Webdings     Regular
+## 147 C:/Windows/Fonts     wingding.ttf                Wingdings     Regular
+## 148 C:/Windows/Fonts      YuGothB.ttc                Yu Gothic        Bold
+## 149 C:/Windows/Fonts      YuGothL.ttc          Yu Gothic Light     Regular
+## 150 C:/Windows/Fonts      YuGothM.ttc         Yu Gothic Medium     Regular
+## 151 C:/Windows/Fonts      YuGothR.ttc                Yu Gothic     Regular
+##             version                      ps_name
+## 1      Version 7.00                      ArialMT
+## 2      Version 7.00                 Arial-BoldMT
+## 3      Version 7.00           Arial-BoldItalicMT
+## 4      Version 7.00               Arial-ItalicMT
+## 5      Version 5.23                  Arial-Black
+## 6      Version 2.01                  Bahnschrift
+## 7      Version 6.22                      Calibri
+## 8      Version 6.22                 Calibri-Bold
+## 9      Version 6.22               Calibri-Italic
+## 10     Version 6.22                Calibri-Light
+## 11     Version 6.22          Calibri-LightItalic
+## 12     Version 6.22           Calibri-BoldItalic
+## 13     Version 6.99                      Cambria
+## 14     Version 6.98                 Cambria-Bold
+## 15     Version 6.98               Cambria-Italic
+## 16     Version 6.98           Cambria-BoldItalic
+## 17     Version 5.62                      Candara
+## 18     Version 5.62                 Candara-Bold
+## 19     Version 5.62               Candara-Italic
+## 20     Version 5.63                Candara-Light
+## 21     Version 5.63          Candara-LightItalic
+## 22     Version 5.62           Candara-BoldItalic
+## 23     Version 5.14                  ComicSansMS
+## 24     Version 5.14             ComicSansMS-Bold
+## 25     Version 5.14           ComicSansMS-Italic
+## 26     Version 5.14       ComicSansMS-BoldItalic
+## 27     Version 7.00                     Consolas
+## 28     Version 7.00                Consolas-Bold
+## 29     Version 7.00              Consolas-Italic
+## 30     Version 7.00          Consolas-BoldItalic
+## 31     Version 5.93                   Constantia
+## 32     Version 5.93              Constantia-Bold
+## 33     Version 5.93            Constantia-Italic
+## 34     Version 5.93        Constantia-BoldItalic
+## 35     Version 5.90                       Corbel
+## 36     Version 5.90                  Corbel-Bold
+## 37     Version 5.90                Corbel-Italic
+## 38     Version 5.90                  CorbelLight
+## 39     Version 5.90           CorbelLight-Italic
+## 40     Version 5.90            Corbel-BoldItalic
+## 41     Version 6.92               CourierNewPSMT
+## 42     Version 6.92          CourierNewPS-BoldMT
+## 43     Version 6.91    CourierNewPS-BoldItalicMT
+## 44     Version 6.91        CourierNewPS-ItalicMT
+## 45     Version 1.17                     DengXian
+## 46     Version 1.17                DengXian-Bold
+## 47     Version 1.17               DengXian-Light
+## 48     Version 5.12                       Ebrima
+## 49     Version 5.12                  Ebrima-Bold
+## 50     Version 5.02        FranklinGothic-Medium
+## 51     Version 5.01  FranklinGothic-MediumItalic
+## 52     Version 5.93                     Gabriola
+## 53     Version 1.12                       Gadugi
+## 54     Version 1.12                  Gadugi-Bold
+## 55     Version 5.59                      Georgia
+## 56     Version 5.59                 Georgia-Bold
+## 57     Version 5.59               Georgia-Italic
+## 58     Version 5.59           Georgia-BoldItalic
+## 59     Version 5.23           Microsoft Himalaya
+## 60     Version 2.02           HoloLensMDL2Assets
+## 61     Version 5.11                       Impact
+## 62     Version 1.00                      InkFree
+## 63     Version 1.09                 JavaneseText
+## 64     Version 5.01            LucidaSansUnicode
+## 65     Version 5.05            LeelawadeeUI-Bold
+## 66     Version 5.05                 LeelawadeeUI
+## 67     Version 5.05       LeelawadeeUI-Semilight
+## 68     Version 5.01                LucidaConsole
+## 69     Version 6.68                 MalgunGothic
+## 70     Version 6.68             MalgunGothicBold
+## 71     Version 6.68       MalgunGothic-Semilight
+## 72     Version 5.01                      Marlett
+## 73     Version 7.00           MicrosoftSansSerif
+## 74     Version 7.02                 MingLiU-ExtB
+## 75     Version 1.18                  MyanmarText
+## 76     Version 1.18             MyanmarText-Bold
+## 77     Version 5.53               MongolianBaiti
+## 78     Version 5.31                    MS-Gothic
+## 79     Version 6.14     MicrosoftJhengHeiRegular
+## 80     Version 6.13        MicrosoftJhengHeiBold
+## 81     Version 6.14       MicrosoftJhengHeiLight
+## 82     Version 6.25               MicrosoftYaHei
+## 83     Version 6.25          MicrosoftYaHei-Bold
+## 84     Version 6.23          MicrosoftYaHeiLight
+## 85     Version 6.00           Microsoft-Yi-Baiti
+## 86     Version 6.84                       MVBoli
+## 87     Version 1.37                    NirmalaUI
+## 88     Version 1.37               NirmalaUI-Bold
+## 89     Version 1.37          NirmalaUI-Semilight
+## 90     Version 5.99           MicrosoftNewTaiLue
+## 91     Version 5.99      MicrosoftNewTaiLue-Bold
+## 92     Version 5.03       PalatinoLinotype-Roman
+## 93     Version 5.03        PalatinoLinotype-Bold
+## 94     Version 5.03  PalatinoLinotype-BoldItalic
+## 95     Version 5.03      PalatinoLinotype-Italic
+## 96     Version 6.00             MicrosoftPhagsPa
+## 97     Version 6.00        MicrosoftPhagsPa-Bold
+## 98     Version 1.68              SegoeMDL2Assets
+## 99     Version 5.04                   SegoePrint
+## 100    Version 5.04              SegoePrint-Bold
+## 101    Version 5.02                  SegoeScript
+## 102    Version 5.02             SegoeScript-Bold
+## 103    Version 5.60                      SegoeUI
+## 104    Version 5.60                 SegoeUI-Bold
+## 105    Version 5.30               SegoeUI-Italic
+## 106    Version 5.60                SegoeUI-Light
+## 107    Version 5.60            SegoeUI-Semilight
+## 108    Version 5.30           SegoeUI-BoldItalic
+## 109    Version 2.01                 SegoeUIBlack
+## 110    Version 2.01          SegoeUIBlack-Italic
+## 111    Version 1.27                 SegoeUIEmoji
+## 112    Version 1.03              SegoeUIHistoric
+## 113    Version 5.30          SegoeUI-LightItalic
+## 114    Version 5.60             SegoeUI-Semibold
+## 115    Version 5.30       SegoeUI-SemiboldItalic
+## 116    Version 5.30      SegoeUI-SemilightItalic
+## 117    Version 6.23                SegoeUISymbol
+## 118    Version 5.01                     FangSong
+## 119    Version 5.03                       SimHei
+## 120    Version 5.01                        KaiTi
+## 121    Version 5.16                       SimSun
+## 122    Version 5.03                  SimSun-ExtB
+## 123    Version 1.12                   SitkaSmall
+## 124    Version 1.12              SitkaSmall-Bold
+## 125    Version 1.12            SitkaSmall-Italic
+## 126    Version 1.12        SitkaSmall-BoldItalic
+## 127    Version 5.06                      Sylfaen
+## 128    Version 5.01                     SymbolMT
+## 129    Version 7.00                       Tahoma
+## 130    Version 7.00                  Tahoma-Bold
+## 131    Version 6.00               MicrosoftTaiLe
+## 132    Version 6.00          MicrosoftTaiLe-Bold
+## 133 Version 014.10                  TeamViewer14
+## 134    Version 7.00            TimesNewRomanPSMT
+## 135    Version 7.00       TimesNewRomanPS-BoldMT
+## 136    Version 7.00 TimesNewRomanPS-BoldItalicMT
+## 137    Version 7.00     TimesNewRomanPS-ItalicMT
+## 138    Version 5.15                  TrebuchetMS
+## 139    Version 5.15             TrebuchetMS-Bold
+## 140    Version 5.15         Trebuchet-BoldItalic
+## 141    Version 5.15           TrebuchetMS-Italic
+## 142    Version 5.33                      Verdana
+## 143    Version 5.33                 Verdana-Bold
+## 144    Version 5.33               Verdana-Italic
+## 145    Version 5.33           Verdana-BoldItalic
+## 146    Version 5.01                     Webdings
+## 147    Version 5.01            Wingdings-Regular
+## 148    Version 1.85                YuGothic-Bold
+## 149    Version 1.85               YuGothic-Light
+## 150    Version 1.85              YuGothic-Medium
+## 151    Version 1.85             YuGothic-Regular</code></pre>
+<p>其中宋体文件是simsun.ttc，黑体文件是：simhei.ttf，楷体文件是simkai.ttf，微软雅黑是msyh.ttf和msyhbd.ttf。</p>
+<p>尝试在R环境中加入黑体（如果字体是在Windows系统的默认字体库中，regular可以不用指定路径）：</p>
+<pre class="r"><code>font_add(family = &quot;heiti&quot;,regular = &quot;simhei.ttf&quot;)
+font_add(family = &quot;kaiti&quot;,regular = &quot;simkai.ttf&quot;)</code></pre>
+<p>此时查看R中自带字体，你会发现多了“heiti”和“kaiti”。</p>
+<pre class="r"><code>font.families()</code></pre>
+<pre><code>## &#39;font.families()&#39; is now renamed to &#39;font_families()&#39;
+## The old version still works, but consider using the new function in future code</code></pre>
+<pre><code>## [1] &quot;sans&quot;         &quot;serif&quot;        &quot;mono&quot;         &quot;wqy-microhei&quot;
+## [5] &quot;heiti&quot;        &quot;kaiti&quot;</code></pre>
+<p>然后我们在画图中使用黑体，借用showtext包作者邱逸轩的这篇文章<a href="https://cosx.org/2014/01/showtext-interesting-fonts-and-graphs">showtext：字体，好玩的字体和好玩的图形</a>中的r示例代码：</p>
+<p>需要注意，<strong>rstudio自带的Plots面板中绘出的图形不显示自定义字体</strong>，这也是以前总是觉得设置自定义字体不成功的原因。在运行下面的代码前，调用windows()函数打开一个新的图形接收窗口，下边代码绘制的图形会显示其中。</p>
+<p>如果你打算在Rmd文档中使用showtext包，请在chunk头参数中设置fig.showtext=TRUE。</p>
+<pre class="r"><code>showtext_auto() #这样代码非常重要
+set.seed(123)
+plot(1, xlim = c(-3, 3), ylim = c(-3, 3), type = &quot;n&quot;)
+text(runif(100, -3, 3), runif(100, -3, 3),
+     intToUtf8(round(runif(100, 19968, 40869)), multiple = TRUE),
+     col = rgb(runif(100), runif(100), runif(100), 0.5 + runif(100)/2),
+     cex = 2, family = &quot;heiti&quot;)   # 指定heiti字体
+title(&quot;随机汉字&quot;, family = &quot;kaiti&quot;)   # 指定kaiti字体</code></pre>
+<p><img src="/post/2017-12-31-using-other-system-chinese-fonts-in-r_files/figure-html/fontexample-1.png" width="672" /></p>
+<p>试一下ggplot2作图。</p>
+<pre class="r"><code>require(ggplot2)</code></pre>
+<pre><code>## Loading required package: ggplot2</code></pre>
+<pre class="r"><code>xy &lt;- data.frame(x=rnorm(100),y=rnorm(100))
+showtext_auto()
+scatter.plot &lt;- ggplot(data = xy,aes(x=x,y=y))+
+  geom_point(shape=21)+
+  labs(x=&quot;均值为0，标准差为1的随机正态分布&quot;,y=&quot;均值为0，标准差为1的随机正态分布&quot;)+
+  theme_grey(base_size = 30,base_family = &quot;heiti&quot;)
+print(scatter.plot)</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:ggplot2example"></span>
+<img src="/post/2017-12-31-using-other-system-chinese-fonts-in-r_files/figure-html/ggplot2example-1.png" alt="&lt;U+57FA&gt;&lt;U+4E8E&gt;0,1&lt;U+6B63&gt;&lt;U+6001&gt;&lt;U+5206&gt;&lt;U+5E03&gt;&lt;U+7684&gt;&lt;U+6563&gt;&lt;U+70B9&gt;&lt;U+56FE&gt;" width="576" />
+<p class="caption">
+Figure 1: &lt;U+57FA&gt;&lt;U+4E8E&gt;0,1&lt;U+6B63&gt;&lt;U+6001&gt;&lt;U+5206&gt;&lt;U+5E03&gt;&lt;U+7684&gt;&lt;U+6563&gt;&lt;U+70B9&gt;&lt;U+56FE&gt;
+</p>
+</div>
+<p>Ok!大功告成！</p>

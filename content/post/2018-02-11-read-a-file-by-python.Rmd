@@ -1,0 +1,42 @@
+---
+title: read a file by python
+author: Sheng Luan
+date: '2018-02-11'
+slug: read-a-file-by-python
+categories:
+  - 编程
+tags:
+  - python
+---
+
+```{r setup,echo=FALSE}
+knitr::opts_chunk$set(engine = "python")
+```
+
+栾佳硕的任务：
+
+1.建立一个文件，在文件中写入以下内容：
+
+Watch the  cartoon.
+
+go fishing.
+
+(不会了话看编程书）
+
+```{python echo = TRUE}
+f = open("datasets/lsj.txt","w")
+f.writelines("Watch the  cartoon.\ngo fishing")
+f.close()
+```
+
+2.把它读出来，并且用format方法显示出来。
+
+```{python echo = TRUE}
+with open("datasets/lsj.txt","r") as f:
+    for line in f.readlines():
+        print(line.strip())
+```
+
+
+
+

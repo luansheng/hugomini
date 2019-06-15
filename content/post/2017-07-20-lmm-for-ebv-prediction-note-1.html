@@ -1,0 +1,203 @@
+---
+title: 动物育种值预测中的线性模型学习笔记1
+author: Sheng Luan
+date: '2017-07-20'
+categories:
+  - lmm
+  - EBV
+tags:
+  - EBV
+  - lmm
+slug: lmm-for-ebv-prediction-note-1
+---
+
+
+
+<div id="genetic-evaluation-with-different-sources-of-records" class="section level1">
+<h1>第一章 基于不同来源记录的遗传评估(Genetic evaluation with different sources of records)</h1>
+<div id="section" class="section level2">
+<h2>1.1 介绍</h2>
+<p>育种值预测是大部分为了遗传改良而建立的育种程序不可或缺的一部分。准确地预测育种值，关键是能够获得哪些记录。在一个群体中，开始阶段能够获得的是个体记录，这些个体间可能存在亲缘关系，也可能不存在。在随后的世代中，后代和其他亲缘个体记录也会不断获的。因此，一开始可以用于育种值预测的主要是个体记录，以及少数亲属个体。在本章中，主要讨论利用个体记录以及来自其他亲缘信息预测育种值。此外（also），也讨论了复合不同来源和亲属信息计算选择指数的方法。</p>
+</div>
+<div id="section-1" class="section level2">
+<h2>1.2 基础模型</h2>
+<p>环境和遗传因素决定动物个体的每一个表型观测值。因此可以通过1.1模型对表型观测值进行分解：</p>
+<p>表型观测值=环境效应+遗传效应+残差效应</p>
+<p>用公式书写为：</p>
+<p>模型1.1</p>
+<p><span class="math display">\[
+y_{ij}=\mu_{i}+g_{i}+e_{ij}
+\]</span></p>
+<p>其中<span class="math inline">\(y_{ij}\)</span>表示第<span class="math inline">\(i^{th}\)</span>个体的第j个测定记录；<span class="math inline">\(\mu_{i}\)</span>表示可剖分的非随机环境效应，主要是指固定效应，如窝组、出生年份、性别等；<span class="math inline">\(g_{i}\)</span>是个体i基因型的加性（<span class="math inline">\(g_{a}\)</span>）、显性(<span class="math inline">\(g_{d}\)</span>)和上位epitatic(<span class="math inline">\(g_{e}\)</span>)遗传效应；<span class="math inline">\(e_{ij}\)</span>是影响个体i的随机环境效应之和。</p>
+<p>上文中的加性遗传值（<span class="math inline">\(g_{a}\)</span>），指的是个体来自父本和母本基因的加性效应均值，被称为育种值（breeding value）。*<strong>每个亲本贡献自身基因的一半给它的后代</strong>。亲本传递给后代的一半基因，其多次抽样的均值，称作该亲本的传递能力（<strong>transmitting ability</strong>），是该亲本加性遗传值的一半。因此后代育种值等于其双亲传递能力之和。
+因为加性遗传值是从亲本传递给子代的基因的函数，它是仅有的可以选择的元素（相对于显性和上位）。显性和上位表示位点内、位点间的交互，通常假定这些效应很少是显著的，一般包括<span class="math inline">\(e^{*}_{ij}\)</span>效应中。因此模型1.1可以改写为：</p>
+<p>模型1.2</p>
+<p><span class="math display">\[
+y_{ij}=\mu+g_{ai}+e^{*}_{ij}
+\]</span></p>
+<p>其中，<span class="math inline">\(e^{*}_{ij}\)</span>表示随机环境效应、显性和上位遗传值之和。模型1.2形式，适用于动物育种大部分育种值预测问题。通常假定y符合多变量正态分布，这其中的含义表示性状是有无数个加性基因决定，每个基因的效应是相同并且微小的，并且这些基因分布在非连锁位点上，也就是通常说的<strong>微效多基因模型</strong>（infinitesimal model）。并且，进一步假定y、g和e的方差var(y)、var(g)、<span class="math inline">\(var(e^{*}\)</span>)是已知的,并且配对个体间不存在任何相关（<span class="math inline">\(cov(e^{*},e^{*})=0\)</span>）（不是特别理解）。而且，<span class="math inline">\(\mu\)</span>代表在相同的管理组下所有个体的平均性能，例如在同一个管理系统下，相同的年龄和性别，因此假定<span class="math inline">\(\mu\)</span>也是已知的。那么问题就简单了，从模型1.2中，可以看出，预测育种值的问题，已经简化为<strong>根据剖分出的非随机环境效应调整表型观测值问题，近似等于加权动物个体和他们的亲缘个体的测定记录</strong>。</p>
+<p>根据前边的解释，个体i的育种值<span class="math inline">\(a_{i}\)</span>可以进一步剖分：</p>
+<p>公式1.3</p>
+<p><span class="math display">\[
+a_{i}=g_{ai}=\frac{1}{2}a_{s}+\frac{1}{2}a_{d}+m_{i}
+\]</span></p>
+<p>其中<span class="math inline">\(a_{s}\)</span>和<span class="math inline">\(a_{d}\)</span>分别表示父本和母本的育种值，<span class="math inline">\(m_{i}\)</span>是个体i的育种值与双亲育种值均值的偏差，也就是孟德尔抽样(Mendelian sampling)。从遗传上分析（inheritance），孟德尔抽样的本质，是由于每一个亲本仅仅从它的基因库中随机抽取了一半给它的后代（基于染色体的分离和自由组合规律，个体的一半基因，会有很多种组合）。因此，一对父母产生的后代，其基因肯定不会完全相同，他们之间存在着遗传变异。孟德尔抽样，可以理解为，个体来自双亲的加性基因的均值（父母本平均，不是基因平均）与来自双亲的所有可能后代的均值之差。</p>
+<p>在育种程序中，准确地预测育种值是非常重要的。因为在遗传改良过程中，必须要准确地选择那些真正属于高育种值的个体。根据可以用来进行选择的候选个体的类型和可以利用的信息，来决定使用何种预测育种值的方法。下一步讨论，如何利用不同的信息来源预测育种值。在许多遗传评估应用案例中，出现的PTA（predicted tranmitting ability）或者说ETA（estimated transmitting ability），通常指的是预测育种值的一半。</p>
+</div>
+<div id="section-2" class="section level2">
+<h2>1.3 利用动物自身性能预测育种值</h2>
+<div id="section-3" class="section level3">
+<h3>1.3.1 单次记录</h3>
+<p>对于个体，当仅可获得一个表型值记录时，个体i的估计育种值计算公式为:</p>
+<p>公式1.4</p>
+<p><span class="math display">\[\hat{a}_{i} = b(y_{i}-\mu)\]</span></p>
+<p>其中b是真实育种值对表型性能的回归系数；<span class="math inline">\(\mu\)</span> 是群体均值，假定<span class="math inline">\(\mu\)</span>是已知的。</p>
+<p>公式1.5</p>
+<p><span class="math display">\[ b = \frac{cov(a,y)}{var(y)} = \frac{cov(a,a+e)}{var(y)} \\
+= \frac{\sigma^2_{a}}{\sigma^2_{y}} \\
+= h^2
+\]</span></p>
+<p>预测值等于调整后的记录值乘以遗传力。选择标准间的相关，在这个例子中是真实育种值与表型值间的相关，也称作预测的准确度。预测准确度，提供了一种评估不同选择标准的方法：相关度越高，选择标准更加适合用来预测育种值。在某些情况下，重复力（repeatability, <span class="math inline">\(r^2\)</span>）也可以作为评估准确性的参数。当个体仅有一个观测值时，准确度计算公式为：</p>
+<p>公式1.6</p>
+<p><span class="math display">\[
+r_{a,y} = cov(a,y)/(\sigma_{a}\sigma_{y}) \\
+= \sigma^{2}_{a}/(\sigma_{a}\sigma_{y}) \\
+= h
+\]</span></p>
+<p>准确度为遗传力的开方。选择反应的计算公式（Falconer and Mackay, 1996）为:</p>
+<p>公式1.7</p>
+<p><span class="math display">\[
+R = ir^{2}_{a,y}\sigma_{y} = ih^{2}\sigma_{y}
+\]</span></p>
+<p>其中，i称作选择强度（selection intensity），以表型标准差为单位，表示选择个体超过群体均值的程度。</p>
+<p>育种值的方差（<span class="math inline">\(var(\hat{a}_{i})\)</span>）表示为:</p>
+<p>公式1.8</p>
+<p><span class="math display">\[
+var(\hat{a}_{i}) = var(by) = var(h^{2}y) \\
+= h^{4}\sigma^{2}_{y} \\
+= r^{2}_{a,y}h^{2}\sigma^{2}_{y} \\
+= r^{2}_{a,y}\sigma^{2}_{a}
+\]</span></p>
+<p>例1.1
+一窝小母牛的一周岁体重均值为250kg，该性状的遗传力为0.45，如果其中一头小母牛周岁重320kg，请问它的育种值是多少？育种值估计的准确度是多少？</p>
+<p>根据公式1.4，育种值计算为：</p>
+<p><span class="math inline">\(\hat{a}_{i} = 0.45*(320-250) =\)</span> 31.5kg。</p>
+<p>育种值估计的准确度(根据公式1.6计算)</p>
+<p>$r_{a,y} = $ 0.67。</p>
+</div>
+<div id="section-4" class="section level3">
+<h3>1.3.2 重复记录</h3>
+<p>个体的多次测定记录，如奶牛在哺乳期的多次产奶量，其均值可以用来预测个体的育种值。对于个体的多次测定记录，通常会存在如下假定：由于受到环境因子或者永久影响个体多次测定记录的环境的影响，多次测定记录间会存在更多的相似性（additional resemblance）。换句话说（in other words），受非遗传永久环境效应的影响，个体的多次测定记录间存在额外的协方差。</p>
+<p>个体间的方差可以进一步剖分为部分遗传的和部分环境的方差（永久环境效应，permanent environmental effect）；个体内的方差组分，是由对个体进行多次测量时的临时环境差异引起的。因此，观测值的方差可以进一步剖分为：</p>
+<p>公式1.9</p>
+<p><span class="math display">\[var(y) = var(g) + var(pe) + var(te)\]</span></p>
+<p>其中<span class="math inline">\(var(g)\)</span>是加性和非加性遗传方差；<span class="math inline">\(var(pe)\)</span>是由永久环境效应产生的方差；<span class="math inline">\(var(te)\)</span>是由随机的(random) 临时的 (temporary) 环境效应引起的方差。</p>
+<p>组内相关（<strong>组内个体间的相关</strong>），指的是个体间方差与表型方差的比例(the ratio of between-individual variance to phenotypic variance)</p>
+<p>公式1.10</p>
+<p><span class="math display">\[t=(var(g)+var(pe))/var(y)\]</span></p>
+<p>t通常称之为重复力，用来测量个体记录间的相关。</p>
+<p>从公式1.10也可以反推出</p>
+<p>公式1.11</p>
+<p><span class="math display">\[var(te)/var(y) = 1-t\]</span></p>
+<p>对于公式1.10 ，通常会假设重复记录是来自同一个性状，也就是说任何成对记录间的遗传相关应该是1（<strong>不是太理解</strong>）。另外一个假设是：所有的测定记录，具有相同的方差。并且所有成对记录的环境相关是相同的。设定<span class="math inline">\(\tilde{y}\)</span>表示个体i的n个记录的均值。个体i的育种值可以通过公式1.12进行预测：</p>
+<p>公式1.12</p>
+<p><span class="math display">\[\hat{a}_{i} = b(\tilde{y}_{i}-\mu)\]</span></p>
+<p>对上述公式进行推导：</p>
+<p>公式1.13</p>
+<p><span class="math display">\[b = cov(a,\tilde{y})/var(\tilde{y})\]</span></p>
+<p>体重a指的是真实育种值。进一步分解<span class="math inline">\(cov(a,\tilde{y})\)</span>:</p>
+<p>公式1.14</p>
+<p><span class="math display">\[cov(a,\tilde{y}) = cov(a,g + pe + \sum{te}/n) = \sigma^{2}_{a}\]</span></p>
+<p>之所以能够推导出上述公式，是因为a与pe、te之间不存在相关性，所以他们的协方差为零。</p>
+<p>公式1.15</p>
+<p><span class="math display">\[var(\tilde{y}) = var(g) + var(pe) +var(te)/n\]</span></p>
+<p>对于<span class="math inline">\(var(\tilde{y})\)</span>，不同于<span class="math inline">\(var(y)\)</span>,最后te的方差需要除以n。</p>
+<p>根据公式1.10 和公式1.11可以对公式1.15进一步变换：</p>
+<p>公式1.16（注意，原书中这个地方写错了，写成var(t)了）</p>
+<p><span class="math display">\[
+var(\tilde{y}) = var(g) + var(pe) + (1-t)\frac{var(y)}{n} \\
+= var(y)t + (1-t)\frac{var(y)}{n} \\
+=var(y)(t + \frac{1-t}{n}) \\
+=\sigma^{2}_{y}(t + \frac{1-t}{n})
+\]</span></p>
+<p>根据公式1.16，那么公式1.13可以进一步简化为：</p>
+<p>公式1.17</p>
+<p><span class="math display">\[
+b = cov(a,\tilde{y})/var(\tilde{y}) \\
+= \frac{\sigma^{2}_{a}}{\sigma^{2}_{y}(t + \frac{1-t}{n})} \\
+= \frac{\sigma^{2}_{a}}{\sigma^{2}_{y}}\frac{1}{t + \frac{1-t}{n}} \\
+= h^{2}\frac{1}{\frac{nt+1-t}{n}} \\
+= h^{2}\frac{1}{\frac{1+(n-1)t}{n}} \\
+= h^{2}n\frac{1}{1+(n-1)t} \\
+= \frac{nh^{2}}{1+(n-1)t} \\
+\]</span></p>
+<p>公式可以看出b由<strong>遗传力、重复力和记录的重复测量次数</strong>决定。从公式1.12中，可以推出，也意味着育种值由上述三个参数决定。</p>
+<p>就像前边提到的，假定个体重复记录的差别是由于测量连续性能（successive performance）时的现场环境差异（temporary environment）造成的。如果清楚那些影响性能的因子，会对连续记录产生影响，那么必须要进行校正。</p>
+<p>譬如，第一次和第二次哺乳期（lactation）产仔（calving）时的母牛年龄，会影响两次哺乳期的产奶量 （milk yield）。因此应用两次哺乳期产奶量均值，预测育种值时，必须要对这种年龄差异进行矫正。</p>
+<p>育种值的准确性用公式（1.18）表述为：</p>
+<p>公式1.18 （基于公式1.16和1.17）</p>
+<p><span class="math display">\[
+r_{a,\tilde{y}} = \frac{cov(a,\tilde{y})}{\sigma_{a}\sigma_{\tilde{y}}} \\
+= \frac{\sigma^{2}_{a}}{\sigma_{a}\sqrt{\sigma^{2}_{y}(t + \frac{1-t}{n})}} \\
+= \frac{\sigma_{a}}{\sqrt{\sigma^{2}_{y}(t + \frac{1-t}{n})}} \\
+= \frac{\sigma_{a}}{\sigma_{y}\sqrt{t + \frac{1-t}{n}}} \\
+= \frac{h}{\sqrt{t + \frac{1-t}{n}}} \\
+= h\sqrt{\frac{n}{nt +1-t}} \\
+= \sqrt{\frac{nh^{2}}{1+(n-1)t}} \\
+= \sqrt{b}
+\]</span></p>
+<p>与单性状的记录相比，多次记录其育种值估计的准确度更好，受重复力和测定记录次数影响。育种值预测准确度的提高，主要来自于当测定记录次数增加时，测定时环境方差（个体内方差）的降低。从公示1.16就可以看出。当n不断增大时，<span class="math inline">\(\sigma^{2}_{y}(t + \frac{1-t}{n})\)</span>是不断减小的。当重复力较低时，增加测定记录次数，可以显著的提高预测准确度。</p>
+<p>譬如假定<span class="math inline">\(h^{2}\)</span>=0.3, t=0.5，当n=1, 2, 6, 10时，育种值估计的准确度分别为</p>
+<p>n=1</p>
+<p><span class="math display">\[
+r_{a,\tilde{y}} = \sqrt{\frac{nh^{2}}{1+(n-1)t}} \\
+= \sqrt{\frac{1*0.3}{1+(1-1)*0.5}} \\
+= 0.55
+\]</span></p>
+<p>结果等同于单次记录结果。</p>
+<p>n=2</p>
+<p><span class="math display">\[
+r_{a,\tilde{y}} = \sqrt{\frac{nh^{2}}{1+(n-1)t}} \\
+= \sqrt{\frac{2*0.3}{1+(2-1)*0.5}} \\
+= 0.63
+\]</span></p>
+<p>n=6</p>
+<p><span class="math display">\[
+r_{a,\tilde{y}} = \sqrt{\frac{nh^{2}}{1+(n-1)t}} \\
+= \sqrt{\frac{6*0.3}{1+(6-1)*0.5}} \\
+= 0.72
+\]</span></p>
+<p>n=10</p>
+<p><span class="math display">\[
+r_{a,\tilde{y}} = \sqrt{\frac{nh^{2}}{1+(n-1)t}} \\
+= \sqrt{\frac{10*0.3}{1+(10-1)*0.5}} \\
+= 0.74
+\]</span></p>
+<p>当重复力比较高时，多次跟单次测量的准确度并无太大差别。这个其实是很朴素的道理，当重复力低时，也就是表示受环境影响较大，需要多次测量才会更加准确，但是当重复力比较高时，测量一次和多次的结果是一致的。</p>
+<p>如果重复力不同，那么基于不同重复力的育种值预测准确度结果，是没有可比性的。譬如如果t=1，那么无论n是多少，其育种值预测准确度都是h。但是如果t小于1，那么预测准确会大于h，但是不同重复率之间，应该是不可以比较的。</p>
+<p>例子1.2</p>
+<p>母牛第一次和第二次哺乳期的平均产奶总体均值是6000kg。一头母牛第一次和第二次哺乳期的平均产奶量是8000kg。产奶量的表型方差和遗传力是600kg和0.3，两次哺乳期产奶量的相关系数是0.5（重复力），预测育种值及其准确度。</p>
+<p>根据公式1.12</p>
+<p><span class="math display">\[
+\hat{a}_{1} = b(\tilde{y}_{i}-\mu) \\
+=b(8000-6000) \\
+=2000b
+\]</span></p>
+<p>其中b根据公式1.17计算</p>
+<p><span class="math display">\[
+b = \frac{nh^{2}}{1+(n-1)t} \\
+= \frac{2*0.3}{1+(2-1)*0.5} \\
+= 0.4
+\]</span></p>
+<p>这头奶牛的育种值为：</p>
+<p><span class="math display">\[
+\hat{a}_{1} = b(\tilde{y}_{i}-\mu) \\
+=0.4*(8000-6000) \\
+=2000*0.4 \\
+=800 kg
+\]</span></p>
+<p>育种值估计的准确度为：</p>
+<p><span class="math display">\[r_{a,\tilde{y}} = \sqrt{b} = \sqrt{0.4} = 0.632\]</span></p>
+</div>
+</div>
+</div>

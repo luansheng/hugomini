@@ -1,0 +1,56 @@
+---
+title: try od package
+author: Sheng Luan
+date: '2018-01-03'
+slug: try-od-package
+categories:
+  - 试验设计
+  - 最优化
+tags:
+  - od
+  - R
+---
+*
+[od](https://asreml.org/optimal-design/)包是一个可以给出数量遗传学**优化试验设计**的包。试着通过实例来理解背后的设计原理。
+
+[windows](https://asreml.org/resources/od/od_0.75.zip)包没有自带数据，从[linux](https://asreml.org/resources/od/od_0.75_R_linux-intel64.tar.gz)包中把数据提出来。
+
+关于od包背后的设计原理，参考作者的博士论文：On The Optimal Design of Experiments Under the Linear Mixed Model。
+
+## 1. 加载数据文件
+
+
+genex是一个作物遗传改良的实验数据，包括213个品种。实验设计为部分重复设计，包括2个Block,每个block内有48行×3列。部分品种有2次实验记录。
+genex.Ainv 包括了213个品种间的加性遗传相关矩阵。注意od包要求genex.Ainv数据框包括一个属性rowNames,存储row列中整数对应的品种名。
+
+```{r readdata}
+require(data.table)
+genex <- fread(file="datasets/genex.csv",stringsAsFactors = TRUE)
+genex[,":="(Row=as.factor(Row),Block=as.factor(Block),Column=as.factor(Column))]
+genex.Ainv <- fread(file="datasets/genex.Ainv.csv",stringsAsFactors = TRUE)
+genex.Ainv.rowNames <- fread(file="datasets/genex.Ainv.rowNames.csv",sep=",",stringsAsFactors = FALSE,header = FALSE)
+attr(genex.Ainv,which = "rowNames") <- genex.Ainv.rowNames$V1
+```
+
+
+```{r rundod,eval=FALSE}
+require(od)
+genex.G <- od.init(`ped(Entry)` = 1, `ide(Entry)` = 0.1, Block = 0.1,Column = 0.4, Row = 0.2)
+genex.R <- od.init(`Column:Row|Column` = 0.2, `Column:Row|Row` = 0.5)
+genex.od <- od(random = ~ped(Entry) + ide(Entry) + Block + Column + Row, 
+               rcov = ~ar1(Column):ar1(Row), 
+               permute = ~ped(Entry) |ide(Entry),
+               swap = ~Block, Gstart = genex.G, 
+               Rstart = genex.R,
+               ginv = list(Entry = genex.Ainv), 
+               geneticEffects = "total",
+               search = "tabu", 
+               maxit = 5, 
+               data = genex)
+save.image()
+```
+
+```{r odresult, eval=FALSE}
+genex.od$design
+```
+

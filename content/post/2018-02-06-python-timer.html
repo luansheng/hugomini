@@ -1,0 +1,28 @@
+---
+title: python 定时器
+author: Sheng Luan
+date: '2018-02-06'
+slug: python-timer
+categories:
+  - 编程
+tags:
+  - python
+---
+
+
+
+<p>栾佳硕给出的作业，要求三秒钟打印出一个随机小数:</p>
+<pre class="python"><code># -*- coding: utf-8 -*-
+import random
+import time
+seconds = 3
+counter = 1
+while counter &lt;= 5:
+    print(&quot;第%i个两位小数是%.2f&quot; %(counter,random.uniform(0,1)))
+    counter += 1
+    time.sleep(seconds)</code></pre>
+<pre><code>## 第1个两位小数是0.97
+## 第2个两位小数是0.33
+## 第3个两位小数是0.02
+## 第4个两位小数是0.87
+## 第5个两位小数是0.72</code></pre>

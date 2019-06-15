@@ -1,0 +1,382 @@
+---
+title: 线性混合效应模型教程1
+author: Sheng Luan
+date: '2017-11-19'
+categories:
+  - lmm
+tags:
+  - 固定效应
+  - 混合效应
+  - 随机效应
+  - 线性
+slug: lmm-tutorial-1
+---
+
+
+
+<p>学习线性混合效应模型（Linear Mixed Effects Model，LMM）最好的方法，是一边学习理论，一边动手实践，这样印象最为深刻。
+本文参考了Bodo Winter博士的教程Linear models and linear mixed effects models in R<a href="http://www.bodowinter.com/tutorial/bw_LME_tutorial1.pdf">教程1</a><a href="http://www.bodowinter.com/tutorial/bw_LME_tutorial2.pdf">教程2</a>的结构。</p>
+<p>本文中，为了便于理解，使用的数据集是来自csv文件<a href="https://luansheng.netlify.com/post/datasets/shrimp.csv">shrimp</a>中的对虾育种数据（对原始数据已经进行了变换）。</p>
+<p>推荐使用<a href="https://www.rstudio.com/products/RStudio/">Rstudio</a>来运行<a href="https://www.r-project.org/">R</a>。</p>
+<ul>
+<li>下载R：Windows版本下载地址点击<a href="https://mirrors.tuna.tsinghua.edu.cn/CRAN/">这里</a>。</li>
+<li>下载Rstudio：Windows版本下载地址点击<a href="https://www.rstudio.com/products/rstudio/download/#download">这里</a>。</li>
+<li>下载后安装方法，以及下边用到的四个R包的安装方法，可以参考<a href="https://jingyan.baidu.com/article/e75aca853788b4142edac6b5.html">百度经验</a>。</li>
+</ul>
+<p>安装Rstudio成功后，请先配置Rstudio，再安装下边四个包。配置方法：</p>
+<ul>
+<li>打开Rstudio，从菜单栏上点击Tools -&gt; Global Options。</li>
+<li>在弹出的Options窗口中，点击左边列表中的Code，在右边的面板中，选择Saving面板，修改Default text encoding选项：点击Change…，选择UTF-8，点击ok确定。</li>
+<li>在弹出的Options窗口中，点击左边列表中的Packages，在右边的面板中，修改CRAN mirror地址：点击Change…，选择中国的镜像地址，如China (Beijing)[https]-TUNA Team, Tsinghua University。这样后边安装包时，速度会快很多。</li>
+</ul>
+<p>本文代码使用了四个包，请提前安装和加载。</p>
+<ul>
+<li>data.table</li>
+<li>ggplot2</li>
+<li>lme4</li>
+<li>sjPlot</li>
+</ul>
+<p>加载方法：可以在控制台（console）运行<code>require(data.table)</code>命令，加载data.table包。其他包加载命令类似。</p>
+<p>初学者提示：</p>
+<ul>
+<li>R代码和shrimp.csv最好保存在同一个路径下，譬如c:</li>
+<li>设置工作路径到c:，<code>setwd("c:/shrimp")</code></li>
+</ul>
+<div id="section" class="section level2">
+<h2>1 读取数据文件</h2>
+<p><code>fread()</code>函数来自data.table包，特点是对大文件读取速度特别快。建议使用data.table作为数据处理的主力包。</p>
+<p>其中的参数sep表示文件是用逗号分割，header表示数据文件中第一行是列名，stringsAsFactors表示读入的数据，对于字符类型，是否自动处理为因子类型。为了方便后边模型处理，这里设置为因子类型。</p>
+<p>str()函数可以对数据集有一个汇总。从中看可以看出，AnimalID-个体编号，SireID-父本编号，DamID-母本编号，FamilyID-家系编号，SexID-性别，TankID-测试池号等字符类型，已经被设置为因子类型了。M1BW-入池前体重，M2BW-收获体重和M2Age-收获时日龄均为数字变量。</p>
+<p>注意，下边代码，shrimp.csv文件保存在了datasets文件夹下。该文件夹与R脚本文件在同一目录下。</p>
+<pre class="r"><code>shrimp &lt;- fread(input = &quot;datasets/shrimp.csv&quot;,sep = &quot;,&quot;,header = TRUE,stringsAsFactors = TRUE)
+str(shrimp)</code></pre>
+<pre><code>## Classes &#39;data.table&#39; and &#39;data.frame&#39;:   4282 obs. of  10 variables:
+##  $ AnimalID: Factor w/ 4282 levels &quot;13G1000001&quot;,&quot;13G1000002&quot;,..: 3308 3307 2215 1303 3601 2184 2194 2175 1585 2176 ...
+##  $ SireID  : Factor w/ 100 levels &quot;12G000K010&quot;,&quot;12G000K065&quot;,..: 81 81 81 81 81 81 81 81 81 81 ...
+##  $ DamID   : Factor w/ 91 levels &quot;12G000K052&quot;,&quot;12G000K097&quot;,..: 81 81 81 81 81 81 81 81 81 81 ...
+##  $ PopID   : Factor w/ 4 levels &quot;Pop1&quot;,&quot;Pop2&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ FamilyID: Factor w/ 105 levels &quot;13F1306003&quot;,&quot;13F1306004&quot;,..: 6 6 6 6 6 6 6 6 6 6 ...
+##  $ SexID   : Factor w/ 2 levels &quot;Female&quot;,&quot;Male&quot;: 2 2 1 1 1 2 1 2 2 1 ...
+##  $ TankID  : Factor w/ 2 levels &quot;T1&quot;,&quot;T2&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ M1BW    : num  8.13 8.13 8.13 8.13 8.13 8.55 8.55 8.55 8.55 8.55 ...
+##  $ M2BW    : num  29 30.5 33.3 40.1 43 29.1 30.7 30.7 32.5 35.6 ...
+##  $ M2Age   : int  219 219 219 219 219 219 219 219 219 219 ...
+##  - attr(*, &quot;.internal.selfref&quot;)=&lt;externalptr&gt;</code></pre>
+<p>数据文件准备完毕，我们正式开始学习线性混合效应模型。</p>
+</div>
+<div id="section-1" class="section level2">
+<h2>2 引子：线性混合效应模型可以做什么</h2>
+<p>我们从一个简单的问题开始。对虾是有性别的，分雌雄。如果你对对虾没有任何了解，你可能会想知道，雄虾和雌虾的体重差别大吗？</p>
+<p>我们测定了4282尾虾的体重。</p>
+<p>我们首先直观的看一下雌雄虾体重分布点图。</p>
+<pre class="r"><code>ggplot(data=shrimp,aes(x=SexID,y=M2BW,color=SexID))+geom_boxplot()+geom_dotplot(binaxis = &quot;y&quot;,stackdir = &quot;center&quot;,position = &quot;dodge&quot;,binwidth = 0.25)</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:sexdotplot"></span>
+<img src="/post/2017-11-19-lmm-tutorial-1_files/figure-html/sexdotplot-1.png" alt="雌雄虾体重分布点图" width="672" />
+<p class="caption">
+Figure 1: 雌雄虾体重分布点图
+</p>
+</div>
+<p>从图1中可以大体看出，雌虾体重比雄虾高。然后，我们实际计算雌雄虾体重均值，发现雌虾的确比雄虾重。</p>
+<pre class="r"><code>shrimp.sex.m2bw &lt;- shrimp[,mean(M2BW,na.rm=TRUE),by=.(SexID)]
+shrimp.sex.m2bw</code></pre>
+<pre><code>##     SexID       V1
+## 1:   Male 28.16273
+## 2: Female 34.37646</code></pre>
+<p>我们不禁要问，雌雄虾的这个差别是真实的吗？这是雌雄虾体重真正的差值吗？这个结果有没有偏差？</p>
+<p>分析一下数据，你会发现，雌雄虾分布在2多个测试池中，且来自105个家系，并且每个家系的入池体重是存在差别的。而且你会发现，两个池子的养殖管理水平存在较大差别。</p>
+<pre class="r"><code>ggplot(shrimp,aes(x=TankID,y=M2BW,color=TankID))+geom_boxplot()+geom_dotplot(binaxis = &quot;y&quot;,stackdir = &quot;center&quot;,position = &quot;dodge&quot;,binwidth = 0.3)</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:tankdotplot"></span>
+<img src="/post/2017-11-19-lmm-tutorial-1_files/figure-html/tankdotplot-1.png" alt="不同测试池体重分布点图" width="672" />
+<p class="caption">
+Figure 2: 不同测试池体重分布点图
+</p>
+</div>
+<p>我们需要去除测试池、家系对雌雄虾体重的影响，准确估计雌雄虾体重。接下来就要用到线性模型了。</p>
+</div>
+<div id="section-2" class="section level2">
+<h2>3 线性混合效应模型简介</h2>
+<p><a id="1">模型1</a></p>
+<p><span class="math display">\[M2BW = Sex + \varepsilon\]</span></p>
+<p>表示一尾虾的体重由性别和随机误差决定。其中<span class="math inline">\(Sex\)</span>作为固定效应，<span class="math inline">\(\varepsilon\)</span>作为随机效应。后者表示所有影响体重的不可测量的效应总和，是随机和不可控制的。</p>
+<p>从数据中我们发现，一尾虾的体重还受它所在的测试池和所在家系的影响。因此，这两个效应也需要放到模型中。模型进一步变为：</p>
+<p><a id="2">模型2</a></p>
+<p><span class="math display">\[M2BW = Sex + Tank +\varepsilon\]</span></p>
+<p><a id="3">模型3</a></p>
+<p><span class="math display">\[M2BW = Sex + Tank + Family +\varepsilon\]</span></p>
+<p>新加入的两个变量，Tank和Family，如果都作为固定效应。那么上述模型称为线性模型。如果Family作为随机效应，那么模型3称为线性混合效应模型（固定效应+随机效应）。</p>
+<p>这里碰到的一个棘手问题是，模型中一个效应到底是作为固定效应，还是随机效应？准确的说，应该是与研究目的相关。</p>
+<p>SAS for Mixed models (Second edition) 手册中对固定效应的定义为：“An effect is called fixed if the levels in the study represent all possible levels of the factor, or at least all levels about which inference is to be made”。可简单地理解为“该效应的所有水平在实验群体中都已经出现”。譬如在本数据集中，性别只有雌、雄两个水平，因此模型中性别一般作为固定效应。再比如，测试投喂5种饲料对对虾体重的影响。由于目的很明确，只是评估这5种饲料的差异，因此饲料应作为固定效应。</p>
+<p>随机效应的定义为：“Factor effects are random if they are used in the study to represent only a sample (ideally, a random sample) of a larger set of potential levels”。可简单地理解为“试验群体出现的该效应的水平只是一个很大水平数中的随机抽样。</p>
+<p>固定效应和随机效应的差别在哪里？“一个效应作为固定效应，还是随机效应，应该依据研究的目的而定”。“a factor is considered random if its levels plausibly represent a larger population with a probability distribution”。如果我们分析一个效应的目的是为了研究它所在的一个具有概率分布的大群体的情况，那么这个效应应该作为随机效应。随机效应有两个特点，a) 它是大群体中的一个样本，b) 它具有概率分布。</p>
+<p>譬如在shrimp数据集中，我们当前的目的是分析雌雄两个性别的体重差异，那么105个家系就是很大家系中的一个小样本，因此作为随机效应更为合适。</p>
+</div>
+<div id="r" class="section level2">
+<h2>4 线型混合效应模型R实战分析</h2>
+<div id="section-3" class="section level3">
+<h3>4.1 简单线性模型</h3>
+<p><code>lm()</code>是R自带的函数。<code>summary()</code>函数输出shrimp.lm的结果。</p>
+<pre class="r"><code>shrimp.lm &lt;- lm(M2BW~SexID,shrimp)
+shrimp.lm.sum &lt;- summary(shrimp.lm)
+shrimp.lm.sum</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = M2BW ~ SexID, data = shrimp)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -22.9765  -3.1765  -0.0765   3.0235  18.9235 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  34.3765     0.1082  317.65   &lt;2e-16 ***
+## SexIDMale    -6.2137     0.1560  -39.82   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 5.101 on 4280 degrees of freedom
+## Multiple R-squared:  0.2704, Adjusted R-squared:  0.2702 
+## F-statistic:  1586 on 1 and 4280 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>现在解释上边的结果。首先来看<code>Multiple R-squared:</code> 0.2703699，它表示模型对总体方差的解释能力。具体意思可以解释为，总体方差中的27.04%，可以由这个模型来解释。<code>Adjusted R-squared</code>是对<code>Multiple R-squared</code>的矫正，主要是考虑了固定效应。固定效应越多，该值越低。</p>
+<p>下一个概念是非常的重要，那就是p值。P值是否小于0.05或者0.001，已经成为文章结果是否可靠，是否能够发表的一个重要标志。但是，p值一定程度上就像SCI论文的影响因子，有点滥用的味道。Nature上关于p值的故事:<a href="http://blog.sciencenet.cn/blog-265205-771680.html">中文版本</a>；<a href="http://www.nature.com/news/scientific-method-statistical-errors-1.14700">英文版本</a>。</p>
+<p>我们还本溯源，本质上p值是一个条件概率，它表示<strong>无效假设为真时的概率</strong>。那什么是无效假设呢？在上文中，无效假设是<strong>“对于体重性状，雌雄虾间没有差异”</strong>，也就是说雌雄虾体重是相等的。在本文中，p值为&lt;0.001 ，意味着如果”雌雄间没有差异，那么数据基本上不可能是这样“，因为<strong>雌雄间没有差异</strong>的概率太低！这反过来表明，性别影响了对虾的体重，雌雄虾体重是有差别的，也就是说统计上是显著的。</p>
+<p>需要注意的另外一个问题是，模型所有效应的显著性（最底部）与系数列表单个效应的显著性还是存在差别的。上文中，两个结果是一致的，主要是因为模型中只包括1个固定效应。如果有更多效应，这两个值就不再相等。</p>
+<p>F值是我们应该关注的另外一个参数，表示模型是否显著的一个重要参数。F值可以简单理解为处理方差与误差方差的比值，譬如在上文中，可以理解为性别间体重方差与残差方差的比值，这个值越大，那么表示雌雄间体重差异越大。需要注意，在上文中F值是1928，与两个自由度有关系（性别2-1；误差4281-1）。</p>
+<p>接下来重点讨论系数列表。你会看到SexIDMale，你可能会问，SexID有两个水平，Female去哪里了？Estimates这一列表示的固定效应值到底是什么意思？</p>
+<p>需要注意，系数列表中最后一列p值，表示估计值偏离0的程度。</p>
+<p>首先看一下系数列表中的(Intercept) 项，估计值是34.3764626，是不是感觉很熟悉？它是Female体重的均值。在本文前边我们估计了雌雄体重的均值。</p>
+<p>再看一下SexIDMale的估计值，是-6.2137345。Intercept估计值+SexIDMale估计值=雄虾体重值28.1627282。为什么要用雌虾体重值作为截距？为什么雄虾体重固定效应估计值要表示为与截距，也就是雌虾体重值的差值？</p>
+<p>第一个问题，之所以选择雌虾而不是雄虾作为截距，只是因为Female和Male这两个水平Female根据字母排序在Male前边。</p>
+<p>第二个问题，之所以把雄虾体重固定效应值表示为与截距之差，是为了与协变量等统一起来。为了解释，大家先看图。</p>
+<pre class="r"><code>sex.bw &lt;- shrimp[,mean(M2BW,na.rm=TRUE),by=.(SexID)]
+
+ggplot(data=shrimp,aes(x=SexID,y=M2BW,color=SexID))+
+  geom_dotplot(binaxis = &quot;y&quot;,stackdir = &quot;center&quot;,position = &quot;dodge&quot;,binwidth = 0.25)+
+  geom_vline(xintercept = 1)+
+  geom_vline(xintercept = 2)+
+  geom_hline(yintercept = 33.93992)+
+  geom_hline(yintercept = 27.77438)+
+  geom_abline(intercept = 40.75,slope=-6.6155)+
+  geom_text(x=2.4,y=31.5,label=&quot;-6.6155&quot;)+
+  annotate(&quot;segment&quot;,x=2.5,xend=2.5,y=27.77438,yend = 33.93992)</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:sexdotplotannotation"></span>
+<img src="/post/2017-11-19-lmm-tutorial-1_files/figure-html/sexdotplotannotation-1.png" alt="雌雄虾体重截距分解" width="672" />
+<p class="caption">
+Figure 3: 雌雄虾体重截距分解
+</p>
+</div>
+<p>因为Female和Male均为因子变量，因此在x轴上可以将Female标准化为0，Male与Female的间距为1，二者体重差值为-6.2137345，那么斜线的斜率可以认为等于-6.2137345。这样就可以很方便的求解或者说预测体重。</p>
+<p>我们可以根据<a href="#1">模型1</a>，预测雌雄虾体重：</p>
+<p>我们随机选取一尾虾，如果是雄虾，那么斜率为-6.2137345，雄虾的预测体重为：</p>
+<p><span class="math inline">\(BW = 群体均值 + 雄虾的固定效应\)</span> = 34.3764626462644 + -6.21373449092449 = 28.1627282</p>
+<p>我们随机选取一尾虾，如果是雌虾，因为截距本身设置为雌虾体重均值，因此斜率为0，雌虾的预测体重为：</p>
+<p><span class="math inline">\(BW = 群体均值 + 雌虾的固定效应\)</span> = 34.3764626462644 + 0*1 = 34.3764626</p>
+<p>我们继续来看一个稍微复杂的例子，在模型中加入TankID效应</p>
+<pre class="r"><code>shrimp.lm.sex.tank &lt;- lm(M2BW~SexID+TankID,shrimp)
+shrimp.lm.sex.tank.sum &lt;- summary(shrimp.lm.sex.tank)
+shrimp.lm.sex.tank.sum</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = M2BW ~ SexID + TankID, data = shrimp)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -21.4916  -3.0478  -0.1697   2.8166  20.4084 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  35.8560     0.1276  281.10   &lt;2e-16 ***
+## SexIDMale    -6.2082     0.1493  -41.58   &lt;2e-16 ***
+## TankIDT2     -2.9644     0.1492  -19.87   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 4.882 on 4279 degrees of freedom
+## Multiple R-squared:  0.332,  Adjusted R-squared:  0.3317 
+## F-statistic:  1063 on 2 and 4279 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>从上边模型中可以看出，截距是35.8560193。我们把数据汇总一下：</p>
+<pre class="r"><code>shrimp[,mean(M2BW,na.rm=TRUE),by=.(SexID,TankID)]</code></pre>
+<pre><code>##     SexID TankID       V1
+## 1:   Male     T1 29.62356
+## 2: Female     T1 35.87844
+## 3:   Male     T2 26.70756
+## 4: Female     T2 32.86907</code></pre>
+<p>我们发现，模型实际上是把Female.T1这个组合均值设置为截距（群体均值）。Male到Female.T1的斜率为-6.2081881，T2到Female.T1的斜率为-2.9644499；同理，Female到Female.T1的斜率为0，T1到Female.T1的斜率也为0。</p>
+<p>那么，根据<a href="#2">模型2</a>,可以预测雌雄虾体重：</p>
+<p>如果随机从T1池捞取一尾雄虾，它的预测体重为：</p>
+<p><span class="math inline">\(BW = 群体均值 + 雄虾的固定效应 + T1池固定效应\)</span> = 35.856019327243 + -6.2081881124781*1 + 0*1 = 29.6478312</p>
+<p>这个数值跟Male.T1的均值非常接近。</p>
+<p>如果随机从T2池捞取一尾雄虾，它的预测体重为</p>
+<p><span class="math inline">\(BW = 群体均值 + 雄虾的固定效应 + T2池固定效应\)</span> = 35.856019327243 + -6.2081881124781*1 + -2.96444990544144*1 = 26.6833813</p>
+<p>这个数值跟Male.T2的均值非常接近。</p>
+<p>如果随机从T2池捞取一尾雌虾，它的预测体重为</p>
+<p><span class="math inline">\(BW = 群体均值 + 雌虾的固定效应 + T2池固定效应\)</span> = 35.856019327243 + 0*1 + -2.96444990544144*1 = 32.8915694</p>
+<p>这个数值跟Female.T2的均值非常接近。</p>
+</div>
+<div id="section-4" class="section level3">
+<h3>4.2 带协变量的线性模型</h3>
+<p>什么是协变量（covariate)？ wikipedia中是这样解释<a href="https://en.wikipedia.org/wiki/Covariate">协变量</a>的：In statistics, a covariate is a variable that is possibly predictive of the outcome under study. A covariate may be of direct interest or it may be a confounding or interacting variable. The alternative terms explanatory variable, independent variable, or predictor, are used in a regression analysis.</p>
+<p>举个简单例子，我们从每个家系选择选择30尾个体，尾部用VIE颜色标记后，混合养殖在一起，比较每个家系的生长性能。需要考虑的一个问题就是，混合养殖前每个家系的大小，是不一样的。一般，混养前体重越大的家系，混养结束时体重也会越大。我们在分析混养后体重时，需要考虑混养前每个家系体重对它的影响。这个混养前家系体重，就是一个协变量，在回归分析中，也会称为自变量，解释变量。</p>
+<p>计算每个家系的混养后平均收获体重（M2BW）</p>
+<pre class="r"><code>shrimp.taggingbw.per.family &lt;-  shrimp[,lapply(.SD,mean,na.rm=TRUE),by=.(FamilyID),.SDcols=c(&quot;M1BW&quot;,&quot;M2BW&quot;)]
+shrimp.taggingbw.per.family</code></pre>
+<pre><code>##        FamilyID     M1BW     M2BW
+##   1: 13F1306014 8.503478 32.73478
+##   2: 13F1306015 8.614000 36.00000
+##   3: 13F1306016 8.753810 34.89286
+##   4: 13F1306019 7.747561 34.25122
+##   5: 13F1306022 8.931842 33.66842
+##  ---                             
+## 101: 13F1306802 7.274138 27.69655
+## 102: 13F1367013 5.438571 25.70000
+## 103: 13F1367075 5.016250 26.19750
+## 104: 13F1367097 6.937500 26.18125
+## 105: 13F1367106 9.000222 38.87778</code></pre>
+<p>绘制出混养前家系初始体重（M1BW）和混养后体重的散点图（M2BW）：</p>
+<pre class="r"><code>ggplot(data=shrimp.taggingbw.per.family,aes(x=M1BW,y=M2BW))+
+  geom_point()+
+  geom_smooth(method = &quot;lm&quot;)</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:taggingbwbwpoint"></span>
+<img src="/post/2017-11-19-lmm-tutorial-1_files/figure-html/taggingbwbwpoint-1.png" alt="混养前家系初始体重和混养后体重的散点图" width="672" />
+<p class="caption">
+Figure 4: 混养前家系初始体重和混养后体重的散点图
+</p>
+</div>
+<p>很明显，二者表现为正相关，相关系数为0.39。因此在对比雌雄体重差异时，需要考虑加入M1BW作为协变量，对M2BW进行校正。</p>
+<p>分析下边2个模型：</p>
+<p><a id="4">模型4</a></p>
+<p><span class="math display">\[M2BW = M1BW + \varepsilon\]</span></p>
+<pre class="r"><code>shrimp.lm.m1bw &lt;- lm(M2BW ~ M1BW,shrimp)
+summary(shrimp.lm.m1bw)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = M2BW ~ M1BW, data = shrimp)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -20.6953  -4.1186  -0.3901   3.8326  21.3708 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 24.47899    0.47668   51.35   &lt;2e-16 ***
+## M1BW         0.94848    0.06434   14.74   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 5.832 on 4239 degrees of freedom
+##   (41 observations deleted due to missingness)
+## Multiple R-squared:  0.04876,    Adjusted R-squared:  0.04854 
+## F-statistic: 217.3 on 1 and 4239 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>上边实际上是简单的回归分析，系数表中Intercept为24.4789861，表示当M1BW为0时，混养体重M2BW为24.4789861g。实际上初始体重不可能为0。因此这个截距没有实际意义。</p>
+<p>M1BW的系数估计值为0.9484804，表示初始体重每增加1g，混养体重会增加0.9484804g。</p>
+<p><a id="5">模型5</a></p>
+<p><span class="math display">\[M2BW = Sex + Sex:M1BW + \varepsilon\]</span></p>
+<pre class="r"><code>shrimp.lm.sex.m1bw &lt;- lm(M2BW~SexID+SexID:M1BW,shrimp)
+summary(shrimp.lm.sex.m1bw)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = M2BW ~ SexID + SexID:M1BW, data = shrimp)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -23.719  -3.078  -0.090   2.846  18.417 
+## 
+## Coefficients:
+##                  Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)      27.28624    0.54727  49.858  &lt; 2e-16 ***
+## SexIDMale        -5.91782    0.80948  -7.311 3.16e-13 ***
+## SexIDFemale:M1BW  0.97548    0.07385  13.208  &lt; 2e-16 ***
+## SexIDMale:M1BW    0.93313    0.08053  11.587  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 4.933 on 4237 degrees of freedom
+##   (41 observations deleted due to missingness)
+## Multiple R-squared:  0.3196, Adjusted R-squared:  0.3191 
+## F-statistic: 663.4 on 3 and 4237 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>这个模型稍微复杂一些。从系数列表中，针对雌性两个性别，给出了不同的回归系数。这主要是由于雌雄生长速度的差异造成的，后期雌虾生长速要快于雄虾。</p>
+<pre class="r"><code>ggplot(data=shrimp,aes(x=M1BW,y=M2BW,color=SexID))+geom_point()</code></pre>
+<pre><code>## Warning: Removed 41 rows containing missing values (geom_point).</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:taggingbwbwpointbysex"></span>
+<img src="/post/2017-11-19-lmm-tutorial-1_files/figure-html/taggingbwbwpointbysex-1.png" alt="雌雄虾混养前家系初始体重和混养后体重的散点图" width="672" />
+<p class="caption">
+Figure 5: 雌雄虾混养前家系初始体重和混养后体重的散点图
+</p>
+</div>
+<p>我们根据<a href="#5">模型5</a>来预测一尾雄虾的体重,假定它的混养前体重为5g，那么它的混养后体重为26.0340769g。</p>
+<p>M2BW = 27.2862423952692 + -5.91782358698496 + 0.933131628220428*5 = 26.0340769g</p>
+</div>
+<div id="section-5" class="section level3">
+<h3>4.3 包括交互效应的线性模型</h3>
+<p>模型已经变的越来越复杂了。我们进一步在<a href="#5">模型5</a>中加入养殖池TankID效应。</p>
+<p><a id="6">模型6</a></p>
+<p><span class="math display">\[M2BW = Sex + Tank + Sex:M1BW\]</span></p>
+<pre class="r"><code>shrimp.lm.sex.tank.m1bw &lt;- lm(M2BW ~ SexID + TankID + SexID:M1BW,shrimp)
+shrimp.lm.sex.tank.m1bw.sum &lt;- summary(shrimp.lm.sex.tank.m1bw)
+print(shrimp.lm.sex.tank.m1bw.sum)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = M2BW ~ SexID + TankID + SexID:M1BW, data = shrimp)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -22.2635  -2.9218  -0.1317   2.7273  19.9333 
+## 
+## Coefficients:
+##                  Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)      28.59445    0.52621  54.340  &lt; 2e-16 ***
+## SexIDMale        -5.43136    0.77289  -7.027 2.44e-12 ***
+## TankIDT2         -2.95103    0.14467 -20.399  &lt; 2e-16 ***
+## SexIDFemale:M1BW  0.99876    0.07049  14.168  &lt; 2e-16 ***
+## SexIDMale:M1BW    0.88930    0.07689  11.566  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 4.708 on 4236 degrees of freedom
+##   (41 observations deleted due to missingness)
+## Multiple R-squared:  0.3805, Adjusted R-squared:  0.3799 
+## F-statistic: 650.4 on 4 and 4236 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>从Adjusted R-squared参数（0.3798813 vs 0.2701994可以看出，模型6 对数据的解释能力，相比模型1，已经提高了。也就是说根据模型6预测体重，准确性比模型1要高。</p>
+<p>什么是交互效应？Interaction effects represent the combined effects of factors on the dependent measure. When an
+interaction effect is present, the impact of one factor depends on the level of the other factor。两个效应间相互影响，促进或者制约的关系。</p>
+<p>譬如，我们数据中有Sex和Tank两个固定效应，那么我们可能会想 雌虾会不会在特别偏爱某种环境，譬如在T1池中长得比T2池中大，但是雄虾可能会在T2池中长的比T1池大？因此我们可以在模型中试着加入交互效应。</p>
+<p><a id="7">模型7</a></p>
+<p><span class="math display">\[M2BW = Sex + Tank + Sex:Tank + Sex:M1BW\]</span></p>
+<pre class="r"><code>shrimp.lm.sex.tank.m1bw.interaction &lt;- lm(M2BW ~ SexID + TankID + SexID:TankID + SexID:M1BW,shrimp)
+shrimp.lm.sex.tank.m1bw.interaction.sum &lt;- summary(shrimp.lm.sex.tank.m1bw.interaction)
+print(shrimp.lm.sex.tank.m1bw.interaction.sum)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = M2BW ~ SexID + TankID + SexID:TankID + SexID:M1BW, 
+##     data = shrimp)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -22.2039  -2.8961  -0.1335   2.7157  19.9954 
+## 
+## Coefficients:
+##                    Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)        28.64805    0.52985  54.068  &lt; 2e-16 ***
+## SexIDMale          -5.56393    0.78792  -7.062 1.92e-12 ***
+## TankIDT2           -3.07193    0.20104 -15.280  &lt; 2e-16 ***
+## SexIDMale:TankIDT2  0.25075    0.28953   0.866    0.387    
+## SexIDFemale:M1BW    0.99972    0.07050  14.180  &lt; 2e-16 ***
+## SexIDMale:M1BW      0.89123    0.07692  11.586  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 4.708 on 4235 degrees of freedom
+##   (41 observations deleted due to missingness)
+## Multiple R-squared:  0.3806, Adjusted R-squared:  0.3798 
+## F-statistic: 520.4 on 5 and 4235 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>从系数表中，可以看出，相比两个主效应（SexIDMale：-5.563925、TankIDT2：-3.0719274），Sex和Tank的交互效应非常小（0.2507485），p &gt; 0.05，统计检验与0相比，达不到显著水平。Adjusted R-squared: 0.3798447也表明，相比<a href="#6">模型6</a>，<a href="#7">模型7</a>的解释能力并没有提高。</p>
+<p>我们图形展示一下模型7固定效应：</p>
+<pre class="r"><code>plot_model(shrimp.lm.sex.tank.m1bw.interaction,show.values = TRUE)</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:lm4plot"></span>
+<img src="/post/2017-11-19-lmm-tutorial-1_files/figure-html/lm4plot-1.png" alt="模型7固定效应图形展示" width="672" />
+<p class="caption">
+Figure 6: 模型7固定效应图形展示
+</p>
+</div>
+<p>不考虑除残差外的随机效应，目前模型6是最优模型。我们根据<a href="#6">模型6</a>，可以回答最初的问题，雌雄体重间差异显著。接下来，我们会考虑在模型中加入随机效应，进入线性混合效应模型部分。</p>
+</div>
+</div>

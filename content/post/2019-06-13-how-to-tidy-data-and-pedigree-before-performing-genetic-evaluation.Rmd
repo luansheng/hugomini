@@ -1,0 +1,141 @@
+---
+date: "2019-06-03T09:36:33-07:00"
+title: "常规遗传评估需要的数据格式和整理步骤"
+---
+
+## 文件格式
+* 育种数据分析，主要用到2个文件，系谱文件和数据文件。
+* 系谱文件和数据文件，保存为.csv格式或者.xlsx格式都可以。csv格式就是逗号分隔的文本格式。具体保存方法，在excel中输入数据后，点击保存，选择格式。
+* 数据文件名表示方式：性状前缀+世代名称Data.csv，譬如中国对虾2015年生长测试数据文件，可以用g2015G11Data.csv表示。
+* 系谱文件名表示方式：性状前缀++世代名称Ped.csv，譬如中国对虾2015年系谱文件，可以用g2015G11Ped.csv表示。
+* 如果是基于分子亲缘关系逆矩阵分析，通常扩展名为giv文件，每一列通过空格或者制表符分割。
+
+## 通用规则
+* 数据按照行保存，每一行是一个个体的记录。每一列表示不同的变量，如个体编号，父本编号，性别，出生年份等信息。
+* 第一行一般是表头，表示该列字段的意义。譬如第一列是个体编号，通常在第一行用AnimalID来表示。第二列是父本编号，通常用SireID表示。
+* 约定俗成的规定，表头一般用**英文字符**如AnimalID等来表示，因为某些统计分析或者数据处理软件软件不兼容中文。
+* 数据文件中，缺失的数据元素，用NA表示。譬如，如果看不出某只虾的性别，用NA代替。如果某只虾的性别鉴定不出来，也用NA表示。
+* 数据文件中，性状关联字段，如**收获体重**、**标记时体重**等数值字段，务必请检查数据范围，修正明显超出范围的错误值。譬如收获体重均值为10g，如果某只虾的体重为300g、1000g，明显是输入错误；如果存在0.01g，很大概率也是输入错误。
+* 对于性状、测试池等分类字段，可以利用Excel中的筛选功能，查看每个字段有多少个水平。譬如性别列，如果出现Male、male、 Female、F、female等，需要统一修正为仅包括两种性别。
+* 当用Excel整理数据时，一定要确保单元格中不能为空，如果没有值，用NA填充。系谱文件例外，见下文。
+* 如果用ASReml软件进行遗传评估，生成的扩展名为.ass的数据汇总文件务必要首先查看，核对数据是否准确。
+* 推荐利用R包DataExplorer包对待分析数据进行检查。
+
+## 系谱文件
+* 系谱文件有三个字段，分别为个体编号、父本编号和母本编号；
+* 系谱文件个体数据要按照规则排序：一个个体的父母本系谱信息必须出现在该个体前边；
+* 如果个体的父本和母本未知，用**0**代替。父本和母本要么都为0，如果只知道已授精的母本，父本也要编一个号码；
+* 如果系谱文件和数据文件共用一个文件，那么文件的前三列将是个体编号、父本编号和母本编号；
+* 如果父本编号和母本编号两列中的个体没有在个体编号列中出现，将会默认为奠基者个体。
+* 在第四列加入个体的性别是一个好的建议。
+* 可以利用optiSel、visPedigree等R包实现对系谱文件的整理
+* visPeidgree包的[中文安装和使用说明](https://luansheng.netlify.com/post/the-first-package-vispedigree-0-1/)
+
+## 数据处理实例
+
+```{r setup,include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls()) #清空已存在的各种对象和变量
+library(data.table) 
+library(visPedigree)
+library(DataExplorer)
+
+```
+
+
+### 1.读取系谱和数据文件
+[数据文件](/post/datasets/g2016G0to2017G1Ped.csv)和[系谱文件](/post/datasets/g2016G0to2017G1Data.csv)可以点击下载。
+
+下载后，跟R代码放在同一目录下，如果不打算修改下述代码，那么把数据和系谱文件放在一个新建目录datasets下。datasetsw文件夹和R脚本文件在同一个目录下。
+```{r readData&Ped}
+gPed <-
+  fread(
+    file = "datasets/g2016G0to2017G1Ped.csv",
+    sep = ",",
+    stringsAsFactors = FALSE,
+    header = TRUE
+  )
+gData <-
+  fread(
+    file = "datasets/g2016G0to2017G1Data.csv",
+    sep = ",",
+    stringsAsFactors = FALSE,
+    header = TRUE
+  )
+gPed$Sex[gPed$Sex == "0"] <- NA
+```
+
+## 2. 数据检查
+
+检查数据中分类以及连续性变量的分布，主要是发现是否有异常值。
+
+根据柱状图，可以查看世代、池塘、性别等分类变量的水平数。如果性别有三个，很容易可以查看出来。
+
+根据直方图，可以检查体重、体长、日龄等连续变量的分布，如果有异常值，也非常容易查看。
+
+连续性变量之间的散点图和相关图，用来发现不同变量间的趋势，也是非常有用的工具。
+
+```{r check_data}
+#检查分类变量
+plot_bar(gData)
+#检查连续性变量
+plot_histogram(gData)
+#检查连续性变量与收获体重间的散点图
+plot_scatterplot(split_columns(gData)$continuous, by = "M2BW")
+#检查连续性变量间的相关性
+plot_correlation(gData, type = "continuous")
+```
+
+
+## 3.预处理系谱、提纯系谱、数字化系谱  
+visPedigree包中的tidyped()函数，主要有两个功能:  
+
+* 包括了自动补全不在系谱ID列中的个体号，以及提纯功能。
+* 把与当前数据集中个体没有亲缘关系的系谱个体，全部剔除掉
+
+```{r transformPed}
+#预处理系谱，主要是把父母本的系谱设置为0
+gPed_tidy <- tidyped(ped = gPed, cand  = gData$AnimalID)
+gPed_tidy
+```
+
+整理后系谱的包含的个体数，要少于原始系谱。
+
+## 4.画出个体的系谱树
+
+侧面验证一下提纯后的系谱，是否正确。
+
+从数据集中最后一尾虾，画出系谱图。
+
+这里需要注意的是，`visped()`函数要求个体的父本和母本，要么双亲独有，要么都没有，不能一个有，一个没有。
+
+实际上可能会存在这样一个情况，像两只已经交尾的母虾，有可能来自同一尾公虾，但是即便是这种情况，也需要给父本一个随机编号，假定他们是各不相同的。
+
+即便是设置为缺失，应该也是这种情况。
+
+```{r plotPedigree,eval=TRUE,echo=TRUE, warning=FALSE, message= FALSE, fig.width=10, fig.height=8, out.width= '100%'}
+one_pedigree <-
+  tidyped(ped = gPed_tidy, cand = gData$AnimalID[nrow(gData)])
+visped(ped = one_pedigree)
+```
+
+
+## 4.输出系谱
+
+输出系谱时，设置缺失的父本和母本编号为0。
+
+`fwrite()`函数来自data.table包。
+
+```{r PedOutput}
+gPed_tidy[is.na(Sire), Sire := "0"]
+gPed_tidy[is.na(Dam), Dam := "0"]
+fwrite(
+  gPed_tidy,
+  file = "datasets/g2016G0to2017G1Pedpruned.csv",
+  sep = ",",
+  row.names = F,
+  na = "NA",
+  quote = FALSE
+)
+```
+

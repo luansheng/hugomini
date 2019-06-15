@@ -1,0 +1,222 @@
+---
+title: 如何构建G矩阵-基因组亲缘关系矩阵（Genomic relationships matrix）
+author: Sheng Luan
+date: '2018-12-09'
+slug: how-to-construct-g-matrix
+categories:
+  - 数量遗传学
+tags:
+  - R
+  - 亲缘关系
+---
+
+自己的选择育种知识，又到了大规模系统学习和更新的时候了。
+
+自从2005年开始学习水产动物选择育种知识以来，采取囫囵吞枣模式，虽然对于REML算法和BLUP算法的细节知识仍然一知半解，好歹相关的软件如ASReml、R等可以以较为熟练的使用，对于选择育种体系的理解也逐渐深入，常规的遗传评估工作算是可以胜任。
+
+全基因组选择方法建立以来，尽管迅速在奶牛、猪等大动物上展现了优越的性能，然而对于虾等个体小、世代周期短的动物，如何应用，仍然是一个难题，也是我正在努力研究的方向。
+
+然而，基于高通量SNP标记信息，获得的亲缘关系更加准确，这一结论已经毋容置疑。
+
+因此，自这个blog开始，将逐渐学习并记录基于SNP标记的基因组选择评估方法，逐渐更新自己的知识体系。随着年龄的增大，知识体系的更新会慢很多，且行且记吧。
+
+计算G矩阵的方法有很多种，目前引用较多的是Vanraden于2008年发表在Journal of Dairy Science上的文章"[Efficient methods to compute genomic predictions](#1)"中所建立的方法，目前该论文已经被引用了超过1500次。
+
+一些背景知识：
+
+* IBD (Identical by discent)，血缘同源。
+* IBS (Identical by state)，状态同源。
+
+通常我们会讲，如果一段DNA在两个或者多个个体中均有一致的核苷酸序列，那么可以定义该DNA片段属性为状态同源，即IBS。
+
+在两个或者多个个体中的一个IBS片段，如果遗传自一个共同的祖先个体，且没有发生重组，那么该片段也是血缘同源的，即IBD。
+
+一段DNA，如果是IBD，那么肯定也是IBS；如果片段不是IBD，也有可能是IBS，因为不同个体中发生了相同的突变，或者重组没有改变片段等原因所致。
+
+关于IBD和IBS的定义，参见[WIKIPEDIA](https://en.wikipedia.org/wiki/Identity_by_descent)。
+
+个体间的亲缘关系(relationship)，可以通过以下两种方法估计：
+
+* 通过系谱进行计算，利用处于IBD状态的等位基因估计个体间的亲缘关系
+* 通过分子标记，利用处于IBS状态的基因估计个体间共享染色体片段的百分比，估计个体间的相似性
+
+下边的SNP例子，主要来自Fikret Isik的一个Presentation： “[Genomic Relationships and GBLUP](https://articles.extension.org/pages/68019/genomic-relationships-and-gblup)”，但幻灯片中P、Z矩阵的计算结果是错误的。
+
+
+## 1. 构建M矩阵
+
+M矩阵是一个n×m矩阵，n表示个体数（the number of individuals），m表示位点数（the number of loci）。
+
+譬如有3个二倍体个体，4个SNP位点。对于每个位点，小写等位基因表示其出现频率最低。
+
+
+```{r setup, results="asis"}
+rm(list=ls())
+# 加载synbreed包
+is_installed <- require(xtable)
+if (!is_installed) {
+  install.packages("xtable")
+  library(xtable)
+}
+genotypes <-
+  data.frame(
+  snp1 = c("AA", "AA", "tt"),
+  snp2 = c("Ct", "Ct", "CC"),
+  snp3 = c("GG", "Ga", "GG"),
+  snp4 = c("Ag", "AA", "AA"),
+  row.names = c("Ind1", "Ind2", "Ind3"),
+  stringsAsFactors = FALSE
+  )
+print(xtable(genotypes),type="html")
+```
+
+把基因型矩阵转换为基因含量矩阵，具体参数用基因型中最小频率等位基因的个数表示，即0、1、2。因此我们称这个矩阵为MAF矩阵。
+
+转换用到了synbreed包中的codeGeno函数。
+```{r m_matrix}
+# 加载synbreed包
+is_installed <- require(synbreed)
+if (!is_installed) {
+  install.packages("synbreed")
+  library(synbreed)
+}
+
+# 把小写字母转换为大写字母
+genotypes <- apply(genotypes, 2, function(x) toupper(x))
+
+# 创建codeGeno函数需要的数据类型
+genotypes_gp <- create.gpData(geno = genotypes)
+# codeGeno默认计算MAF等位基因的个数
+M <- codeGeno(genotypes_gp,reference.allele = "minor")$geno
+M
+```
+为了便于计算，通常会将M矩阵减1，每个位点等位基因含量变为-1、0、1三种形式。减1的目的也是为了将每列的均值标准化为0。如果三种等位基因型出现的频率是相同的，那么-1后，每列的均值就是0。
+```{r M_1}
+M <-  M - 1 
+M
+```
+
+## 2. MM'矩阵
+
+```{r MtM}
+M %*% t(M)
+```
+
+MM'对角线数字为2、2、4，分别表示三个个体基因型为纯合的位点数。譬如Ind1，四个位点中有两个位点的基因型为纯合类型（AA和GG），而Ind3个体四个位点基因型全部为纯合类型。
+
+非对角线元素，表示亲缘个体间共享的等位基因数。原英文：off-diagonals measure the number of alleles shared by relatives，不是很理解。
+
+## 3. M'M矩阵
+
+```{r tMM}
+t(M) %*% M
+```
+
+M'M对角线数字为3、1、2、2，分别表示四个位点纯合基因型的个体数。譬如位点snp1，有3个个体基因型全部为纯合；位点snp2，有1个个体基因型为纯合。
+
+非对角线元素表示什么意思，还不是很清楚。原英文：off-diagonals measure the number of times alleles at different loci were inherited by the same individual.
+
+## 4. 构建P矩阵
+
+根据下述公式构建P矩阵的每一列：
+
+$$P_{i} = 2(p_{i}-0.5)$$
+
+其中i表示位点编号，$p_{i}$表示每个位点最小等位基因频率。P矩阵中反应的是每个snp位点（每列）两个等位基因频率偏离均值0.5的程度。以snp1，最小等位基因为t，频率为p=2/6=0.333333；那么数字化后=c(0, 0, 2), 再减1后为c(-1, -1, 1)，相加为-1而不是0，如何标准化为0？因此这里需要用到偏离矩阵，P=2(0.333333-0.5)= -0.333334。在下一部分构建Z矩阵时, M-P = -1 - 3*(-0.333334) ≈ 0。
+
+
+
+```{r}
+#计算每个位点的MAF.
+p_lower <- (apply(M,2,sum)+nrow(M))/(nrow(M)*2)
+p_upper <- 2*(p_lower-0.5)
+p_matrix <- matrix(p_upper,byrow=T,nrow=nrow(M),ncol=ncol(M))
+P <- p_matrix
+P
+```
+
+每一列，即每个位点的最小等位基因频率都是相同的数字。
+
+## 5. 构建Z矩阵
+
+Z矩阵实际上是中心化后的M矩阵。
+
+原文中M-P的作用：
+
+* Sets means values of  the allele effects to 0. 从下边Z矩阵可以看出，每一列SNP位点，等位基因效应的和为0。
+* Gives more credit to rare alleles than to common alleles when calculating genomic relationships. 意思是以MAF基因频率去进行中心化？
+* Allele frequencies in P should be from the unselected base population rather than those that occur after selection or inbreeding. An earlier or later base population can lead to greater or fewer relationships and to more or less inbreeding.
+* The genomic inbreeding coefficient is greater if the individual is homozygous for rare alleles than if homozygous for common alleles.
+
+
+```{r Z}
+Z <-  M - P
+Z
+```
+
+## 6. 构建G矩阵
+
+构建方法，在文章中提到了3种：
+
+### 6.1 第一种方法：
+
+$$G = \frac{ZZ'}{2\sum{p_{i}(1-p_{i})}}$$
+
+Z为SNP标记的设计矩阵；公式中，$p_{i}$为每个位点的最小等位基因频率。
+公式中分母部分，是为了使G矩阵与A矩阵的尺度相一致。$\sum{p_{i}(1-p_{i})}$ scales G to be analogous to the numerator relationship matrix A.
+
+```{r output_G1, results='asis'}
+d <- 2*sum(p_lower*(1 - p_lower))
+G <- Z %*% t(Z) / d
+print(xtable(G),type="html")
+```
+
+邓飞在他的[科学网博客](http://wap.sciencenet.cn/blog-2577109-1122903.html)，利用sommer包对上述结果进行了验证。在此，同样利用sommer包的` A.mat()`函数进行验证。可以看出，计算结果是一致的。sommer 包现在核心函数已经用C++重写，性能可期待。
+
+```{r sommer, results="asis"}
+suppressPackageStartupMessages(is_installed <- require(sommer))
+if (!is_installed) {
+  install.packages("sommer")
+  library(sommer)
+}
+print(xtable(A.mat(M)),type="html")
+```
+
+个体j的基因组近交系数等于$G_{jj}-1$。
+
+```{r}
+diag(G) - 1
+```
+
+Ind1和Ind2个体的近交系数为负值，这表明基因组近交系数跟传统的基于系谱的近交系数并不在一个尺度上。
+
+个体间的基因组亲缘关系，譬如j、k个体间的亲缘关系，= $G_{jk}/\sqrt{G_{jj}G_{kk}}$。
+
+现在计算Ind1和Ind2个体间的亲缘关系，= $G_{12}/\sqrt{G_{11}G_{22}}$ = `r G[1,2]/(G[1,1]*G[2,2])`。这个系数，跟经典的[Relationship coefficient of Wright （1922）](#2)非常相似。
+
+由于对角线元素一般都在1左右，因此j与k的基因组亲缘关系（Genomic relationship）也就基本约等于G矩阵中相对应的值。
+
+如果把G阵与传统A阵（Additive genetic relationship matrix 或 numerator relationship matrix）类比，那么j与k的共亲系数（coancestry coefficient）同样是基因组亲缘系数的一半。
+
+### 6.2 第二种方法
+
+$$G = ZDZ'$$
+
+D是一个对角矩阵，其中$D_{ii}$等于
+$$D_{ii} = \frac{1}{m[2p_{i}(1-p_{i})]}$$
+
+第二种方法是第一种方法的一个变体，利用每个位点期望方差的倒数，对标记效应值进行加权。
+
+```{r output_G2, results="asis"}
+D_ii <- 1/(ncol(M)*(2*p_lower*(1 - p_lower)))
+# 构建对角矩阵
+D <- diag(D_ii,ncol(M))
+G <- Z %*% D %*% t(Z)
+print(xtable(G),type="html")
+```
+
+参考文献：
+
+<a id="1">Vanraden P M. Efficient methods to compute genomic predictions.[J]. Journal of Dairy Science, 2008, 91(11):4414-4423.</a>
+
+<a id="2">Wright, S. 1922. Coefficients of inbreeding and relationship. Am.Nat. 56:330–338.</a>

@@ -1,0 +1,114 @@
+---
+title: '如何在EV3上安装ev3dev系统 '
+author: Sheng Luan
+date: '2018-01-06'
+slug: how-to-install-ev3dev
+categories:
+  - 机器人
+  - 编程
+tags:
+  - EV3
+  - python
+---
+
+EV3是乐高机器人，除了官方系统，有人进行逆向工程，建立了一个基于Debian的开源linux系统[EV3DEV](http://www.ev3dev.org/)。然后就可以利用python等编程语言，控制EV3机器人。本文记录基于Windows 10系统的安装过程。
+
+详细的过程，可以参考官方网站[Getting Started with ev3dev](http://www.ev3dev.org/docs/getting-started/)。
+
+## 1. 准备的硬件
+
+需要一个micro SD卡，我购买的是[金士顿（Kingston）16GB Class4 TF(Micro SD)存储卡](https://item.jd.com/343546.html)。看官网介绍，大于32G的卡，EV3读不出来。
+
+另外需要一个读卡器，同样购买的[金士顿（Kingston）USB 2.0 TF（Micro SD）读卡器（FCR-MRG2）](https://item.jd.com/343389.html)。
+
+还需要一台计算机，最好是笔记本电脑，支持蓝牙或者wifi无线网络。
+
+## 2.制作EV3DEV启动盘
+
+### 2.1 下载EV3DEV镜像文件。
+
+目前官网上的下载地址下载不了，通过其[github](https://github.com/ev3dev)找到了下载地址，在[这里](https://github.com/ev3dev/ev3dev/releases)，目前最新的是2017-09-14发布的镜像文件。
+
+### 2.2 把镜像文件烧录到sd卡
+
+下载原文中推荐的img镜像烧录软件[etcher](https://etcher.io/)，这个软件使用简单，非常好用。
+
+## 3. 利用EV3DEV启动EV3
+
+把**sd卡正面跟EV3正面一个方向**，插入卡槽中。然后从EV3主机上按启动键，会出现一个带有小企鹅的启动画面，启动需要等一段时间。
+
+## 4. 通过蓝牙连接EV3主机与电脑
+
+为了控制EV3，必须要有另外一台电脑，与EV3建立连接，控制EV3。本文推荐蓝牙连接。因为如果想通过wifi连接，还需要再买一个EV3专用的无线网卡。
+
+具体的连接方法，参考[这里](http://www.ev3dev.org/docs/tutorials/connecting-to-the-internet-via-bluetooth/)。请注意，文中给出了连接安卓、苹果和windows三个系统的蓝牙连接设置方法，win10的设置在网页最下边。务必要严格按照网页要求的步骤来设置。
+
+但是，目前按照这个教程，设置EV3跟电脑蓝牙连接后，EV3并不能通过蓝牙连接电脑的无线网络上网。这是一个当前**还没有解决的问题**。
+
+## 5. 通过SSH协议登录并控制EV3主机
+
+如果是win10系统，下载一个[putty软件](https://www.chiark.greenend.org.uk/~sgtatham/putty/)，然后填入在EV3主机中显示的IP地址，譬如：169.254.26.0，然后点击open，会弹出一个黑色的命令行窗口，稍微等一会，根据提示输入用户名：**robot**，回车后，根据提示输入密码：**maker**，然后等一会，如果登陆成功，会显示如下画面：
+
+![putty成功登陆EV3][EV3log]
+
+[EV3log]: /post/images/puttyev3.png "putty成功登陆EV3"
+
+## 6. 通过python控制EV3
+
+可以认为，python是EV3DEV系统支持的官方语言。想学习如何利用pyhton控制EV3，可以参考[这里](http://python-ev3dev.readthedocs.io/en/stable/)。
+
+### 6.1 控制EV3说话
+
+"hello,world"是编程学习时的经典输出语句。下边我们试着让EV3直接说出来：
+
+首先在成功连接EV3的putty窗口中，输入**python3**，启动python环境，成功后是这样：
+
+![EV3上启动python3][EV3python]
+
+[EV3python]: /post/images/puttyev3python.png "EV3上启动python3"
+
+然后在python控制台下，输入下列命令：
+
+```python
+#导入ev3dev.ev3模块
+import ev3dev.ev3 as ev3
+
+#调用ev3的声音模块发出声音
+ev3.Sound.speak('hello,world').wait()
+```
+
+程序运行成功后的putty窗口：
+
+![EV3说出hello, world][EV3helloworld]
+
+[EV3helloworld]: /post/images/puttyev3helloworld.png "EV3说出hello, world"
+
+### 6.2 控制马达转动
+
+```python
+#控制连接到主机A端口的一个大型马达
+m = ev3.LargeMotor('outA')
+
+# speed_sp控制马达转速，这里的用的是ticks per second
+# time_sp控制马达的启动时间，表示的是毫秒
+m.run_timed(time_sp=3000, speed_sp=500)
+```
+
+### todo
+
+如何把电脑写好的python程序传输到EV3上并执行？
+
+[EV3DEV教程中心](http://www.ev3dev.org/docs/tutorials/)
+
+[Working with ev3dev remotely using RPyC](http://python-ev3dev.readthedocs.io/en/stable/rpyc.html)
+
+
+
+
+
+
+
+
+
+
+

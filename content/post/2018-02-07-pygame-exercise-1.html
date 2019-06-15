@@ -1,0 +1,44 @@
+---
+title: pygame 练习1
+author: Sheng Luan
+date: '2018-02-07'
+slug: pygame-exercise-1
+categories:
+  - 编程
+tags:
+  - python
+  - pygame
+---
+
+
+
+<p>栾佳硕给出的作业，用Pygame显示一个窗口（填充为黑色）:</p>
+<pre class="python"><code># -*- coding: utf-8 -*-
+import pygame as pg
+from pygame.locals import *
+from sys import exit
+
+#初始化pygame
+pg.init()
+
+#设置屏幕分辨率640*480
+screen = pg.display.set_mode((640,480),0,32)
+
+#设置窗口的标题
+pg.display.set_caption(&quot;黑色窗口&quot;)
+
+#设置背景色
+bg_color = (0,0,0)
+
+
+while True:
+    for event in pg.event.get():
+        if event.type == QUIT:
+            #接收到退出事件后退出程序
+            exit()
+    screen.fill(bg_color)</code></pre>
+<p>运行结果如下图所示：</p>
+<div class="figure">
+<img src="/post/images/2018-02-07.png" title="pygame生成的黑色窗口" alt="pygame生成的黑色窗口" />
+<p class="caption">pygame生成的黑色窗口</p>
+</div>

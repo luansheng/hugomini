@@ -1,0 +1,198 @@
+---
+title: 如何可视化家系间的亲缘关系
+author: Sheng Luan
+date: '2017-06-06'
+categories:
+  - R
+  - 可视化
+tags:
+  - 家系
+  - 亲缘关系
+  - R Markdown
+  - circlize
+slug: family-relationship-circle
+---
+
+
+
+<ul>
+<li>运行前清除掉原来的一些对象变量，然后加载包。</li>
+<li>optiSel（处理系谱数据、计算个体间的共亲系数）、dplyr（清洗数据）、data.table（数据框存为该格式，加快清洗速度）和reshape2（清洗数据）</li>
+</ul>
+<pre class="r"><code>rm(list=ls())
+knitr::opts_chunk$set(echo = TRUE,cache = FALSE,warning=FALSE,message=FALSE,dpi = 600,fig.width = 8, out.width = &quot;70%&quot;, fig.align = &quot;center&quot;)</code></pre>
+<pre class="r"><code>require(optiSel) #系谱处理和计算共亲系数
+require(dplyr) #数据清洗
+require(data.table) #加快计算速度
+require(reshape2) #数据变形
+require(magrittr) #管道符
+require(circlize) #加载circlize包画弦线图</code></pre>
+<div id="circlize" class="section level2">
+<h2>1.circlize简介</h2>
+<p>circlize (<a href="https://cran.r-project.org/web/packages/circlize/" class="uri">https://cran.r-project.org/web/packages/circlize/</a>) 是一个华人(Zuguang Gu)开发的包，是对用于基因组数据进行展示的circos (<a href="http://circos.ca/" class="uri">http://circos.ca/</a>) 软件功能的一个R实现包。<br />
+circlize的功能（<a href="http://zuguang.de/circlize_book/book/" class="uri">http://zuguang.de/circlize_book/book/</a>） 非常多，这里我们主要是利用它解析家系间的亲缘关系。</p>
+</div>
+<div id="circlize-1" class="section level2">
+<h2>2. circlize使用</h2>
+<div id="section" class="section level3">
+<h3>2.1 数据读取</h3>
+<p>演示数据主要来自于一种虾的系谱。首先利用R自带的read.table函数读取系谱信息。</p>
+<pre class="r"><code>test.ped &lt;-  read.table(file=&quot;datasets/TestPed.csv&quot;,header = TRUE,sep=&quot;,&quot;,stringsAsFactors = TRUE)
+tail(test.ped)</code></pre>
+<pre><code>##       AnimalID     SireID      DamID FamilyID SexID Year
+## 1273 XX010A185  XX900D014  XX900C831  16XY881     2 2116
+## 1274 XX010A139  XX900A422  XX900C823  16XY891     1 2116
+## 1275 XX010A058 XX900XY064  XX900C953  16XY901     2 2116
+## 1276 XX010A091  XX900A391 XX900XY676  16XY921     2 2116
+## 1277 XX010A096  XX900A553 XX900XY135  16XY961     1 2116
+## 1278 XX010A040 XX900XY326  XX900E185  16XY981     1 2116</code></pre>
+</div>
+<div id="section-1" class="section level3">
+<h3>2.2 系谱分析和亲缘系数计算</h3>
+<ul>
+<li>为了加快计算速度，将数据框转换为data.table格式；</li>
+<li>利用optiSel包中的prePed函数对系谱进行整理，主要目的是对系谱按照祖先在前，个体在后的顺序进行排序；</li>
+<li>利用optiSel包中的pedIBD函数计算2116任意两个体间的共亲系数；</li>
+</ul>
+<pre class="r"><code>#prePed函数来自optiSel
+test.ped.pre &lt;- prePed(test.ped)
+#筛选2016年个体
+keep &lt;- test.ped.pre$Indiv[test.ped.pre$Year == 2116]
+#在计算个体间的共亲系数前，每个家系只入选一个个体做代表，整体计算量就下来了。
+unique.indiv &lt;-  distinct(test.ped.pre[keep,],Sire,Dam,Sex, .keep_all = TRUE)$Indiv
+#计算2016年家系个体间的共亲系数
+keep.kin &lt;- pedIBD(test.ped.pre, keep.only = unique.indiv)
+#keep.kin是一个对称矩阵
+class(keep.kin)</code></pre>
+<pre><code>## [1] &quot;matrix&quot;</code></pre>
+<ul>
+<li>数据整理为3列形式</li>
+</ul>
+<pre class="r"><code>#转为data.table格式
+keep.kin.data.table &lt;-
+    as.data.table(keep.kin, keep.rownames = TRUE)
+#利用reshape2包中的melt函数将矩阵转为3列形式  
+keep.kin.three.column &lt;-
+    melt(
+      keep.kin.data.table,
+      id.vars = c(&quot;rn&quot;),
+      measure.vars =    colnames(keep.kin.data.table)[-1]
+    )
+colnames(keep.kin.three.column) &lt;- c(&quot;ID1&quot;, &quot;ID2&quot;, &quot;cc&quot;)
+head(keep.kin.three.column)</code></pre>
+<pre><code>##          ID1       ID2         cc
+## 1: XX010A022 XX010A022 0.52929688
+## 2: XX010A002 XX010A022 0.07714844
+## 3: XX010A528 XX010A022 0.07714844
+## 4: XX010A204 XX010A022 0.11425781
+## 5: XX010A050 XX010A022 0.09277344
+## 6: XX010A348 XX010A022 0.00000000</code></pre>
+<pre class="r"><code>max(keep.kin.three.column$cc)</code></pre>
+<pre><code>## [1] 0.5332031</code></pre>
+<pre class="r"><code>keep.kin.three.column$ID2 &lt;-
+  as.character(keep.kin.three.column$ID2)
+#利用管道符号 %&gt;% 简化代码书写和计算流程
+#找出每个个体所在的家系
+keep.kin.three.column.family &lt;- keep.kin.three.column %&gt;%
+  left_join(., test.ped.pre[, c(&quot;Indiv&quot;, &quot;FamilyID&quot;)], by = c(&quot;ID1&quot; = &quot;Indiv&quot;)) %&gt;%
+  left_join(., test.ped.pre[, c(&quot;Indiv&quot;, &quot;FamilyID&quot;)], by = c(&quot;ID2&quot; = &quot;Indiv&quot;)) 
+
+#去除重复的家系组合,理论上不会再有重复
+keep.kin.three.column.family.unique &lt;-
+  keep.kin.three.column.family[, c(&quot;FamilyID.x&quot;, &quot;FamilyID.y&quot;, &quot;cc&quot;)] %&gt;%
+  distinct(.,
+           FamilyID.x,
+           FamilyID.y,
+           cc,
+           .keep_all = TRUE)  
+head(keep.kin.three.column.family)</code></pre>
+<pre><code>##         ID1       ID2         cc FamilyID.x FamilyID.y
+## 1 XX010A022 XX010A022 0.52929688   16XY1191   16XY1191
+## 2 XX010A002 XX010A022 0.07714844   16XY1201   16XY1191
+## 3 XX010A528 XX010A022 0.07714844   16XY1202   16XY1191
+## 4 XX010A204 XX010A022 0.11425781   16XY1211   16XY1191
+## 5 XX010A050 XX010A022 0.09277344   16XY1241   16XY1191
+## 6 XX010A348 XX010A022 0.00000000    16XY011   16XY1191</code></pre>
+</div>
+<div id="circlize-2" class="section level3">
+<h3>2.3 用circlize画圈图</h3>
+<div id="section-2" class="section level4">
+<h4>2.3.1 选取10个家系，绘制它们间的亲缘系数</h4>
+<pre class="r"><code>ten.families &lt;- unique(keep.kin.three.column.family.unique$FamilyID.x)[1:10]
+keep.kin.three.column.family.ten &lt;- keep.kin.three.column.family.unique %&gt;%  
+  filter(., (FamilyID.x %in% ten.families) &amp; (FamilyID.y %in% ten.families))
+chordDiagram(keep.kin.three.column.family.ten)</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:tenfamilycccircos"></span>
+<img src="/post/2017-06-06-family-relationship-circle_files/figure-html/tenfamilycccircos-1.png" alt="10个家系间的共亲系数弦状图" width="70%" />
+<p class="caption">
+Figure 1: 10个家系间的共亲系数弦状图
+</p>
+</div>
+<pre class="r"><code>circos.clear()
+sort(unique(keep.kin.three.column.family.ten$cc))</code></pre>
+<pre><code>##  [1] 0.00000000 0.05923021 0.06555462 0.06933594 0.07493985 0.07714844
+##  [7] 0.08462715 0.08496094 0.09277344 0.09562135 0.11425781 0.11494756
+## [13] 0.12402344 0.16125262 0.19129539 0.23632812 0.51935029 0.52068853
+## [19] 0.52125573 0.52234769 0.52343750 0.52929688 0.53320312</code></pre>
+</div>
+<div id="section-3" class="section level4">
+<h4>2.3.2 清除自我连接后的家系亲缘关系弦状图</h4>
+<ul>
+<li>从上图中可以看出，每个家系自我连接。在不考虑个体自身近交系数的情况下，主要是指个体自身的共亲系数0.5。</li>
+</ul>
+<p>下边的代码将会清除家系间的自我连接。</p>
+<pre class="r"><code>keep.kin.three.column.family.ten.between &lt;- keep.kin.three.column.family.ten %&gt;% 
+  filter(.,!(FamilyID.x==FamilyID.y))
+sort(unique(keep.kin.three.column.family.ten.between$cc))</code></pre>
+<pre><code>##  [1] 0.00000000 0.05923021 0.06555462 0.06933594 0.07493985 0.07714844
+##  [7] 0.08462715 0.08496094 0.09277344 0.09562135 0.11425781 0.11494756
+## [13] 0.12402344 0.16125262 0.19129539 0.23632812</code></pre>
+<pre class="r"><code>chordDiagram(keep.kin.three.column.family.ten.between)</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:tenfamilycccircosnowithin"></span>
+<img src="/post/2017-06-06-family-relationship-circle_files/figure-html/tenfamilycccircosnowithin-1.png" alt="10个家系间的共亲系数弦状图(排除家系内的共亲系数)" width="70%" />
+<p class="caption">
+Figure 2: 10个家系间的共亲系数弦状图(排除家系内的共亲系数)
+</p>
+</div>
+<pre class="r"><code>circos.clear()</code></pre>
+</div>
+<div id="section-4" class="section level4">
+<h4>2.3.3 设定区块和连接线的颜色</h4>
+<p>circlize生成的区块和连接线颜色，都是随机的。如果想要使用自己设定的颜色，需要设定<strong>grid.col</strong>参数，生成颜色可以有多种颜色函数，这里用的是rainbow(),来自R自带的包grDevices。</p>
+<pre class="r"><code>chordDiagram(keep.kin.three.column.family.ten.between,grid.col = rainbow(10))</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:circoscolor"></span>
+<img src="/post/2017-06-06-family-relationship-circle_files/figure-html/circoscolor-1.png" alt="设定区块和连接线的颜色（grid.col参数）" width="70%" />
+<p class="caption">
+Figure 3: 设定区块和连接线的颜色（grid.col参数）
+</p>
+</div>
+<pre class="r"><code>circos.clear()</code></pre>
+</div>
+<div id="section-5" class="section level4">
+<h4>2.3.4 一种简单的作图形式。</h4>
+<p>其实前边的对称矩阵keep.kin可以不用再去变为3列矩阵，也不需要去掉重复等，可以直接用对称矩阵作图。
+<strong>symmetric=TRUE</strong>表示矩阵是对称的，只使用下三角矩阵。</p>
+<pre class="r"><code>keep.kin.ten.family.sym &lt;- keep.kin[ten.families,ten.families]
+chordDiagram(keep.kin.ten.family.sym,grid.col = rainbow(10),symmetric = TRUE)</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:symmatrixnotshow"></span>
+<img src="/post/2017-06-06-family-relationship-circle_files/figure-html/symmatrixnotshow-1.png" alt="画出家系间的亲缘关系（排除家系自身亲缘系数）" width="70%" />
+<p class="caption">
+Figure 4: 画出家系间的亲缘关系（排除家系自身亲缘系数）
+</p>
+</div>
+<pre class="r"><code>chordDiagram(keep.kin.ten.family.sym,grid.col = rainbow(10),symmetric = FALSE)</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:symmatrixshow"></span>
+<img src="/post/2017-06-06-family-relationship-circle_files/figure-html/symmatrixshow-1.png" alt="画出家系间的亲缘关系（包括家系自身亲缘系数）" width="70%" />
+<p class="caption">
+Figure 5: 画出家系间的亲缘关系（包括家系自身亲缘系数）
+</p>
+</div>
+<ul>
+<li>画出全部家系间的弦状图(这个图非常耗费时间，在chunk中设置eval=FALSE屏蔽了，只展示代码)</li>
+</ul>
+<pre class="r"><code>keep.kin.three.column.family.unique.no.within &lt;- keep.kin.three.column.family.unique %&gt;% filter(., !(FamilyID.x == FamilyID.y))
+chordDiagram(keep.kin.three.column.family.unique.no.within)
+circos.clear()</code></pre>
+</div>
+</div>
+</div>

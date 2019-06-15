@@ -1,0 +1,389 @@
+---
+title: data.table学习笔记1
+author: Sheng Luan
+date: '2017-07-03'
+categories:
+  - R
+  - 数据清洗
+tags:
+  - Data.table
+  - R
+slug: data-table-note-1
+---
+
+
+
+<p>data.table的特点：<strong>减小计算复杂度</strong>，降低<strong>计算时间</strong>。</p>
+<div id="section" class="section level1">
+<h1>1.数据</h1>
+<p>教程中，使用<a href="https://raw.githubusercontent.com/wiki/arunsrinivasan/%20flights/NYCflights14/flights14.csv">NYC-flights14数据集</a>，纽约机场2014年出发的所有航班信息，时间是2014.01-10月份。下载到本地目录，与Rmd代码在同一目录
+data.table中提供了fread()函数，用于快速读取大数据。<br />
+执行代码前，首先运行<code>setwd()</code>或者通过rstudio软件<code>Session</code> -&gt; <code>Set Working Directory</code> -&gt; <code>To Source File Location</code>，将工作目录切换到代码文件和数据文件所在路径。</p>
+<pre class="r"><code>require(data.table)</code></pre>
+<pre><code>## Loading required package: data.table</code></pre>
+<pre class="r"><code>flights &lt;- fread(&quot;datasets/flights14.csv&quot;)
+flights</code></pre>
+<pre><code>##         year month day dep_time dep_delay arr_time arr_delay cancelled
+##      1: 2014     1   1      914        14     1238        13         0
+##      2: 2014     1   1     1157        -3     1523        13         0
+##      3: 2014     1   1     1902         2     2224         9         0
+##      4: 2014     1   1      722        -8     1014       -26         0
+##      5: 2014     1   1     1347         2     1706         1         0
+##     ---                                                               
+## 253312: 2014    10  31     1459         1     1747       -30         0
+## 253313: 2014    10  31      854        -5     1147       -14         0
+## 253314: 2014    10  31     1102        -8     1311        16         0
+## 253315: 2014    10  31     1106        -4     1325        15         0
+## 253316: 2014    10  31      824        -5     1045         1         0
+##         carrier tailnum flight origin dest air_time distance hour min
+##      1:      AA  N338AA      1    JFK  LAX      359     2475    9  14
+##      2:      AA  N335AA      3    JFK  LAX      363     2475   11  57
+##      3:      AA  N327AA     21    JFK  LAX      351     2475   19   2
+##      4:      AA  N3EHAA     29    LGA  PBI      157     1035    7  22
+##      5:      AA  N319AA    117    JFK  LAX      350     2475   13  47
+##     ---                                                              
+## 253312:      UA  N23708   1744    LGA  IAH      201     1416   14  59
+## 253313:      UA  N33132   1758    EWR  IAH      189     1400    8  54
+## 253314:      MQ  N827MQ   3591    LGA  RDU       83      431   11   2
+## 253315:      MQ  N511MQ   3592    LGA  DTW       75      502   11   6
+## 253316:      MQ  N813MQ   3599    LGA  SDF      110      659    8  24</code></pre>
+<pre class="r"><code>class(flights)</code></pre>
+<pre><code>## [1] &quot;data.table&quot; &quot;data.frame&quot;</code></pre>
+</div>
+<div id="section-1" class="section level1">
+<h1>2.基础</h1>
+<p>flights的类型显示为data.table和data.frame。也可以通过<code>as.data.table()</code>将对象转化为data.table类型。<br />
+读取形式 语法如下所示：</p>
+<pre><code>DT[i, j, by]</code></pre>
+<p>其中i表示行过滤（实际上按照行选择数据集），j表示对列进行选择，by表示根据什么条件进行分组。</p>
+<div id="section-2" class="section level2">
+<h2>2.1行过滤</h2>
+<p>首先来看一下，如何对行进行过滤。譬如要获得6月份从JFK机场起飞，途径纽约或者终点是纽约的航班信息。</p>
+<pre class="r"><code>flights.JFK &lt;-  flights[origin==&quot;JFK&quot; &amp; month == 6L]
+head(flights.JFK)</code></pre>
+<pre><code>##    year month day dep_time dep_delay arr_time arr_delay cancelled carrier
+## 1: 2014     6   1      851        -9     1205        -5         0      AA
+## 2: 2014     6   1     1220       -10     1522       -13         0      AA
+## 3: 2014     6   1      718        18     1014        -1         0      AA
+## 4: 2014     6   1     1024        -6     1314       -16         0      AA
+## 5: 2014     6   1     1841        -4     2125       -45         0      AA
+## 6: 2014     6   1     1454        -6     1757       -23         0      AA
+##    tailnum flight origin dest air_time distance hour min
+## 1:  N787AA      1    JFK  LAX      324     2475    8  51
+## 2:  N795AA      3    JFK  LAX      329     2475   12  20
+## 3:  N784AA      9    JFK  LAX      326     2475    7  18
+## 4:  N791AA     19    JFK  LAX      320     2475   10  24
+## 5:  N790AA     21    JFK  LAX      326     2475   18  41
+## 6:  N785AA    117    JFK  LAX      329     2475   14  54</code></pre>
+<p>data.table的语法跟dplyr类似，不需要加上数据框名（<code>flights$origin</code>）,大幅度简化。<br />
+另外一种写法<code>flights.JFK &lt;-  flights[origin=="JFK" &amp; month == 6L,,]</code>也是可以的。这种写法，在data frame是不行的。<br />
+## 行排序
+可以利用<code>order()</code>函数来完成。</p>
+<pre class="r"><code>flights.sort &lt;- flights[order(origin,-dest),]
+head(flights.sort)</code></pre>
+<pre><code>##    year month day dep_time dep_delay arr_time arr_delay cancelled carrier
+## 1: 2014     1   5      836         6     1151        49         0      EV
+## 2: 2014     1   6      833         7     1111        13         0      EV
+## 3: 2014     1   7      811        -6     1035       -13         0      EV
+## 4: 2014     1   8      810        -7     1036       -12         0      EV
+## 5: 2014     1   9      833        16     1055         7         0      EV
+## 6: 2014     1  13      923        66     1154        66         0      EV
+##    tailnum flight origin dest air_time distance hour min
+## 1:  N12175   4419    EWR  XNA      195     1131    8  36
+## 2:  N24128   4419    EWR  XNA      190     1131    8  33
+## 3:  N12142   4419    EWR  XNA      179     1131    8  11
+## 4:  N11193   4419    EWR  XNA      184     1131    8  10
+## 5:  N14198   4419    EWR  XNA      181     1131    8  33
+## 6:  N12157   4419    EWR  XNA      188     1131    9  23</code></pre>
+<p><code>order()</code>实际上调用了data.table的快速基数排序函数<code>forder()</code>。</p>
+</div>
+<div id="section-3" class="section level2">
+<h2>2.2选择列</h2>
+<pre class="r"><code>flights.arr_delay &lt;- flights[,arr_delay]
+head(flights.arr_delay)</code></pre>
+<pre><code>## [1]  13  13   9 -26   1   0</code></pre>
+<p>请注意，返回值是向量。<br />
+如果想返回值是data.table，需要在列名称前加一个list</p>
+<pre class="r"><code>flights.arr_delay.dt &lt;- flights[,list(arr_delay)]
+head(flights.arr_delay.dt)</code></pre>
+<pre><code>##    arr_delay
+## 1:        13
+## 2:        13
+## 3:         9
+## 4:       -26
+## 5:         1
+## 6:         0</code></pre>
+<p><code>list()</code>也可以用<code>.()</code>代替，提高写作效率。</p>
+<pre class="r"><code>flights.arr_delay.dt.2 &lt;- flights[,.(arr_delay)]
+head(flights.arr_delay.dt.2)</code></pre>
+<pre><code>##    arr_delay
+## 1:        13
+## 2:        13
+## 3:         9
+## 4:       -26
+## 5:         1
+## 6:         0</code></pre>
+<p>继续选取两列,列变量名称用<code>.()</code>包括，返回data.table类型。</p>
+<pre class="r"><code>flights.arr_delay.dep_delay &lt;- flights[,.(arr_delay,dep_delay)]
+head(flights.arr_delay.dep_delay)</code></pre>
+<pre><code>##    arr_delay dep_delay
+## 1:        13        14
+## 2:        13        -3
+## 3:         9         2
+## 4:       -26        -8
+## 5:         1         2
+## 6:         0         4</code></pre>
+<p>另外一种形式：</p>
+<pre class="r"><code>flights.arr_delay.dep_delay &lt;- flights[,c(&quot;arr_delay&quot;,&quot;dep_delay&quot;),with=FALSE]
+head(flights.arr_delay.dep_delay)</code></pre>
+<pre><code>##    arr_delay dep_delay
+## 1:        13        14
+## 2:        13        -3
+## 3:         9         2
+## 4:       -26        -8
+## 5:         1         2
+## 6:         0         4</code></pre>
+<pre class="r"><code>class(flights.arr_delay.dep_delay)</code></pre>
+<pre><code>## [1] &quot;data.table&quot; &quot;data.frame&quot;</code></pre>
+<p>直接对列变量重新命名</p>
+<pre class="r"><code>flights.new &lt;- flights[,.(delay_arr = arr_delay, delay_dep = dep_delay)]</code></pre>
+</div>
+<div id="section-4" class="section level2">
+<h2>2.3列运算</h2>
+<p>这是个新概念，理解起来有些困难。先看例子,计算有多少个航班没有延误。<br />
+具体的计算逻辑是这样的：到达和出发延迟时间均为负值，那么<code>(arr_delay+dep_delay)&lt;0</code>如果为真，表示该航班延误了，那么这个表达式的值是TRUE，同时也等于1，再进行sum()求和，实际上获得了延误航班的总数。</p>
+<pre class="r"><code>flights.nodelay.num &lt;- flights[,sum((arr_delay+dep_delay)&lt;0)]
+flights.nodelay.num</code></pre>
+<pre><code>## [1] 141814</code></pre>
+<p>从上式中，可以看出,<code>sum((arr_delay+dep_delay)&lt;0)</code>实际上是针对数据集的一个操作，只是在<code>[]</code>内完成而已。</p>
+<p>进一步看下一个例子：计算6月份从JFK机场起飞的航班中，起飞和延误的平均时间:</p>
+<pre class="r"><code>flights.JFK.stats &lt;- flights[origin == &quot;JFK&quot; &amp; month == 6L,
+                             .(m_arr=mean(arr_delay),m_dep=mean(dep_delay))]
+flights.JFK.stats</code></pre>
+<pre><code>##       m_arr    m_dep
+## 1: 5.839349 9.807884</code></pre>
+<pre class="r"><code>class(flights.JFK.stats)</code></pre>
+<pre><code>## [1] &quot;data.table&quot; &quot;data.frame&quot;</code></pre>
+<p>这种操作跟dplyr中的summarise函数的功能是类似的。虽然网上说dplyr更加容易操作和理解，但是就我本人而言，data.table这种操作方式更加简洁，好用。<br />
+来自 <a href="http://blog.csdn.net/smart_xiao_xiong/article/details/51658262" class="uri">http://blog.csdn.net/smart_xiao_xiong/article/details/51658262</a> 的解释（性能更好的原因，同时提取符合条件的列和行，而不是分步，先行后列）：</p>
+<ul>
+<li>我们首先在i参数里，找到所有符合 origin (机场)是“JFK”，并且 month (月份)是 6 这样条件的行。此时，我们还没有subset整个data.table。</li>
+<li>现在，我们看看参数j，它只使用了两列。我们需要分别计算这两列的平均值 mean()。这个时候，我们才subset那些符合i参数里条件的列，然后计算它们的平均值。
+因为这三个参数（i，j和by）都被指定在同一个方括号中，data.table能同时接受这三个参数，并在计算之前，选取最优的计算方法，而不是分步骤计算。所以，我们可以避免对整个data.table计算，同时，在计算速度和内存使用量这两方面，取得最优的效果。</li>
+</ul>
+<p>如果我们想看一下，从JFK机场起飞的航班一共有多少架次。</p>
+<pre class="r"><code>flights.JFK.num &lt;- flights[origin == &quot;JFK&quot; &amp; month == 6L,length(dest)]
+flights.JFK.num</code></pre>
+<pre><code>## [1] 8422</code></pre>
+<p>其实，我只是需要知道符合条件的行数，<code>length()</code>中的参数理论上可以是任何一列。data.table中定义了一个内建的变量<code>.N</code>，表示当前的分组中对象的数目。因此上边的代码，可以写的更加简洁和可理解。</p>
+<pre class="r"><code>flights.JFK.num &lt;- flights[origin == &quot;JFK&quot; &amp; month == 6L, .N]
+flights.JFK.num</code></pre>
+<pre><code>## [1] 8422</code></pre>
+</div>
+</div>
+<div id="section-5" class="section level1">
+<h1>3.聚合</h1>
+<div id="section-6" class="section level2">
+<h2>3.1 分组</h2>
+<p>获得每个机场起飞航班数</p>
+<pre class="r"><code>flights.dep.num.per.airport &lt;- flights[,.(.N),by=.(origin)]
+flights.dep.num.per.airport</code></pre>
+<pre><code>##    origin     N
+## 1:    JFK 81483
+## 2:    LGA 84433
+## 3:    EWR 87400</code></pre>
+<p>当参数j和by，也就是第2个和第3个参数只有1列时，可以不用<code>.()</code>。上述代码可以简化为：</p>
+<pre class="r"><code>flights.dep.num.per.airport &lt;- flights[,.N,by=origin]
+flights.dep.num.per.airport</code></pre>
+<pre><code>##    origin     N
+## 1:    JFK 81483
+## 2:    LGA 84433
+## 3:    EWR 87400</code></pre>
+<p>获取一个制定航空公司在每个机场的起飞航班数，譬如美航（AA）。
+在<code>i</code>参数中设置条件过滤需要的行。</p>
+<pre class="r"><code>flights.AA.dep.num.per.airport &lt;- flights[carrier == &quot;AA&quot;,.(.N),by=.(origin)]
+flights.AA.dep.num.per.airport</code></pre>
+<pre><code>##    origin     N
+## 1:    JFK 11923
+## 2:    LGA 11730
+## 3:    EWR  2649</code></pre>
+<p>获取AA航空公司在所有机场起飞和降落的航班数</p>
+<pre class="r"><code>flights.AA.dep.dest.num.per.airport &lt;- flights[carrier == &quot;AA&quot;,.(.N),by=.(origin,dest)]
+flights.AA.dep.dest.num.per.airport</code></pre>
+<pre><code>##     origin dest    N
+##  1:    JFK  LAX 3387
+##  2:    LGA  PBI  245
+##  3:    EWR  LAX   62
+##  4:    JFK  MIA 1876
+##  5:    JFK  SEA  298
+##  6:    EWR  MIA  848
+##  7:    JFK  SFO 1312
+##  8:    JFK  BOS 1173
+##  9:    JFK  ORD  432
+## 10:    JFK  IAH    7
+## 11:    JFK  AUS  297
+## 12:    EWR  DFW 1618
+## 13:    LGA  ORD 4366
+## 14:    JFK  STT  229
+## 15:    JFK  SJU  690
+## 16:    LGA  MIA 3334
+## 17:    LGA  DFW 3785
+## 18:    JFK  LAS  595
+## 19:    JFK  MCO  597
+## 20:    JFK  EGE   85
+## 21:    JFK  DFW  474
+## 22:    JFK  SAN  299
+## 23:    JFK  DCA  172
+## 24:    EWR  PHX  121
+##     origin dest    N</code></pre>
+<p>想进一步分析在所有机场，每个月起降的平均延误时间。</p>
+<pre class="r"><code>flights.AA.dep.dest.stats.per.airport &lt;- flights[carrier == &quot;AA&quot;,.(.N,MeanArrDelay=mean(arr_delay),MeanDepDelay=mean(dep_delay)),by=.(origin,dest,month)]
+flights.AA.dep.dest.stats.per.airport</code></pre>
+<pre><code>##      origin dest month   N MeanArrDelay MeanDepDelay
+##   1:    JFK  LAX     1 249     6.590361   14.2289157
+##   2:    LGA  PBI     1  58    -7.758621    0.3103448
+##   3:    EWR  LAX     1  30     1.366667    7.5000000
+##   4:    JFK  MIA     1 179    15.720670   18.7430168
+##   5:    JFK  SEA     1  28    14.357143   30.7500000
+##  ---                                                
+## 196:    LGA  MIA    10 278    -6.251799   -1.4208633
+## 197:    JFK  MIA    10 217    -1.880184    6.6774194
+## 198:    EWR  PHX    10  31    -3.032258   -4.2903226
+## 199:    JFK  MCO    10  62   -10.048387   -1.6129032
+## 200:    JFK  DCA    10  31    16.483871   15.5161290</code></pre>
+<p>分组结果如何按照升降序排列。需要keyby参数代替by。</p>
+<pre class="r"><code>flights.AA.dep.dest.stats.per.airport &lt;- flights[carrier == &quot;AA&quot;,.(.N,MeanArrDelay=mean(arr_delay),MeanDepDelay=mean(dep_delay)),keyby=.(origin,dest,month)]
+flights.AA.dep.dest.stats.per.airport</code></pre>
+<pre><code>##      origin dest month   N MeanArrDelay MeanDepDelay
+##   1:    EWR  DFW     1 159     6.427673   10.0125786
+##   2:    EWR  DFW     2 136    10.536765   11.3455882
+##   3:    EWR  DFW     3 163    12.865031    8.0797546
+##   4:    EWR  DFW     4 164    17.792683   12.9207317
+##   5:    EWR  DFW     5 164    18.487805   18.6829268
+##  ---                                                
+## 196:    LGA  PBI     1  58    -7.758621    0.3103448
+## 197:    LGA  PBI     2  52    -7.865385    2.4038462
+## 198:    LGA  PBI     3  61    -5.754098    3.0327869
+## 199:    LGA  PBI     4  60   -13.966667   -4.7333333
+## 200:    LGA  PBI     5  14   -10.357143   -6.8571429</code></pre>
+</div>
+<div id="chaining" class="section level2">
+<h2>3.2 管道符 chaining</h2>
+<p>类似于 %&gt;% ，实现连续操作，避免中间变量的生成。这个是非常强大的操作。</p>
+<pre class="r"><code>ans &lt;- flights[carrier == &quot;AA&quot;, .N, by=.(origin, dest)][order(origin, -dest)]
+head(ans,10)</code></pre>
+<pre><code>##     origin dest    N
+##  1:    EWR  PHX  121
+##  2:    EWR  MIA  848
+##  3:    EWR  LAX   62
+##  4:    EWR  DFW 1618
+##  5:    JFK  STT  229
+##  6:    JFK  SJU  690
+##  7:    JFK  SFO 1312
+##  8:    JFK  SEA  298
+##  9:    JFK  SAN  299
+## 10:    JFK  ORD  432</code></pre>
+<p>可以多个表达式链接<code>DT[...][...][...][...]</code>，另外一种形式，也是可以接受的：</p>
+<pre><code>DT[...
+][...
+][...
+]</code></pre>
+</div>
+<div id="by" class="section level2">
+<h2>3.3 by参数表达式</h2>
+<p>参数by也可以接受表达式
+譬如，想看一下有多少航班起飞延误但却提前／准时到达的，有多少航班起飞和到达都延误了。</p>
+<pre class="r"><code>ans &lt;- flights[, .N, .(dep_delay&gt;0, arr_delay&gt;0)]
+ans</code></pre>
+<pre><code>##    dep_delay arr_delay      N
+## 1:      TRUE      TRUE  72836
+## 2:     FALSE      TRUE  34583
+## 3:     FALSE     FALSE 119304
+## 4:      TRUE     FALSE  26593</code></pre>
+<p>这也是一个比较牛逼的用法。</p>
+</div>
+<div id="section-7" class="section level2">
+<h2>3.4 对多列同时进行统一运算</h2>
+<p>譬如有1000列，要对每一列进行均值计算。传统可以通过lapply函数来进行。如果存在分组的情况，该如何操作？data.table提供了<code>.SD</code>，表示Subset of Data，本身是一个data.table，包括<strong>通过by分组后的每一组</strong>。
+实例来看一下，对于起飞机场的一个分组</p>
+<pre class="r"><code>flights.SD &lt;- flights[,.(origin,dep_time,arr_time,air_time,distance,hour,min)][,.SD,by=origin]
+flights.SD</code></pre>
+<pre><code>##         origin dep_time arr_time air_time distance hour min
+##      1:    JFK      914     1238      359     2475    9  14
+##      2:    JFK     1157     1523      363     2475   11  57
+##      3:    JFK     1902     2224      351     2475   19   2
+##      4:    JFK     1347     1706      350     2475   13  47
+##      5:    JFK     2133       37      338     2475   21  33
+##     ---                                                    
+## 253312:    EWR     1242     1549      344     2565   12  42
+## 253313:    EWR     2121     2224      100      719   21  21
+## 253314:    EWR     1049     1335      326     2454   10  49
+## 253315:    EWR     1653     1910      291     2227   16  53
+## 253316:    EWR      854     1147      189     1400    8  54</code></pre>
+<p>每个分组，按照origin整齐排列。
+对于除了分组列外的其他列，统一求平均值，并且保留两位小数。</p>
+<pre class="r"><code>flights.SD.mean &lt;- flights[,.(origin,dep_time,arr_time,air_time,distance,hour,min)][,lapply(.SD,mean),by=origin][,round(.SD,2),by=origin]
+flights.SD.mean</code></pre>
+<pre><code>##    origin dep_time arr_time air_time distance  hour   min
+## 1:    JFK  1359.69  1488.90   195.28  1413.86 13.27 32.34
+## 2:    LGA  1315.07  1500.38   116.46   777.47 12.82 33.20
+## 3:    EWR  1340.62  1493.54   159.68  1117.36 13.10 30.22</code></pre>
+<p>如何进一步获取制定列的均值。答案是通过.SDcols参数。</p>
+<pre class="r"><code>flights.SD.mean &lt;- flights[,.(origin,dep_time,arr_time,air_time,distance,hour,min)][,lapply(.SD,mean),.SDcols=c(&quot;dep_time&quot;,&quot;arr_time&quot;),by=origin][,round(.SD,2),by=origin]
+flights.SD.mean</code></pre>
+<pre><code>##    origin dep_time arr_time
+## 1:    JFK  1359.69  1488.90
+## 2:    LGA  1315.07  1500.38
+## 3:    EWR  1340.62  1493.54</code></pre>
+<p>实现类似melt的功能，把多列合并为一列。
+首先生成一个数据集</p>
+<pre class="r"><code>DT = data.table(ID = c(&quot;b&quot;,&quot;b&quot;,&quot;b&quot;,&quot;a&quot;,&quot;a&quot;,&quot;c&quot;), a = 1:6, b = 7:12, c=13:18)
+DT</code></pre>
+<pre><code>##    ID a  b  c
+## 1:  b 1  7 13
+## 2:  b 2  8 14
+## 3:  b 3  9 15
+## 4:  a 4 10 16
+## 5:  a 5 11 17
+## 6:  c 6 12 18</code></pre>
+<p>然后，把a，b，c三列合并为1列。</p>
+<pre class="r"><code>DT.new &lt;- DT[,.(abc=c(a,b,c)),by=ID]
+DT.new</code></pre>
+<pre><code>##     ID abc
+##  1:  b   1
+##  2:  b   2
+##  3:  b   3
+##  4:  b   7
+##  5:  b   8
+##  6:  b   9
+##  7:  b  13
+##  8:  b  14
+##  9:  b  15
+## 10:  a   4
+## 11:  a   5
+## 12:  a  10
+## 13:  a  11
+## 14:  a  16
+## 15:  a  17
+## 16:  c   6
+## 17:  c  12
+## 18:  c  18</code></pre>
+<p>j参数非常强大，也可以a,b,c三列的结果，作为一个列表返回。</p>
+<pre class="r"><code>DT.new.list &lt;- DT[,.(abc=list(c(a,b,c))),by=ID]
+DT.new.list</code></pre>
+<pre><code>##    ID               abc
+## 1:  b   1,2,3,7,8,9,...
+## 2:  a  4, 5,10,11,16,17
+## 3:  c           6,12,18</code></pre>
+<p>合并a，b，c三列，作为字符串。</p>
+<pre class="r"><code>DT.new.str &lt;- DT[,.(abc=paste(a,b,c,sep = &quot;&quot;)),by=ID]
+DT.new.str</code></pre>
+<pre><code>##    ID   abc
+## 1:  b  1713
+## 2:  b  2814
+## 3:  b  3915
+## 4:  a 41016
+## 5:  a 51117
+## 6:  c 61218</code></pre>
+</div>
+</div>

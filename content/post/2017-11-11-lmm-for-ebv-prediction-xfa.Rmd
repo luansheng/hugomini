@@ -1,0 +1,30 @@
+---
+title: 动物育种值预测中的线性模型学习笔记2
+author: Sheng Luan
+date: '2017-11-11'
+categories:
+  - lmm
+  - EBV
+tags:
+  - XFA
+  - FA
+slug: lmm-for-ebv-prediction-xfa
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 6.4.1 因子分析
+设定w向量，包括n个变量，w的协方差矩阵为G，w用模型表示为：
+
+$$
+w = \mu + \phi c + s
+$$
+
+其中$\mu$是群体均值，c是长度为m的公共因子向量，s是残差效应或特定效应，$\phi$是n×m阶因子负荷矩阵。FA最为常见的形式，是$\phi$中的任意两列是正交的(orthogonal)，也就是说$\phi_{i}\phi_{j}=0$，其中i≠j。c中的公共因子不相关，并且方差为1，$var(c)=I$。
+
+w的协方差矩阵，可以分解为：
+
+$$var(w) = G_{FA}=\phi\phi^{'} + S$$
+

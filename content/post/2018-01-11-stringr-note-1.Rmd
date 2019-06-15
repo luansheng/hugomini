@@ -1,0 +1,232 @@
+---
+title: 字符串处理包stringr学习笔记-1
+author: Sheng Luan
+date: '2018-01-11'
+slug: stringr-note-1
+categories:
+  - 数据清洗
+tags:
+  - R
+  - stringr
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup}
+suppressPackageStartupMessages(require(stringr))
+```
+
+R中的字符串处理函数，不但多，而且难记，参数调用方法也不一致。stringr包提供了统一名称的函数调用形式。
+
+## 1. 基本处理
+### 1.1 计算字符串的长度
+
+```{r}
+str_length("abc")
+str_length("你好")
+str_length(NA)
+str_length(c("abc","ad","co"))
+```
+`str_length`等同于R中自带的`nchar()`函数可以正确的识别中文字的个数，赞一个。
+
+### 1.2 提取子字符串
+
+下述函数可以针对向量操作，提取子字符串
+```{r}
+x <-  c("abcdefgh","dljwowowjj")
+str_sub(x,2,4) #从第2个位置到第四个位置
+str_sub(x,2,-2) #第二个位置到倒数第二个位置
+
+```
+
+### 1.3 修改字符串中指定位置的内容
+修改字符串中某个位置的字符
+```{r}
+str_sub(x,3,5) <- "XYZ"
+x
+```
+
+### 1.4 重复字符串的内容
+
+```{r}
+str_dup(x,3) #表示每个字符串重复两次
+str_dup(x,c(2,3)) #表示第一个字符串重复2次，第二个字符串重复3次
+```
+### 1.5 填补字符串至一定长度
+ 
+```{r}
+str_pad(x,str_length(x[2])) #把第一个字符串用空格补充至跟第二字符串一样长
+str_pad(string = x,width = str_length(x[2]),side = "right", pad = "?") #一个标准写法，用？号补充，在填补在右边
+```
+
+缩写字符串
+```{r}
+str_trunc(x,3)
+```
+ 
+默认的最小缩写字符串长度就是3（"..."），因此直接显示为"..."。
+
+如果想缩写为2位，可以这样写：
+```{r}
+str_trunc(x,2,ellipsis = ".")
+```
+
+### 1.6 剔除字符串中的空格
+```{r}
+x <- c("  a   ", "b   ",  "   c")
+str_trim(x)
+```
+
+### 1.7 大小写转换+本地语言支持
+```{r}
+x <- "You are beautiful."
+str_to_lower(x) #转换为小写
+str_to_upper(x) #转换为大写
+str_to_title(x) #首字母大写
+x <- "i love you"
+str_to_upper(x,locale = "tr") #土耳其语,i带点
+#stringi::stri_locale_list() #语言支持列表
+```
+
+### 1.8 排名和排序
+
+获得每个元素的排名
+```{r}
+x <- c("a","y","i","o")
+str_order(x)
+
+y <- c("ac","oa","bp","oo")
+str_order(y)
+```
+
+对y中的元素进行排序
+```{r}
+str_sort(y)
+#另外一种实现方式
+y[str_order(y)]
+
+```
+
+降序排列
+```{r}
+str_sort(x=y,decreasing = TRUE)
+```
+
+字符类型的数字，支持按照数字大小排序
+```{r}
+x <- as.character(c(sample(1:100,5),1000))
+x
+str_sort(x)
+str_sort(x,numeric =TRUE)
+```
+
+### 1.9 合并字符串
+```{r}
+str_c("I","love","this","world!",sep = " ")
+str_c(c("2018","01","18"),collapse = "-")
+```
+
+## 2 模式匹配
+
+### 2.1 正则表达 regular expression
+
+`str_view()`和`str_view_all()`用来展示正则表达式是如何匹配的，是学习正则表达式的好帮手。
+
+#### 2.1.1 基础匹配
+```{r}
+x <- c("apple", "banana", "pear")
+str_view(x, "an")
+```
+
+接下来会稍微复杂一些，加入通配符`.`，匹配任何字符：
+
+```{r}
+str_view(x,".a.")
+```
+
+但是如何匹配字符串中的`.`呢？我们需要一个逃脱符，也就是反斜杠`\`，英文是blackflash，`\.`。
+
+但是这里有一个问题，那就是在普通字符串处理中，R也定义了`\`是一个逃脱符，而正则表达式又是通过字符串表达出来的，因此，为了匹配`.`，需要写为`\\.`。
+
+```{r}
+writeLines("\\.")
+str_view("b.a","\\.")
+```
+
+
+那么另外一个问题是，如何匹配文字`\`。根据规则，应该是`\\`。但是，要想在R中输出`\\`字符串（两个反斜杠），我们每个前边都需要再加一个反斜杠，这就变成了四个反斜杠`\\\\`。
+
+```{r}
+writeLines("\\\\")
+str_view("a\\b","\\\\") 
+```
+
+#### 2.1.2 引导符
+
+如何匹配开头或者结尾字符。
+
+`^`用于匹配开头。
+
+`$`用于匹配结尾。
+
+```{r}
+x <- c("apple", "banana", "pear")
+str_view(x, "^a")
+str_view(x,"a$")
+str_view(x,"^pear$") #匹配完整字符串
+```
+如何匹配文字`$^$`？
+```{r}
+str_view("$^$","\\$\\^\\$")
+```
+
+一个小练习题，从`stringr::words`900多个单词中找出首字母是y的所有单词：
+```{r}
+str_view(stringr::words,"^y",match = TRUE)
+```
+结尾是x的所有单词：
+```{r}
+str_view(stringr::words,"x$",match = TRUE)
+```
+
+列出长度为11的所有单词：
+```{r}
+str_view(stringr::words,"^.{11}$",match = TRUE)
+```
+
+#### 2.1.2 匹配不同类型的字符
+
+`.`匹配任何字符，其他类型的字符包括：
+ * `\d`匹配任何数字
+ * `\s`匹配空格、制表符、换行符
+ * `[abc]`匹配abc中的任一个字符
+ * `[^abc]` 匹配除了abc以外的任一个字符
+ 
+ 小小练习题。
+ 
+查找元音字母打头的单词
+```{r}
+str_view(stringr::words,"^[aeiou]",match = TRUE)
+```
+
+那些单词结尾是"ed"但不是"eed"的单词：
+```{r}
+str_view(stringr::words,"[^e]ed$",match = TRUE)
+```
+
+筛选出结尾是ing或者ise的单词
+```{r}
+str_view(stringr::words,"ing|ise$",match = TRUE)
+```
+
+验证字母q后边是否总是跟着字母u，也就是说查找那些q后边不是u的单词：
+```{r}
+str_view(words,"q[^u]",match = TRUE)
+```
+结果是没找到。
+
+验证另外一个字母搭配规则，i在e前或者是在c后边。
+```{r}
+str_view(words,"ie|ci",match = TRUE)
+```
+

@@ -1,0 +1,58 @@
+---
+title: windows系统下转换Rmd文档为PDF文档
+author: Sheng Luan
+date: '2018-01-07'
+categories:
+  - tex
+tags:
+  - pdf
+  - rmd
+  - tex
+slug: Rmd-to-pdf-in-r
+---
+
+如何将Rmd文档输出为PDF，一直是一个挑战性的工作，我在windows系统上就没有成功过。主要是搞不定巨大的tex安装包。不过最近有个好消息，[yihui](https://yihui.name/)开发了[tinytex](https://yihui.name/tinytex/)包，自动化了tex包的安装和配置工作。目前，这个包已经挂在cran上，可以通过rstudio安装。
+
+安装tinytex后，在Rstudio中有以下2点需要配置：
+
+* 点击Tools菜单-> Global Options-> sweave：typeset LaTeX into PDF using: 修改为XeLaTeX。
+* knit Output Options部分，在Advanced中注意同样选择为XeLaTex。
+
+文件中如果包括中文，有两个方面需要注意：
+
+## 1. 文本中包括中文
+
+参考这个[链接](https://www.jianshu.com/p/0bfda49f1a52)，进行如下设置：
+
+```tex
+\usepackage{xeCJK}  
+\setCJKmainfont{simsun.ttc}  % 字体可以更换
+```
+
+把上述代码单独保存为一个文件，如header.tex，注意与Rmd文件在同一个路径下。其作用貌似是调用xeCJK包，中文字体设置为宋体。如果tinytex检测到系统中没有安装xeCJK包，那么会自动下载安装。
+
+但是尝试了一下，好像tinytex自动安装xeCJK存在问题，包的名称应该全部是小写。在Rstudio的console中手动安装，**注意xecjk需要全部为小写**。
+
+tinytex::tlmgr_install("xecjk") 
+
+ps: 安装了rmarkdown最新开发版，上述问题就解决了：`devtools::install_github("rstudio/rmarkdown")`
+
+然后，在新建立的Rmd文档中YAML头中，设置包括header.tex文件：
+
+```yaml
+output: 
+  pdf_document: 
+    includes:
+      in_header: header.tex
+    keep_tex: yes
+    latex_engine: xelatex
+```
+
+## 2.图片中中文设置
+
+主要是利用showtext包完成，具体参考[此篇blog](https://luansheng.netlify.com/post/using-other-system-chinese-fonts-in-r/)。
+
+点击下载[Rmd文档和生成的PDF文档](/post/doc/RmdtoPDF.zip)
+
+
+

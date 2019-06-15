@@ -1,0 +1,109 @@
+---
+title: Rgraphviz 学习笔记
+author: Sheng Luan
+date: '2018-01-22'
+slug: rgraphviz-note1
+categories:
+  - visualization
+tags:
+  - graphviz
+  - R
+---
+
+
+
+<p><a href="http://www.graphviz.org/">graphviz</a> (Graph Visualization Software)是贝尔实验室鼓捣出来的一个用来展示结构化信息的软件。有一个对应的Rgraphviz包，学习一下，这是一个用来画系谱图的好工具。</p>
+<p>Rgraphviz包现在已经被收录到<a href="http://www.bioconductor.org/">Bioconductor</a>平台，不在cran中，因此正常的安装包的流程无法获取该包。需要根据Bioconductor的<a href="http://www.bioconductor.org/packages/release/bioc/html/Rgraphviz.html">安装指令</a>进行安装：</p>
+<pre class="r"><code>source(&quot;https://bioconductor.org/biocLite.R&quot;)
+biocLite(&quot;Rgraphviz&quot;)</code></pre>
+<div id="graphviz" class="section level2">
+<h2>1. Graphviz的简单说明</h2>
+<p>这个软件包可以生成各种图像格式的文件，以及SVG文件，可以用于web网络展示；也可以生成PDF文件。</p>
+<p>graphviz 中国包括了很多布局器：</p>
+<ul>
+<li>dot 默认的布局方式，主要是用于有向图。（画系谱，这应该是一个主要布局方式）</li>
+<li>neato 基于spring-model（又称force-based）算法</li>
+<li>twopi 径向布局</li>
+<li>circo 圆环布局</li>
+<li>fdp 无向图</li>
+</ul>
+<p>graphviz默认使用一种dot语言来定义图形元素，然后选择上边的布局算法进行布局，最后生成结果。</p>
+<p>大体步骤如下：
+1. 利用dot脚本，定义一个图，然后向图中，添加节点和边。
+2. 定义节点和边各自的属性，比如形状、颜色、填充模式、字体等。
+2. 使用布局引擎，调用布局算法，绘制图形。</p>
+<p>graphviz中三个基本的元素：图（graph）、节点（node）和边（edge）
+参考一篇<a href="http://icodeit.org/2015/11/using-graphviz-drawing/">blog</a>，关于graphviz的入门说明。</p>
+</div>
+<div id="graphviz-1" class="section level2">
+<h2>2. 初窥Graphviz</h2>
+<pre class="r"><code>knitr::opts_chunk$set(echo = TRUE,fig.align = &quot;center&quot;)
+suppressPackageStartupMessages(require(Rgraphviz))</code></pre>
+<pre class="r"><code>set.seed(123)
+v &lt;- letters[1:10] #储存节点
+m &lt;- 1:4 #
+g1 &lt;- randomGraph(v,m,0.2)</code></pre>
+<p>不同的布局样式，默认是有向图。</p>
+<pre class="r"><code>plot(g1)</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:dot"></span>
+<img src="/post/2018-01-22-rgraphviz-note1_files/figure-html/dot-1.png" alt="&lt;U+9ED8&gt;&lt;U+8BA4&gt;&lt;U+7684&gt;&lt;U+6709&gt;&lt;U+5411&gt;&lt;U+56FE&gt;(dot)" width="672" />
+<p class="caption">
+Figure 1: &lt;U+9ED8&gt;&lt;U+8BA4&gt;&lt;U+7684&gt;&lt;U+6709&gt;&lt;U+5411&gt;&lt;U+56FE&gt;(dot)
+</p>
+</div>
+<p>第二种布局：neato</p>
+<pre class="r"><code>plot(g1, &quot;neato&quot; )</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:neato"></span>
+<img src="/post/2018-01-22-rgraphviz-note1_files/figure-html/neato-1.png" alt="&lt;U+7B2C&gt;&lt;U+4E8C&gt;&lt;U+79CD&gt;&lt;U+5E03&gt;&lt;U+5C40&gt;(neato)" width="672" />
+<p class="caption">
+Figure 2: &lt;U+7B2C&gt;&lt;U+4E8C&gt;&lt;U+79CD&gt;&lt;U+5E03&gt;&lt;U+5C40&gt;(neato)
+</p>
+</div>
+<p>第三种布局，twopi：</p>
+<pre class="r"><code>plot(g1, &quot;twopi&quot; )</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:twopi"></span>
+<img src="/post/2018-01-22-rgraphviz-note1_files/figure-html/twopi-1.png" alt="&lt;U+7B2C&gt;&lt;U+4E09&gt;&lt;U+79CD&gt;&lt;U+5E03&gt;&lt;U+5C40&gt;(twopi)" width="672" />
+<p class="caption">
+Figure 3: &lt;U+7B2C&gt;&lt;U+4E09&gt;&lt;U+79CD&gt;&lt;U+5E03&gt;&lt;U+5C40&gt;(twopi)
+</p>
+</div>
+</div>
+<div id="section" class="section level2">
+<h2>3. 从头开始画一个图</h2>
+<pre class="r"><code>#定义节点
+nodes &lt;- c(&quot;A&quot;,&quot;B&quot;,&quot;C&quot;,&quot;D&quot;,&quot;E&quot;,&quot;F&quot;,&quot;G&quot;)
+#生成一个简单的系谱图
+rEG &lt;- new(&quot;graphNEL&quot;,nodes=nodes,edgemode=&quot;directed&quot;)
+rEG &lt;- addEdge(from=&quot;A&quot;,to = &quot;B&quot;,graph = rEG,weights = 1)
+rEG &lt;- addEdge(from=&quot;A&quot;,to = &quot;C&quot;,graph = rEG,weights = 2)
+rEG &lt;- addEdge(from=&quot;B&quot;,to = &quot;D&quot;,graph = rEG,weights = 3)
+rEG &lt;- addEdge(from=&quot;B&quot;,to = &quot;E&quot;,graph = rEG,weights = 10)
+rEG &lt;- addEdge(from=&quot;C&quot;,to = &quot;F&quot;,graph = rEG,weights = 3)
+rEG &lt;- addEdge(from=&quot;C&quot;,to = &quot;G&quot;,graph = rEG,weights = 10)
+#从上望下画
+plot(rEG,attrs=list(graph=list(rankdir=&quot;TB&quot;)))  #TB from top to bottom</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:simple"></span>
+<img src="/post/2018-01-22-rgraphviz-note1_files/figure-html/simple-1.png" alt="&lt;U+6700&gt;&lt;U+7B80&gt;&lt;U+5355&gt;&lt;U+7684&gt;&lt;U+56FE&gt;" width="672" />
+<p class="caption">
+Figure 4: &lt;U+6700&gt;&lt;U+7B80&gt;&lt;U+5355&gt;&lt;U+7684&gt;&lt;U+56FE&gt;
+</p>
+</div>
+<p>从下往上画，更符合系谱图的惯例</p>
+<pre class="r"><code>plot(rEG,attrs=list(graph=list(rankdir=&quot;BT&quot;))) #BT from bottom to top</code></pre>
+<p><img src="/post/2018-01-22-rgraphviz-note1_files/figure-html/draworder-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="section-1" class="section level2">
+<h2>4. 调整节点的颜色</h2>
+<pre class="r"><code>plot(rEG,attrs=list(node=list(color=&quot;deepskyblue4&quot;,fontcolor=&quot;orange&quot;,fillcolor=&quot;deepskyblue4&quot;),graph=list(rankdir=&quot;BT&quot;))) #BT from bottom to top</code></pre>
+<p><img src="/post/2018-01-22-rgraphviz-note1_files/figure-html/nodecolor-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="section-2" class="section level2">
+<h2>5. 调整节点的形状</h2>
+<pre class="r"><code>plot(rEG,attrs=list(node=list(shape=&quot;ellipse&quot;,color=&quot;deepskyblue4&quot;,fontcolor=&quot;orange&quot;,fillcolor=&quot;deepskyblue4&quot;),graph=list(rankdir=&quot;BT&quot;))) #BT from bottom to top</code></pre>
+<p><img src="/post/2018-01-22-rgraphviz-note1_files/figure-html/nodeshape-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="section-3" class="section level2">
+<h2>6. 调整边的颜色</h2>
+<pre class="r"><code>plot(rEG,attrs=list(node=list(color=&quot;deepskyblue4&quot;,fontcolor=&quot;orange&quot;,fillcolor=&quot;deepskyblue4&quot;),edge=list(color=&quot;deepskyblue4&quot;),graph=list(rankdir=&quot;BT&quot;))) #BT from bottom to top</code></pre>
+<p><img src="/post/2018-01-22-rgraphviz-note1_files/figure-html/edge-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>

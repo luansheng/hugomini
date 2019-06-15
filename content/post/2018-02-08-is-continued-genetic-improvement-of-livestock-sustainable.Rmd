@@ -1,0 +1,73 @@
+---
+title: Is continued genetic improvement of livestock sustainable-阅读笔记
+author: Sheng Luan
+date: '2018-02-08'
+slug: is-continued-genetic-improvement-of-livestock-sustainable
+categories:
+  - 文献阅读
+tags:
+  - 选择育种
+---
+
+Hill William G. Is continued genetic improvement of livestock sustainable? Genetics, 2016, 202:977-881.
+
+## 摘要
+
+作者认为，很少遗传变异已经丢失，连续遗传改良是可持续的，没有问题的。
+
+ps：**但是从商业角度看，并不是遗传变异丢失的问题，而是谁家的育种方案优化，遗传变异更丰富，培育出的良种性能更好。只是有遗传变异是远远不够的。**
+
+## 正文
+
+作者主要从事鸡的选育工作。关于动物育种的历史、理论、方法，参见作者本人的下述著作：
+
+* Hill, W. G., 1982 Predictions of response to artificial selection from new mutations. Genet. Res. 40:255–278.
+* Hill, W. G., 2010 Understanding and using quantitative genetic variation. Phil. Trans. R. Soc. B 365:73–85.
+* Hill, W. G., 2014 Applications of population genetics to animal breeding, from Wright, Fisher and Lush to genomic prediction. Genetics 196: 1–16.
+* Hill, W. G., A. Wolc, N. P. O’Sullivan, and S. Avendaño, 2016 Breeding for sustainability: maintaining and enhancing multi-trait genetic improvement, chapter 11 in Sustainable Poultry Production in Europe, edited by E. Burton, J. Gatcliffe, H. M. O’Neill, and D. Scholey. CABI, Wallingford, UK (in press).
+
+### 已经取得的遗传进展
+
+对于肉鸡，以1957年的一个未经选择的品系作为对照：
+
+* 1991年统计的生长速度提高了3.47倍，2011年统计的生长速度提高了4.36倍，平均每年在3.4%~3.7%左右。
+* 2001年的统计结果中，鸡胸脯肉占体重的比例，也是1957年的2倍；
+* 饲料转化效率也达到了3.3%/年（1957-2005）；
+* 达到商品规格屠宰的时间，也缩短到35d；
+* 从工业界反馈的数据来看，体重每年的增加速度~2%，胸脯肉在~4% （2006-2013）。
+
+为了增加生产速度，需要增加鸡的食欲，同时要控制食物摄入量，以便于更好的生产。对于生长速度的改良，会带来负面效应。由于体重变大，肉鸡腿和脚的支撑能力不足。
+
+肉鸡主要性状的遗传力表现为中高等，但是蛋鸡的生产性状，并不是这样。在60年前，育种学家非常担心选择平台期（selection plateaus)。但实际上，蛋鸡的饲料利用效率（鸡蛋重量/饲料重量）的进展在0.7%/年，仍在不断提高。尽管蛋鸡每天的产蛋量很少超过1个，但是鸡的产蛋年龄提前，并且体重更轻，产蛋周期更长，产的蛋更大。
+
+家禽的选育策略，通常是多元杂交方式。分别建立父本和母本选育系，父本选育系侧重生长，母本选育系侧重繁殖力。每个选育系主要是纯种选育，但是也会通过BLUP的方法考虑杂种的性能，因为杂种也就是商品鸡会在不同的养殖环境下养殖，譬如低饲料投喂量、高疾病风险、组饲养等。
+
+奶牛的群体结构，与家禽非常不同，要包括很多场，主要是通过后裔测定，选出好的公牛。最近几年，奶牛的选育重点，放在与产奶量性状负相关的牛奶蛋白百分比和母牛繁殖力等方面，并取得了一些进展，扭转了这两个性状下降的趋势。总体来看，荷斯坦奶牛的产奶量的遗传进展：每年0.5%，大约每代3%。随着基因组选择技术的应用，遗传改良速度也在不断提高。
+
+与动物相比，植物遗传材料很多，自交、双单倍体、克隆等，育种系统非常灵活。不利的地方时，受区域、天气的影响比较大。
+
+ps：**水产动物，特别是南美白对虾，存在多种养殖模式，工厂化的部分，偏向于畜牧，标准化、高度可控的模式；但是开放的系统，如土池和高位池养殖模式，高盐、低盐等，又偏向于植物，需要强调基因型与环境互作。**
+
+对于杂交玉米，产量的提高速度，大约是每年1%以上，如果在好的种植条件下，譬如有充足的的降雨量，大约是2%左右。对于小麦产量，改良速度大约是0.6~0.7%左右。
+
+优质种质的扩繁形式，动植物差别很大。植物如小麦，主要是出售近交系，而玉米是近交系的杂交后代。而动物，主要是通过纯种（奶牛）和杂种（家禽）形式扩繁销售。
+
+动植物的另外一个较大差别是，植物品种较为稳定，只有当新的品种替换了旧品种，那么改良的效果才会体现。而动物，每年提供的品种，性能都会比上一年要好。
+
+ps：在扩繁方面，水产动物与畜牧动物更为一致。
+
+
+## 遗传结构和模型
+
+畜牧动物重要的生产性状都是数量性状，后代分布和选择反应均很好的验证了其符合Fisher的微效多基因模型。
+来自人类身高的GWAS分析，也表明该性状是高度多基因决定的本质。
+.
+有一篇模拟文章，表明少数SNP不会对总遗传方差起主要作用。但是没怎么看懂。
+
+Kemper, K. E., C. M. Reich, and P. J. Bowman, C. J. Vander Jagt, A. J. Chamberlain et al., 2015 Improved precision of QTL mapping using a nonlinear Bayesian method in a multi-breed population leads to greater accuracy of across-breed genomic predictions. Genet. Sel. Evol. 47: 29.
+
+
+来自畜禽高密度基因组标记的研究表明：选择反应很难用几个标记解释。譬如最好的10-20个标记，只能解释跨世代总方差的0.5-1%，与实际结果不一致。
+
+基因组选择的作用，是通过利用realized relationship through shared genomic regions和marker-associated effects
+through linkage disequilibrium using information on distantly related individuals来提高选择的准确度。

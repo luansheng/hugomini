@@ -1,0 +1,88 @@
+---
+title: 在R中使用windows系统自带的中文字体
+author: Sheng Luan
+date: '2017-12-31'
+slug: using-other-system-chinese-fonts-in-r
+categories:
+  - R
+tags:
+  - font
+  - showtext
+---
+
+R作图时，如何在图片中使用windows系统自带的其他中文字体？以前尝试过好几次，都没有成功。
+
+首先安装二个包：
+
+* [sysfonts](https://cran.r-project.org/web/packages/sysfonts/index.html)
+* [showtext](https://cran.r-project.org/web/packages/showtext/index.html)
+
+
+R中自带的默认字体家族，可以通过sysfonts::font.families()函数查看：
+```{r}
+require(sysfonts)
+require(showtext)
+font_families()
+```
+
+R中自带的三种标准字体家族为：[serif](https://baike.baidu.com/item/衬线字体/6820704?fr=aladdin)（衬线）、[sans](https://baike.baidu.com/item/无衬线体/2374029)（无衬线）和[mono](https://baike.baidu.com/item/等宽字体/8434037?fr=aladdin)（等宽）三类。
+
+如果想使用Windows系统中自带的中文字体，首先查看系统中字体存储路径：
+```{r}
+font_paths()
+```
+
+进一步查看有哪些可以利用的字体文件：
+```{r}
+font_files()
+```
+
+其中宋体文件是simsun.ttc，黑体文件是：simhei.ttf，楷体文件是simkai.ttf，微软雅黑是msyh.ttf和msyhbd.ttf。
+
+尝试在R环境中加入黑体（如果字体是在Windows系统的默认字体库中，regular可以不用指定路径）：
+
+```{r}
+font_add(family = "heiti",regular = "simhei.ttf")
+font_add(family = "kaiti",regular = "simkai.ttf")
+```
+
+此时查看R中自带字体，你会发现多了“heiti”和“kaiti”。
+
+```{r}
+font.families()
+```
+
+然后我们在画图中使用黑体，借用showtext包作者邱逸轩的这篇文章[showtext：字体，好玩的字体和好玩的图形](https://cosx.org/2014/01/showtext-interesting-fonts-and-graphs)中的r示例代码：
+
+需要注意，**rstudio自带的Plots面板中绘出的图形不显示自定义字体**，这也是以前总是觉得设置自定义字体不成功的原因。在运行下面的代码前，调用windows()函数打开一个新的图形接收窗口，下边代码绘制的图形会显示其中。
+
+如果你打算在Rmd文档中使用showtext包，请在chunk头参数中设置fig.showtext=TRUE。
+
+```{r fontexample,fig.showtext=TRUE}
+showtext_auto() #这样代码非常重要
+set.seed(123)
+plot(1, xlim = c(-3, 3), ylim = c(-3, 3), type = "n")
+text(runif(100, -3, 3), runif(100, -3, 3),
+     intToUtf8(round(runif(100, 19968, 40869)), multiple = TRUE),
+     col = rgb(runif(100), runif(100), runif(100), 0.5 + runif(100)/2),
+     cex = 2, family = "heiti")   # 指定heiti字体
+title("随机汉字", family = "kaiti")   # 指定kaiti字体
+```
+
+试一下ggplot2作图。
+
+```{r ggplot2example,fig.cap="基于0,1正态分布的散点图",fig.width=6,fig.height=6,fig.align='center',fig.showtext=TRUE}
+require(ggplot2)
+xy <- data.frame(x=rnorm(100),y=rnorm(100))
+showtext_auto()
+scatter.plot <- ggplot(data = xy,aes(x=x,y=y))+
+  geom_point(shape=21)+
+  labs(x="均值为0，标准差为1的随机正态分布",y="均值为0，标准差为1的随机正态分布")+
+  theme_grey(base_size = 30,base_family = "heiti")
+print(scatter.plot)
+```
+
+Ok!大功告成！
+
+
+

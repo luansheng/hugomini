@@ -1,0 +1,116 @@
+---
+title: Rgraphviz 学习笔记
+author: Sheng Luan
+date: '2018-01-22'
+slug: rgraphviz-note1
+categories:
+  - visualization
+tags:
+  - graphviz
+  - R
+---
+
+[graphviz](http://www.graphviz.org/) (Graph Visualization Software)是贝尔实验室鼓捣出来的一个用来展示结构化信息的软件。有一个对应的Rgraphviz包，学习一下，这是一个用来画系谱图的好工具。
+
+Rgraphviz包现在已经被收录到[Bioconductor](http://www.bioconductor.org/)平台，不在cran中，因此正常的安装包的流程无法获取该包。需要根据Bioconductor的[安装指令](http://www.bioconductor.org/packages/release/bioc/html/Rgraphviz.html)进行安装：
+
+```r
+source("https://bioconductor.org/biocLite.R")
+biocLite("Rgraphviz")
+```
+
+## 1. Graphviz的简单说明
+
+这个软件包可以生成各种图像格式的文件，以及SVG文件，可以用于web网络展示；也可以生成PDF文件。
+
+graphviz 中国包括了很多布局器：
+
+* dot 默认的布局方式，主要是用于有向图。（画系谱，这应该是一个主要布局方式）
+* neato 基于spring-model（又称force-based）算法
+* twopi 径向布局
+* circo 圆环布局
+* fdp 无向图
+
+graphviz默认使用一种dot语言来定义图形元素，然后选择上边的布局算法进行布局，最后生成结果。
+
+大体步骤如下：
+1. 利用dot脚本，定义一个图，然后向图中，添加节点和边。
+2. 定义节点和边各自的属性，比如形状、颜色、填充模式、字体等。
+2. 使用布局引擎，调用布局算法，绘制图形。
+
+graphviz中三个基本的元素：图（graph）、节点（node）和边（edge）
+参考一篇[blog](http://icodeit.org/2015/11/using-graphviz-drawing/)，关于graphviz的入门说明。
+
+## 2. 初窥Graphviz
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE,fig.align = "center")
+suppressPackageStartupMessages(require(Rgraphviz))
+```
+
+
+```{r randomgraph, fig.cap="一个随机图"}
+set.seed(123)
+v <- letters[1:10] #储存节点
+m <- 1:4 #
+g1 <- randomGraph(v,m,0.2)
+```
+
+不同的布局样式，默认是有向图。
+```{r dot,fig.cap="默认的有向图(dot)"}
+plot(g1)
+```
+
+第二种布局：neato
+```{r neato, fig.cap="第二种布局(neato)"}
+plot(g1, "neato" )
+```
+
+第三种布局，twopi：
+
+```{r twopi,fig.cap="第三种布局(twopi)"}
+plot(g1, "twopi" )
+```
+
+## 3. 从头开始画一个图
+
+```{r simple,fig.cap="最简单的图"}
+#定义节点
+nodes <- c("A","B","C","D","E","F","G")
+#生成一个简单的系谱图
+rEG <- new("graphNEL",nodes=nodes,edgemode="directed")
+rEG <- addEdge(from="A",to = "B",graph = rEG,weights = 1)
+rEG <- addEdge(from="A",to = "C",graph = rEG,weights = 2)
+rEG <- addEdge(from="B",to = "D",graph = rEG,weights = 3)
+rEG <- addEdge(from="B",to = "E",graph = rEG,weights = 10)
+rEG <- addEdge(from="C",to = "F",graph = rEG,weights = 3)
+rEG <- addEdge(from="C",to = "G",graph = rEG,weights = 10)
+#从上望下画
+plot(rEG,attrs=list(graph=list(rankdir="TB")))  #TB from top to bottom
+```
+
+
+从下往上画，更符合系谱图的惯例
+```{r draworder}
+plot(rEG,attrs=list(graph=list(rankdir="BT"))) #BT from bottom to top
+```
+
+
+## 4. 调整节点的颜色
+
+```{r nodecolor}
+plot(rEG,attrs=list(node=list(color="deepskyblue4",fontcolor="orange",fillcolor="deepskyblue4"),graph=list(rankdir="BT"))) #BT from bottom to top
+```
+
+## 5. 调整节点的形状
+```{r nodeshape}
+plot(rEG,attrs=list(node=list(shape="ellipse",color="deepskyblue4",fontcolor="orange",fillcolor="deepskyblue4"),graph=list(rankdir="BT"))) #BT from bottom to top
+```
+
+## 6. 调整边的颜色
+
+```{r edge}
+plot(rEG,attrs=list(node=list(color="deepskyblue4",fontcolor="orange",fillcolor="deepskyblue4"),edge=list(color="deepskyblue4"),graph=list(rankdir="BT"))) #BT from bottom to top
+```
+
+

@@ -1,0 +1,135 @@
+---
+title: data.table学习笔记5
+author: Sheng Luan
+date: '2017-09-03'
+categories:
+  - Data.table
+  - R
+  - 数据清洗
+tags:
+  - Data.table
+  - R
+slug: data-table-note-5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(data.table)
+```
+
+* data.table的特点：**减小计算复杂度**，降低**计算时间**。  
+
+## 1. 1建立两个数据集：DF（data.frame）和DT（data.table）
+```{r}
+DF = data.frame(x=rep(c("b","a","c"),each=3), y=c(1,3,6), v=1:9) #data frame类型数据集
+DT = data.table(x=rep(c("b","a","c"),each=3), y=c(1,3,6), v=1:9) #data.table类型数据集
+```
+## 1.2 比较DF和DT,注意函数identical，是比较两个对象的安全方式。
+
+DF和DT本质上都是list类型？
+```{r}
+DF
+DT
+identical(dim(DT),dim(DF)) #比较维数是否相同
+identical(DF$a,DT$a) #比较a列是否相同
+is.list(DF) #检测是否是list类型
+is.list(DT) #同上
+is.data.frame(DT) #data.table是否是data.frame类型
+
+tables() #用来统计全局环境中有多少个data.table。
+```
+## 1.3 基本数据提取操作
+```{r}
+DT[2] #提取第2行
+DT[3:2] #提取第3行和第2行
+DT[order(x)] #根据x列排序DT数据集
+DT[order(x),] #同上
+DT[y>2] #提取y>2的所有数据行
+DT[y>2 & v>5] #提取满足条件y>2 并且v>5的所有数据行
+DT[!2:4] #剔除2,3,4行后的数据集
+DT[-(2:4)] #同上
+```
+## 1.4 选择列，计算列
+```{r}
+DT[,v] #选择v列返回向量
+DT[,list(v)] #同上
+DT[,.(v)] #同上，.()等同于list()
+DT[,sum(v)] #计算v列的和，返回一个向量
+DT[,.(sum(v))] #同上，但是返回一个data.table类型，列名V1
+DT[,.(sv=sum(v))] #同上，命名为sv
+DT[,.(v,v*2)] #生成一个新的数据集，包括v和v*2两列
+```
+
+## 1.5 同时筛选行列
+
+```{r}
+
+DT[2:3,sum(v)] #返回一个向量
+DT[2:3,.(sum(v))] #返回一个data.table,列命名为V1
+DT[2:3,.(sv=sum(v))] #返回一个data.table，列命名为sv
+DT[2:5,cat(v,"\n")] #v列2-5行，通过cat连接输出为一个字符串，不明白为什么有一个NULL
+```
+## 1.6 通过data.frame的方式提取数据
+
+```{r}
+DT[,2,with=FALSE] #提取2列的数据，with参数，控制列是否可以运算
+DT[,sum(2),with=FALSE] #with=FALSE，表示列不可运算，返回与上式相同的结果
+DT[,sum(v),with=TRUE] #v列之和
+#DT[,sum(v),with=FALSE] #这种格式错误，不能操作v列
+DT[["v"]] #提取v列更快的方式
+```
+## 1.7 组操作
+```{r}
+DT[,sum(v),by=x] #依据x列分组，求v列和
+DT[,sum(v),keyby=x] #依据x列分组，求v列和，结果按照x列排序
+DT[,sum(v),keyby=x][order(x)] #结果同上，但是链式表达式操作
+```
+
+## 1.8 快速数据集提取，二级索引形式
+```{r}
+DT["a",on="x"] #on开启二级索引形式
+DT["a",on=.(x)] #更加方便的形式，不用写双引号
+DT[.("a"),on=.(x)] #作用同上
+DT[x=="a"] #on 传统形式，然而内部进行了优化，速度同上
+DT[x!="b" | y!=3] #没有进行优化
+DT[.("b",3),on=c("x","y")] #二级索引优化
+DT[.("b",3),on=.(x,y)] #二级索引，简化去除引号
+DT[.("b",1:2),on=.(x,y)] #不匹配的返回NA
+DT[.("b",1:2),on=.(x,y),nomatch=0] #不匹配的行，不返回
+DT[.("b",1:2),on=.(x,y),roll=Inf] #不匹配的行，返回前边行对应的值
+DT[.("b",1:2),on=.(x,y),roll=-Inf] #不匹配的行，返回后边行对应的值
+DT[.("b"),sum(v*y),on="x"] #提取x=="b"的行，计算v*y的值，然后求和
+```
+
+## 1.9 综合以上所有技能
+```{r}
+DT[x!="a",sum(v),by=x] #对照
+DT[!"a",sum(v),by=.EACHI,on="x"] #结果同上，速度更快 .EACHI的意思就是对i中的每一个水平分组分组
+DT[c("b","c"),sum(v),by=.EACHI,on=.(x)]
+```
+
+## 1.10 合并数据集
+```{r}
+DT #原始数据集
+X = data.table(x=c("c","b"),v=8:7,foo=c(4,2)) #X作为拟要合并的数据集
+X
+X[DT,on="x"] #以DT数据集中x列为主，筛选与之匹配的X中的行，left join
+DT[X,on="x"] #以X数据集中x列为主，筛选与之匹配的DT行 right join
+DT[X,on="x",nomatch=0] #返回双方共有的行 inner join
+DT[!X,on="x"] #返回的是X中没有的DT数据集中的行
+DT[X,on=.(y<=foo)] #从此一下的表达式不是特别理解
+DT[X,on=.(y>=foo)]
+DT[X,on=.(x,y<=foo)]
+DT[X,.(x,y,x.y,v),on=.(x,y>foo)]
+
+DT[X,on="x",mult="first"]
+DT[X,on="x",mult="last"]
+DT[X,sum(v),by=.EACHI,on="x"]
+DT[X,sum(v)*foo,by=.EACHI,on="x"]
+DT[X,sum(v)*i.v,by=.EACHI,on="x"]
+DT[X, on=.(x, v>=v), sum(y)*foo, by=.EACHI]
+```
+
+
+
+

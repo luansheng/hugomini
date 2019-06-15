@@ -1,0 +1,188 @@
+---
+title: data.table学习笔记2
+author: Sheng Luan
+date: '2017-07-07'
+categories:
+  - R
+  - Data.table
+  - 数据清洗
+tags:
+  - ASReml
+  - Data.table
+slug: data-table-note-2
+---
+
+
+
+<ul>
+<li>data.table的特点：<strong>减小计算复杂度</strong>，降低<strong>计算时间</strong>。<br />
+</li>
+<li>这一部分笔记主要讲述如何更新数据集，而不产生新的数据拷贝。<br />
+</li>
+<li>主要用到的符号是“:=”，类似于指针功能，通过引用更新列。</li>
+<li>本章的操作，实际上是把data.table作为一个数据库在操作。</li>
+</ul>
+<div id="section" class="section level1">
+<h1>1.语义引用</h1>
+<p><code>:=</code>两种用法:</p>
+<p>左右相等方式</p>
+<pre><code>DT[, c(&quot;colA&quot;, &quot;colB&quot;, ...) := list(valA, valB, ...)]
+
+# when you have only one column to assign to you 
+# can drop the quotes and list(), for convenience
+DT[, colA := valA]</code></pre>
+<p>函数方式</p>
+<pre><code>DT[, `:=`(colA = valA, # valA is assigned to colA
+      colB = valB, # valB is assigned to colB
+      ...
+)]</code></pre>
+<ul>
+<li>左右相等方式比较容易编码，特别是，事先不知道需要被赋值的列的时候。</li>
+<li>相对而言，函数方式更加趁手，可以少写代码。</li>
+<li>操作符“:=”没有返回值。</li>
+<li>既然参数j里面可以使用操作符“:=”，那么，就像上一讲中学习到的内容，我们可以和参数i和参数by一起，做些聚合的运算</li>
+</ul>
+</div>
+<div id="section-1" class="section level1">
+<h1>2. 添加／更新／删除列</h1>
+<div id="section-2" class="section level2">
+<h2>2.1 添加列</h2>
+<p>增加两列，计算航班的速度和延迟时间。注意，“:==”不返回任何值，为了方便查看，加入<code>[]</code>。</p>
+<pre class="r"><code>flights[,&quot;:=&quot;(speed = distance / (air_time / 60),delay = arr_delay+dep_delay)][]</code></pre>
+<pre><code>##         year month day dep_time dep_delay arr_time arr_delay cancelled
+##      1: 2014     1   1      914        14     1238        13         0
+##      2: 2014     1   1     1157        -3     1523        13         0
+##      3: 2014     1   1     1902         2     2224         9         0
+##      4: 2014     1   1      722        -8     1014       -26         0
+##      5: 2014     1   1     1347         2     1706         1         0
+##     ---                                                               
+## 253312: 2014    10  31     1459         1     1747       -30         0
+## 253313: 2014    10  31      854        -5     1147       -14         0
+## 253314: 2014    10  31     1102        -8     1311        16         0
+## 253315: 2014    10  31     1106        -4     1325        15         0
+## 253316: 2014    10  31      824        -5     1045         1         0
+##         carrier tailnum flight origin dest air_time distance hour min
+##      1:      AA  N338AA      1    JFK  LAX      359     2475    9  14
+##      2:      AA  N335AA      3    JFK  LAX      363     2475   11  57
+##      3:      AA  N327AA     21    JFK  LAX      351     2475   19   2
+##      4:      AA  N3EHAA     29    LGA  PBI      157     1035    7  22
+##      5:      AA  N319AA    117    JFK  LAX      350     2475   13  47
+##     ---                                                              
+## 253312:      UA  N23708   1744    LGA  IAH      201     1416   14  59
+## 253313:      UA  N33132   1758    EWR  IAH      189     1400    8  54
+## 253314:      MQ  N827MQ   3591    LGA  RDU       83      431   11   2
+## 253315:      MQ  N511MQ   3592    LGA  DTW       75      502   11   6
+## 253316:      MQ  N813MQ   3599    LGA  SDF      110      659    8  24
+##            speed delay
+##      1: 413.6490    27
+##      2: 409.0909    10
+##      3: 423.0769    11
+##      4: 395.5414   -34
+##      5: 424.2857     3
+##     ---               
+## 253312: 422.6866   -29
+## 253313: 444.4444   -19
+## 253314: 311.5663     8
+## 253315: 401.6000    11
+## 253316: 359.4545    -4</code></pre>
+</div>
+<div id="section-3" class="section level2">
+<h2>2.2 更新列</h2>
+<p>观察 fligths 里的 hour列。</p>
+<pre class="r"><code>flights[,sort(unique(hour))]</code></pre>
+<pre><code>##  [1]  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22
+## [24] 23 24</code></pre>
+<p>0和24同时存在，二者其实是等同的。因此，可以把24换为0。</p>
+<pre class="r"><code>flights[hour == 24L,hour := 0L]
+flights[,sort(unique(hour))]</code></pre>
+<pre><code>##  [1]  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22
+## [24] 23</code></pre>
+</div>
+<div id="section-4" class="section level2">
+<h2>2.3删除列</h2>
+<p>譬如删除speed列</p>
+<pre class="r"><code>flights[,speed := NULL,]
+str(flights)</code></pre>
+<pre><code>## Classes &#39;data.table&#39; and &#39;data.frame&#39;:   253316 obs. of  18 variables:
+##  $ year     : int  2014 2014 2014 2014 2014 2014 2014 2014 2014 2014 ...
+##  $ month    : int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ day      : int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ dep_time : int  914 1157 1902 722 1347 1824 2133 1542 1509 1848 ...
+##  $ dep_delay: int  14 -3 2 -8 2 4 -2 -3 -1 -2 ...
+##  $ arr_time : int  1238 1523 2224 1014 1706 2145 37 1906 1828 2206 ...
+##  $ arr_delay: int  13 13 9 -26 1 0 -18 -14 -17 -14 ...
+##  $ cancelled: int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ carrier  : chr  &quot;AA&quot; &quot;AA&quot; &quot;AA&quot; &quot;AA&quot; ...
+##  $ tailnum  : chr  &quot;N338AA&quot; &quot;N335AA&quot; &quot;N327AA&quot; &quot;N3EHAA&quot; ...
+##  $ flight   : int  1 3 21 29 117 119 185 133 145 235 ...
+##  $ origin   : chr  &quot;JFK&quot; &quot;JFK&quot; &quot;JFK&quot; &quot;LGA&quot; ...
+##  $ dest     : chr  &quot;LAX&quot; &quot;LAX&quot; &quot;LAX&quot; &quot;PBI&quot; ...
+##  $ air_time : int  359 363 351 157 350 339 338 356 161 349 ...
+##  $ distance : int  2475 2475 2475 1035 2475 2454 2475 2475 1089 2422 ...
+##  $ hour     : int  9 11 19 7 13 18 21 15 15 18 ...
+##  $ min      : int  14 57 2 22 47 24 33 42 9 48 ...
+##  $ delay    : int  27 10 11 -34 3 4 -20 -17 -18 -16 ...
+##  - attr(*, &quot;.internal.selfref&quot;)=&lt;externalptr&gt; 
+##  - attr(*, &quot;index&quot;)= int</code></pre>
+</div>
+</div>
+<div id="section-5" class="section level1">
+<h1>3.在分组的情况下使用“:=”</h1>
+<p>感觉分组情况下，就地更新列，并不符合常规。这样对数据集的改动太大了。这里其实不是我理解的意思是，<strong>并不是用分组后的统计结果替代原数据集</strong>。而是根据分组统计后的结果，更新列。
+譬如，从origin到dest，延迟时间最长为多少？</p>
+<pre class="r"><code>flights[, max_delay_time := max(dep_delay+arr_delay), keyby=.(origin, dest)]
+head(flights)</code></pre>
+<pre><code>##    year month day dep_time dep_delay arr_time arr_delay cancelled carrier
+## 1: 2014     1   2      724        -2      810       -25         0      EV
+## 2: 2014     1   3     2313        88        9        79         0      EV
+## 3: 2014     1   4     1526       220     1618       211         0      EV
+## 4: 2014     1   4      755        35      848        19         0      EV
+## 5: 2014     1   5      817        47      921        42         0      EV
+## 6: 2014     1   5     2301        66        2        62         0      EV
+##    tailnum flight origin dest air_time distance hour min delay
+## 1:  N11547   4373    EWR  ALB       30      143    7  24   -27
+## 2:  N18120   4470    EWR  ALB       29      143   23  13   167
+## 3:  N11184   4373    EWR  ALB       32      143   15  26   431
+## 4:  N14905   4551    EWR  ALB       32      143    7  55    54
+## 5:  N19966   4470    EWR  ALB       26      143    8  17    89
+## 6:  N19966   4682    EWR  ALB       31      143   23   1   128
+##    max_delay_time
+## 1:            618
+## 2:            618
+## 3:            618
+## 4:            618
+## 5:            618
+## 6:            618</code></pre>
+<p>从结果可以看到，新增加了一列<code>max_delay_time</code>，而且从EWR-ALB区间，该列值为618，为最大值。</p>
+</div>
+<div id="section-6" class="section level1">
+<h1>4. 对多列数据进行操作</h1>
+<p>添加了两列：统计每个月，最长的出发延迟时间、到达延迟时间</p>
+<pre class="r"><code>in_cols  = c(&quot;dep_delay&quot;, &quot;arr_delay&quot;)
+out_cols = c(&quot;max_dep_delay&quot;, &quot;max_arr_delay&quot;)
+flights[, c(out_cols) := lapply(.SD, max), by = month, .SDcols = in_cols]
+head(flights)</code></pre>
+<pre><code>##    year month day dep_time dep_delay arr_time arr_delay cancelled carrier
+## 1: 2014     1   2      724        -2      810       -25         0      EV
+## 2: 2014     1   3     2313        88        9        79         0      EV
+## 3: 2014     1   4     1526       220     1618       211         0      EV
+## 4: 2014     1   4      755        35      848        19         0      EV
+## 5: 2014     1   5      817        47      921        42         0      EV
+## 6: 2014     1   5     2301        66        2        62         0      EV
+##    tailnum flight origin dest air_time distance hour min delay
+## 1:  N11547   4373    EWR  ALB       30      143    7  24   -27
+## 2:  N18120   4470    EWR  ALB       29      143   23  13   167
+## 3:  N11184   4373    EWR  ALB       32      143   15  26   431
+## 4:  N14905   4551    EWR  ALB       32      143    7  55    54
+## 5:  N19966   4470    EWR  ALB       26      143    8  17    89
+## 6:  N19966   4682    EWR  ALB       31      143   23   1   128
+##    max_delay_time max_dep_delay max_arr_delay
+## 1:            618           973           996
+## 2:            618           973           996
+## 3:            618           973           996
+## 4:            618           973           996
+## 5:            618           973           996
+## 6:            618           973           996</code></pre>
+<p>另外一种形式</p>
+<pre class="r"><code>flights[,c(&quot;max_dep_delay&quot;, &quot;max_arr_delay&quot;) := lapply(.SD, max),.SDcols = c(&quot;dep_delay&quot;, &quot;arr_delay&quot;)]</code></pre>
+</div>

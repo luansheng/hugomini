@@ -1,0 +1,182 @@
+---
+title: data.table学习笔记3
+author: Sheng Luan
+date: '2017-07-12'
+categories:
+  - Data.table
+  - R
+  - 数据清洗
+tags:
+  - R
+  - Data.table
+slug: data-table-note-3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(data.table)
+flights <- fread("datasets/flights14.csv")
+flights.copy <- copy(flights)
+```
+* data.table的特点：**减小计算复杂度**，降低**计算时间**。  
+
+# 1.主键
+
+利用主键进行subset，速度会更加快。  
+
+## 设置主键
+
+通过函数`setkey()`来设置主键。下边代码将origin列设置为主键。
+```{r}
+setkey(flights,origin)
+setkey(flights,"origin")
+head(flights)
+```
+origin列设置为主键后，一个明显特征，其中的元素从小到大排序了。主键列中元素并不唯一，可以重复。
+列被setkey后，速度提升很快。利用microbenchmark包进行测试。设置为主键后，的确快一些。
+```{r}
+require(microbenchmark)
+microbenchmark(flights[.("JFK")],flights.copy[origin == "JFK"])
+```
+
+* 因为已经将主键设置为 origin列了，所以只要直接指定"JFK"就可以了。这里 .()用来在data.table的主键（也就是flights 的 origin列）里，查找"JFK"。
+* 首先，满足"JFK"条件的行的索引都被获取到。然后，这些行的哪些信息是必要的呢。既然参数j里没有指定任何表达式，这些行的所有列都被返回了。
+* 如果主键是字符型的列，那么可以省略 .()，就像用行名subset一个data.frame的行的时候。
+flights["JFK"]              ## same as flights[.("JFK")]
+
+* 我们可以根据需要指定多个值
+flights[c("JFK", "LGA")]    ## same as flights[.(c("JFK", "LGA"))]
+这返回所有 origin列是“JFK” 或者 “LGA”的所有行。
+```{r}
+flights[c("JFK", "LGA")]
+flights[.(c("JFK", "LGA"))]
+```
+使用函数 `key()`，获得被设置为主键的列名。
+```{r}
+key(flights)
+key(flights.copy)
+```
+
+* 函数 key() 返回主键列名的字符型向量。
+* 如果data.table没有设置过主键，返回 NULL。
+
+# 2. 更多主键
+可以把主键理解为功能更强大的行名。可以设置多列为主键。
+ 
+```{r}
+setkey(flights,origin,dest)
+head( flights)
+```
+从返回结果看，origin和dest这两列被重新排序了。
+
+提取满足orgin=="JFK"，dest== "MIA"条件的数据集。
+```{r}
+flights[.("JFK","MIA")]
+```
+当有两个主键时，对第一个主键，这样写是ok的。
+```{r}
+flights[.("JFK")]
+```
+如何只对第二个主键进行过滤?
+```{r}
+flights[.("MIA")]
+```
+像上边这样是行不通的。必须要给出第一个主键的所有值,通过`unique(origin)`来实现。
+```{r}
+flights[.(unique(origin),"MIA")]
+```
+
+# 3. 和参数j, by一起使用
+提取满足origin="LGA"和dest="TPA"这两个条件的数据集，并且只返回arr_delay列。
+```{r}
+key(flights)
+flights[.("LGA","TPA"),.(arr_delay)]
+```
+## chaining表达式，链式表达式。
+
+对上边的表达式生成的数据集，进一步对arr_delay按照降序排列。
+```{r}
+flights[.("LGA","TPA"),.(arr_delay)][order(-arr_delay)]
+```
+## j参数运算
+
+找出从LGA到TPA的到达航班最长延迟时间。
+```{r}
+flights[.("LGA","TPA"),.(max(arr_delay))]
+```
+可以跟降序排列的第一行结果对比验证。两者应该是一致的。
+
+利用主键，把hour列中的24替换为0。注意，替换后，由于主键列的内容发生变化，hour的主键特性消失。
+```{r}
+setkey(flights,hour)
+key(flights)
+flights[.(24),hour:=0L]
+flights[,unique(hour)]
+key(flights)
+```
+## 用参数by进行聚合
+
+每个月从“JFK”起飞航班的最大起飞延误时间，按照月排序。注意用到了`keyby`参数。
+```{r}
+setkey(flights,origin,dest)
+flights[.("JFK")]
+flights.max.dep_delay.per.month <- flights[.("JFK"),max(dep_delay),keyby=month]
+head(flights.max.dep_delay.per.month)
+```
+
+# 4. 两个重要的参数mult和nomatch
+## `mult`参数
+
+用来设置返回的行数, `first`只返回第一行,`last`返回最后一行，`all`返回所有行。
+```{r}
+flights[.("JFK","MIA"),mult="first"]
+flights[.("JFK","MIA"),mult="last"]
+flights[.("JFK","MIA"),mult="all"]
+```
+## `nomatch`参数
+
+指定在没有找到符合条件的数据的情况下，是返回NA呢，还是跳过（不返回）。默认是返回NA，如果想跳过，设置`nomatch=0L`。JFK+XNA不匹配数据库中的任何一条记录，因此在第一种方式中跳过，在第二种方式中用NA补充。
+```{r}
+flights[.(c("LGA", "JFK", "EWR"), "XNA"), mult="last", nomatch = 0L]
+flights[.(c("LGA", "JFK", "EWR"), "XNA"), mult="last", nomatch = NA]
+```
+# 5. 二分法搜索vs向量搜索
+探讨一下为什么设置主键后，速度会提升。  
+创建一个2000万行三列的数据。
+```{r}
+set.seed(1234)
+N <- 2e7L
+DT <-  data.table(x=sample(letters,N,TRUE),
+                  y=sample(1000L,N,TRUE),
+                  val=runif(N),key=c("x","y"))
+print(object.size(DT),units="Mb")
+key(DT)
+head(DT)
+```
+上边代码产生了一个380M的数据集，用来测试和比较设置主键后的性能优化效果。
+
+现在要提取x=a 和 y=100的行。来比较直接向量提取和利用主键来做的性能差异。
+```{r}
+require(microbenchmark)
+microbenchmark(DT[x=="a" & y==100L],DT[.("a",100L)])
+```
+看起来，快了大约200多倍。的确是非常快。
+看看给出的解释：中文地址在[这里](https://youngspring1.github.io/post/2016/2016-03-22-datatable3/)
+
+##向量扫描  
+* 在所有两千条数据中，逐行搜索 x列里值为“g”的行。这会生成一个有两千行的逻辑向量，根据和x列的批评结果，它每个元素的取值可能是TRUE, FALSE 以及 NA。
+* 相似的，在所有两千条数据中，逐行搜索 y列里值为“877”的行，再保存在另一个逻辑向量里面。
+* 操作符"&"对上面两个逻辑向量进行“且”运算，返回结果为TRUE的行
+这就是所谓的“向量扫描”。效率非常低，特别是数据量很大、需要重复subset的时候。因为它每次不得不对整个数据全盘扫描。
+
+## 二分法搜索  
+这里有一个简单的示例。看看下面这组排过序的数字：
+1, 5, 10, 19, 22, 23, 30
+假设我们希望找到数字1的位置，用二分法搜索（因为这组数字是排过序的），我们是这么做的：
+* 从中间的数开始，它是19，不是1，而且 1<19。
+* 既然我们要找的数字1小于19，那它应该排在19前面。所以我们可以无视19后面的那一半数据，因为它们都大于19.
+* 现在我们的数据只剩下1, 5, 10。再找到中间的数5，它不是1，而且 1<5。
+* 现在我们的数据只剩下1。符合条件。这就是我们要找的数。
+相反的，向量扫描需要扫描所有的数字，在这个例子中是7。
+
+用主键也就是二分法搜索的时间开销是**O(logn)**，而用向量扫描，时间开销是**O(n)**。当n（数据行数）非常大时，性能会差别很大。

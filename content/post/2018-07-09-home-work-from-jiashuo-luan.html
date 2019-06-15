@@ -1,0 +1,38 @@
+---
+title: home work from jiashuo luan
+author: Sheng Luan
+date: '2018-07-09'
+slug: home-work-from-jiashuo-luan
+categories:
+  - 编程
+tags:
+  - python
+header:
+  caption: ''
+  image: ''
+---
+
+
+
+<div id="section" class="section level2">
+<h2>问题</h2>
+<p>编写一个程序，要求输入一个数，判断它是否能被3,5,7整除，是输出“yes”，不是输出“no”（解密点30）
+当前解密点（70,100)</p>
+<p>定义一个判断数字是否可以被3,5,7同时整除的函数</p>
+<pre class="python"><code>def is_divisibility(int_num):
+    if (int_num % 3 == 0) and (int_num % 5 == 0) and (int_num % 7 == 0) :
+        return True
+    else:
+        return False</code></pre>
+<p>测试数字50, 105, 200, 315，哪些数字可以满足上述条件。如果满足条件，输出yes，否则输出no。</p>
+<pre class="python"><code>numbers = [50, 105, 200, 315]
+for i in range(len(numbers)) :
+    if is_divisibility(numbers[i]) :
+        print(&quot;yes&quot;)
+    else:
+        print(&quot;no&quot;)</code></pre>
+<pre><code>## no
+## yes
+## no
+## yes</code></pre>
+</div>
