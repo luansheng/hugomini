@@ -42,7 +42,7 @@ world_PNV_production_dt &lt;-
   world_aquaculture_production_dt[SPECIES %chin% species_3alpha_code]
 world_PNV_production_2016_dt &lt;-
   world_PNV_production_dt[YEAR == 2016]</code></pre>
-<p>凡纳滨对虾在海水、淡水和半咸水中都可以养殖，因此在统计世界各个国家产量时，需要累加在不同养殖环境下的产量。</p>
+<p>凡纳滨对虾在海水、淡水和半咸水中都可以养殖，因此在统计世界各个国家产量时，需要累加在不同养殖环境下的产量.</p>
 <p>由于在TS_FI_AQUACULTURE.csv文件中，国家列（COUNTRY）是用代码表示。因此需要从CL_FI_COUNTRY_GROUPS.csv文件中匹配UN_Code列查询国家名称等信息。其中Name_En和Name_Cn分别表示英文和中文国家名称。</p>
 <pre class="r"><code>#读取国家信息
 country_group_dt &lt;-
@@ -78,12 +78,12 @@ world_PNV_production_2016_country_info_dt[1:5]</code></pre>
 ## 3:               F    3600           NA         23        BZ       BLZ
 ## 4:                 6515824           NA         41        CN       CHN
 ## 5:                 6698018           NA         41        CN       CHN
-##    Name_En                                                  Name_Cn
-## 1: Bahamas                                 &lt;U+5DF4&gt;&lt;U+54C8&gt;&lt;U+9A6C&gt;
-## 2:  Brazil                                        &lt;U+5DF4&gt; &lt;U+897F&gt;
-## 3:  Belize                                 &lt;U+4F2F&gt;&lt;U+5229&gt;&lt;U+5179&gt;
-## 4:   China &lt;U+4E2D&gt;&lt;U+534E&gt;&lt;U+4EBA&gt;&lt;U+6C11&gt;&lt;U+5171&gt;&lt;U+548C&gt;&lt;U+56FD&gt;
-## 5:   China &lt;U+4E2D&gt;&lt;U+534E&gt;&lt;U+4EBA&gt;&lt;U+6C11&gt;&lt;U+5171&gt;&lt;U+548C&gt;&lt;U+56FD&gt;</code></pre>
+##    Name_En        Name_Cn
+## 1: Bahamas         巴哈马
+## 2:  Brazil          巴 西
+## 3:  Belize         伯利兹
+## 4:   China 中华人民共和国
+## 5:   China 中华人民共和国</code></pre>
 <pre class="r"><code># 累加每个国家的总产量，凡纳滨对虾可在不同环境下养殖，如海、淡水、半咸水等
 PNV_production_2016_per_country_dt &lt;-
   world_PNV_production_2016_country_info_dt[, .(Production = sum(QUANTITY)), keyby =
