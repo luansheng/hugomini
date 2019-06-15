@@ -59,7 +59,7 @@ world_PNV_production_2016_dt <-
   world_PNV_production_dt[YEAR == 2016]
 ```
 
-凡纳滨对虾在海水、淡水和半咸水中都可以养殖，因此在统计世界各个国家产量时，需要累加在不同养殖环境下的产量。
+凡纳滨对虾在海水、淡水和半咸水中都可以养殖，因此在统计世界各个国家产量时，需要累加在不同养殖环境下的产量.
 
 由于在TS_FI_AQUACULTURE.csv文件中，国家列（COUNTRY）是用代码表示。因此需要从CL_FI_COUNTRY_GROUPS.csv文件中匹配UN_Code列查询国家名称等信息。其中Name_En和Name_Cn分别表示英文和中文国家名称。
 
