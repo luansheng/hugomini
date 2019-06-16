@@ -15,7 +15,7 @@ output:
 
 架构在netlify上的blog站点，一开始用的是hugo的经典[学术主题](https://themes.gohugo.io/academic/)。个性化和可配置性非常强，很是符合一个科研人员的需求。**但是**，用了两年后发现越来越慢了，目前总共不到50条blog，然而增加一条新的blog，经常需要等待3-5分钟才能够render完预览，甚至会更长。这些都忍了，最近不知道怎么搞的，hugo突然编译失败了，无法再更新blog。尝试了hugo最新版本，也是无法解决问题。本来想把hugo学术主题更新到最新版本，但是对hugo了解也不多，迁移是个大工程。
 
-因此计划换个主题。要求只有一个，简单。发现[yihui](https://github.com/yihui)修改的[lithium](https://github.com/yihui/hugo-lithium)这个主题非常符合要求，很简单，也不需要怎么配置。因此花了一段时间，把所有的帖子重新render了一遍。
+因此计划在github上新建一个repository，换个主题。要求只有一个，简单。发现[yihui](https://github.com/yihui)修改的[lithium](https://github.com/yihui/hugo-lithium)这个主题非常符合要求，很简单，也不需要怎么配置。因此花了一段时间，把所有的帖子重新render了一遍。
 
 不过重新构建的站点，blog的**链接发生了变化**，现在每个blog链接地址带着日期。因此原blog的链接就失效了。这是很遗憾的事情。
 
