@@ -7,7 +7,7 @@ title: About
 * Sheng Luan, Professor of [YSFRI](http://ysfri.ac.cn/)
 * luansheng@gmail.com
 * Nanjing Road 106#, Qingdao, 266071, Shandong, China
-* [R-bloggers](https://www.r-bloggers.com/)
+
 
 ## Biography
 My research is on the areas of shrimp and fish selective breeding. I am interested in design of genetic improvement programs, development of breeding objectives, selection strategies, and genetic evaluation systems. Currently, my research is focused on estimating genetic parameters for additive, non-additive and indirect genetic effects, predicting selection response, and designing mating scheme for economically important traits in shrimp and fish.
@@ -23,3 +23,6 @@ My research is on the areas of shrimp and fish selective breeding. I am interest
 ## Education
 * PhD in marine biology, 2006
 * Ocean University of China
+
+## Link
+* [R-bloggers](https://www.r-bloggers.com/)
