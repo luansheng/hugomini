@@ -43,8 +43,9 @@ Therefore, the reliable and accurate pedigree records are very important for a s
 <h2><a id="1">1. Installation of the visPedigree package</a></h2>
 <p>The visPedigree package has not been released in cran, but it can be installed from github(<a href="https://github.com" class="uri">https://github.com</a>) using the devtools package.</p>
 <p>In this blog, all R scripts are runned in Rstudio. If the devtools package is not found in the library, please install it first, then load it.</p>
-<pre class="r"><code>suppressPackageStartupMessages(is_installed &lt;- require(devtools))
-if (!is_installed) {
+<pre class="r"><code>suppressPackageStartupMessages(is_installed &lt;- require(devtools))</code></pre>
+<pre><code>## Warning: package &#39;devtools&#39; was built under R version 3.5.3</code></pre>
+<pre class="r"><code>if (!is_installed) {
   install.packages(&quot;devtools&quot;)  
   suppressPackageStartupMessages(require(devtools))  
 }</code></pre>
@@ -57,7 +58,7 @@ if (!is_installed) {
 <p>In China, you can try another method to install quickly visPedigree and avoid the slow internet for github.</p>
 <ul>
 <li>Access <a href="https://github.com/luansheng/visPedigree">the github link</a> of visPedigree package.</li>
-<li>Click <strong>Clone or download</strong> list box，and Click <strong>Download ZIP</strong>, download the installation of visPedigree package and save it to a english file folder in the computer, such as <code>c:/visPedigree</code>. The downloaded installation package will be visPedigree-master.zip.
+<li>Click <strong>Clone or download</strong> list box，and Click <strong>Download ZIP</strong>, download the installation of visPedigree package and save it in an english folder, such as <code>c:/visPedigree</code>. The downloaded installation package will be visPedigree-master.zip.
 <div align="center">
 <p><img src="/post/images/Downloadgithub.png"  height= "300" width="100%" ></p>
 </div></li>
@@ -242,7 +243,7 @@ print(tidy_simple_ped_J0Z990_offspring)</code></pre>
   tidyped(ped = small_ped,
   cand = c(&quot;Y&quot;,&quot;Z1&quot;,&quot;Z2&quot;))
 visped(tidy_small_ped, compact = TRUE, file=&quot;doc/smallped.pdf&quot;)</code></pre>
-<pre><code>## The vector drawing of the pedigree is saved in the C:/Users/luan_/OneDrive/HugoMini/content/post/doc/smallped.pdf file</code></pre>
+<pre><code>## The vector drawing of the pedigree is saved in the D:/luansheng/Documents/OneDrive/HugoMini/content/post/doc/smallped.pdf file</code></pre>
 <pre><code>## The cex for individual label is 0.7.</code></pre>
 <pre><code>## Please decrease or increase the value of the parameter cex if the label&#39;s width is longer or shorter than that of the circle or square in the graph.</code></pre>
 <p><img src="/post/2018-11-09-vispedigree-use-guide_files/figure-html/smallped-1.png" width="100%" />
@@ -276,7 +277,7 @@ Rerun visped() function!</code></pre>
 ## with the missing value NA.</code></pre>
 <pre><code>## Warning in checkped(ped, addgen): Blank and NA are recoded as a missing sex
 ## in the Sex column of the pedigree.</code></pre>
-<pre><code>## The vector drawing of the pedigree is saved in the C:/Users/luan_/OneDrive/HugoMini/content/post/doc/deepped1.pdf file</code></pre>
+<pre><code>## The vector drawing of the pedigree is saved in the D:/luansheng/Documents/OneDrive/HugoMini/content/post/doc/deepped1.pdf file</code></pre>
 <pre><code>## The cex for individual label is 0.525.</code></pre>
 <pre><code>## Please decrease or increase the value of the parameter cex if the label&#39;s width is longer or shorter than that of the circle or square in the graph.</code></pre>
 <p><img src="/post/2018-11-09-vispedigree-use-guide_files/figure-html/reduceped1-1.png" width="100%" />
@@ -287,7 +288,7 @@ Let’s open the <a href="/post/doc/deepped1.pdf">deepped1.pdf</a> file and view
 ## with the missing value NA.</code></pre>
 <pre><code>## Warning in checkped(ped, addgen): Blank and NA are recoded as a missing sex
 ## in the Sex column of the pedigree.</code></pre>
-<pre><code>## The vector drawing of the pedigree is saved in the C:/Users/luan_/OneDrive/HugoMini/content/post/doc/deepped2.pdf file</code></pre>
+<pre><code>## The vector drawing of the pedigree is saved in the D:/luansheng/Documents/OneDrive/HugoMini/content/post/doc/deepped2.pdf file</code></pre>
 <pre><code>## The cex for individual label is 0.83.</code></pre>
 <pre><code>## Please decrease or increase the value of the parameter cex if the label&#39;s width is longer or shorter than that of the circle or square in the graph.</code></pre>
 <p>Let’s open the <a href="/post/doc/deepped2.pdf">deepped2.pdf</a> file to view the high-definition pedigree vectorgraph. There is higher matching degree between individual labels and shapes compared to deepped1.pdf. If it doesn’t feel right, you can continue to modify the cex.</p>

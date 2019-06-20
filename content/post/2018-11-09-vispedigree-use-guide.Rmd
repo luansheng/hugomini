@@ -67,7 +67,7 @@ if (!is_installed) {
 In China, you can try another method to install quickly visPedigree and avoid the slow internet for github.
 
 * Access [the github link](https://github.com/luansheng/visPedigree) of visPedigree package.
-* Click **Clone or download** list box，and Click **Download ZIP**, download the installation of visPedigree package and save it to a english file folder in the computer, such as `c:/visPedigree`. The downloaded installation package will be visPedigree-master.zip. 
+* Click **Clone or download** list box，and Click **Download ZIP**, download the installation of visPedigree package and save it in an english folder, such as `c:/visPedigree`. The downloaded installation package will be visPedigree-master.zip. 
 <div align="center">
 <img src="/post/images/Downloadgithub.png"  height= "300" width="100%" >
 </div>

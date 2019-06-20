@@ -64,7 +64,10 @@ if (!is_installed) {
 在国内，直接利用上述方法安装，可能会比较慢，甚至经常会发生安装失败的问题。因此利用`devtools::install_local()`函数直接从本地安装是一个更好的方法。具体操作如下：
 
 * 访问visPedigree包的[github网址](https://github.com/luansheng/visPedigree)。
-* 点击页面右侧的**Clone or download**下拉框，选择**Download ZIP**，把安装visPedigree包需要的文件下载到本地，保存到一个英文目录下，如`c:/visPedigree`。如果是从master分支下载的压缩包，下载后的名字为visPedigree-master.zip。![](/post/images/Downloadgithub.png)
+* 点击页面右侧的**Clone or download**下拉框，选择**Download ZIP**，把安装visPedigree包需要的文件下载到本地，保存到一个英文目录下，如`c:/visPedigree`。如果是从master分支下载的压缩包，下载后的名字为visPedigree-master.zip。
+<div align="center">
+<img src="/post/images/Downloadgithub.png"  height= "300" width="100%" >
+</div>
 * 打开Rstudio，切换工作目录到`c:/visPedigree`
 * 利用devtools::install_local()函数进行安装。
 
