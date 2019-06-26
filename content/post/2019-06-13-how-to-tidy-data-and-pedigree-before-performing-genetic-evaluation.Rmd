@@ -48,21 +48,21 @@ library(DataExplorer)
 
 下载后，跟R代码放在同一目录下，如果不打算修改下述代码，那么把数据和系谱文件放在一个新建目录datasets下。datasetsw文件夹和R脚本文件在同一个目录下。
 ```{r readData&Ped}
-gPed <-
+gPed_dt <-
   fread(
     file = "datasets/g2016G0to2017G1Ped.csv",
     sep = ",",
     stringsAsFactors = FALSE,
     header = TRUE
   )
-gData <-
+gData_dt <-
   fread(
     file = "datasets/g2016G0to2017G1Data.csv",
     sep = ",",
     stringsAsFactors = FALSE,
     header = TRUE
   )
-gPed$Sex[gPed$Sex == "0"] <- NA
+gPed_dt$Sex[gPed_dt$Sex == "0"] <- NA
 ```
 
 ## 2. 数据检查
@@ -77,13 +77,13 @@ gPed$Sex[gPed$Sex == "0"] <- NA
 
 ```{r check_data}
 #检查分类变量
-plot_bar(gData)
+plot_bar(gData_dt)
 #检查连续性变量
-plot_histogram(gData)
+plot_histogram(gData_dt)
 #检查连续性变量与收获体重间的散点图
-plot_scatterplot(split_columns(gData)$continuous, by = "M2BW")
+plot_scatterplot(split_columns(gData_dt)$continuous, by = "M2BW")
 #检查连续性变量间的相关性
-plot_correlation(gData, type = "continuous")
+plot_correlation(gData_dt, type = "continuous")
 ```
 
 
@@ -95,8 +95,8 @@ visPedigree包中的tidyped()函数，主要有两个功能:
 
 ```{r transformPed}
 #预处理系谱，主要是把父母本的系谱设置为0
-gPed_tidy <- tidyped(ped = gPed, cand  = gData$AnimalID)
-gPed_tidy
+gPed_tidy_dt <- tidyped(ped = gPed_dt, cand  = gData_dt$AnimalID)
+gPed_tidy_dt
 ```
 
 整理后系谱的包含的个体数，要少于原始系谱。
@@ -114,9 +114,9 @@ gPed_tidy
 即便是设置为缺失，应该也是这种情况。
 
 ```{r plotPedigree,eval=TRUE,echo=TRUE, warning=FALSE, message= FALSE, fig.width=10, fig.height=8, out.width= '100%'}
-one_pedigree <-
-  tidyped(ped = gPed_tidy, cand = gData$AnimalID[nrow(gData)])
-visped(ped = one_pedigree)
+one_ped_dt <-
+  tidyped(ped = gPed_tidy_dt, cand = gData_dt$AnimalID[nrow(gData_dt)])
+visped(ped = one_ped_dt)
 ```
 
 
@@ -127,10 +127,10 @@ visped(ped = one_pedigree)
 `fwrite()`函数来自data.table包。
 
 ```{r PedOutput}
-gPed_tidy[is.na(Sire), Sire := "0"]
-gPed_tidy[is.na(Dam), Dam := "0"]
+gPed_tidy_dt[is.na(Sire), Sire := "0"]
+gPed_tidy_dt[is.na(Dam), Dam := "0"]
 fwrite(
-  gPed_tidy,
+  gPed_tidy_dt,
   file = "datasets/g2016G0to2017G1Pedpruned.csv",
   sep = ",",
   row.names = F,
