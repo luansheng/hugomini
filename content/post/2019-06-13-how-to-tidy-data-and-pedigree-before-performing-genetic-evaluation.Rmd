@@ -29,7 +29,7 @@ title: "常规遗传评估需要的数据格式和整理步骤"
 * 如果父本编号和母本编号两列中的个体没有在个体编号列中出现，将会默认为奠基者个体。
 * 在第四列加入个体的性别是一个好的建议。
 * 可以利用optiSel、visPedigree等R包实现对系谱文件的整理
-* visPeidgree包的[中文安装和使用说明](https://luansheng.netlify.com/post/the-first-package-vispedigree-0-1/)
+* visPedigree包的[中文安装和使用说明](https://luansheng.netlify.com/post/the-first-package-vispedigree-0-1/)
 
 ## 数据处理实例
 
