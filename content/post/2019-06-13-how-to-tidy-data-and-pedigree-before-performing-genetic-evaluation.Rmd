@@ -89,7 +89,7 @@ plot_correlation(gData_dt, type = "continuous")
 
 ### 2.2 数据清洗
 
-数据分析的需求是经常变动和碎片化的，因此需要掌握熟练的数据清洗技能。数据清洗主流的R包有[dplyr](https://dplyr.tidyverse.org/)和[data.table](https://github.com/Rdatatable/data.table/wiki)等包。网络上关于二者的比较也有[不少](https://stackoverflow.com/questions/21435339/data-table-vs-dplyr-can-one-do-something-well-the-other-cant-or-does-poorly)。前者的优势是有一个较为完善的数据处理体系，具体参见[tidyverse](https://www.tidyverse.org/)包合集。data.table的优势是特别适合处理大数据，读入、处理和写入的速度[非常快](https://github.com/Rdatatable/data.table/wiki/Benchmarks-:-Grouping)。考虑到测序和分型数据都是上G的数据量，推荐利用data.table包。data.table包理解起来，一开始可能有些门槛，不过跟着[教程](https://github.com/Rdatatable/data.table/wiki/Getting-started)，很快就会熟悉了。我也跟着官方英文教程写了几个学习的blog(https://luansheng.netlify.com/tags/data.table/)，供大家参考。百度、知乎上也有不少data.table的使用方法介绍，大家自行参考，具体data.table的使用就不在此赘述了。这里举几个在育种数据分析中用到data.table的例子：
+数据分析的需求是经常变动和碎片化的，因此需要掌握熟练的数据清洗技能。数据清洗主流的R包有[dplyr](https://dplyr.tidyverse.org/)和[data.table](https://github.com/Rdatatable/data.table/wiki)等包。网络上关于二者的比较也有[不少](https://stackoverflow.com/questions/21435339/data-table-vs-dplyr-can-one-do-something-well-the-other-cant-or-does-poorly)。前者的优势是有一个较为完善的数据处理体系，具体参见[tidyverse](https://www.tidyverse.org/)包合集。data.table的优势是特别适合处理大数据，读入、处理和写入的速度[非常快](https://github.com/Rdatatable/data.table/wiki/Benchmarks-:-Grouping)。考虑到测序和分型数据都是上G的数据量，推荐利用data.table包。data.table包理解起来，一开始可能有些门槛，不过跟着[教程](https://github.com/Rdatatable/data.table/wiki/Getting-started)，很快就会熟悉了。我也跟着官方英文教程写了几个学习的[blog](https://luansheng.netlify.com/tags/data.table/)，供大家参考。百度、知乎上也有不少data.table的使用方法介绍，大家自行参考，具体data.table的使用就不在此赘述了。这里举几个在育种数据分析中用到data.table的例子：
 
 #### 2.2.1 数据提取
 (1)提取雄虾数据     
