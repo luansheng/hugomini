@@ -187,8 +187,6 @@ shrimp[,&quot;:=&quot;(ObsSeq=seq(nrow(shrimp)))]
 #把拟合值合并到shrimp数据集
 shrimp.predicted.value &lt;- merge(shrimp,shrimp.lm.9.predict.dt,by = c(&quot;ObsSeq&quot;),all.y = TRUE)
 
-
-
 ggplot(data=shrimp.predicted.value,aes(x=PopID,y=PredictedValue,fill=FamilyID)) + 
   geom_boxplot(outlier.size = 0)+
   labs(x=&quot;群体&quot;,y=&quot;收获体重预测值&quot;)+
