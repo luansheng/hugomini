@@ -52,7 +52,7 @@ library(DataExplorer)</code></pre>
 <div id="section-4" class="section level3">
 <h3>1.读取系谱和数据文件</h3>
 <p><a href="/post/datasets/g2016G0to2017G1Ped.csv">数据文件</a>和<a href="/post/datasets/g2016G0to2017G1Data.csv">系谱文件</a>可以点击下载。</p>
-<p>下载后，跟R代码放在同一目录下，如果不打算修改下述代码，那么把数据和系谱文件放在一个新建目录datasets下。datasetsw文件夹和R脚本文件在同一个目录下。</p>
+<p>下载后，跟R代码放在同一目录下，如果不打算修改下述代码，那么把数据和系谱文件放在一个新建目录datasets下。datasets文件夹和R脚本文件在同一个目录下。</p>
 <pre class="r"><code>gPed_dt &lt;-
   fread(
     file = &quot;datasets/g2016G0to2017G1Ped.csv&quot;,
@@ -70,7 +70,10 @@ gData_dt &lt;-
 gPed_dt$Sex[gPed_dt$Sex == &quot;0&quot;] &lt;- NA</code></pre>
 </div>
 <div id="section-5" class="section level3">
-<h3>2. 数据检查</h3>
+<h3>2. 数据检查和整理</h3>
+</div>
+<div id="section-6" class="section level3">
+<h3>2.1 数据检查</h3>
 <p>检查数据中分类以及连续性变量的分布，主要是发现是否有异常值。</p>
 <p>根据柱状图，可以查看世代、池塘、性别等分类变量的水平数。如果性别有三个，很容易可以查看出来。</p>
 <p>根据直方图，可以检查体重、体长、日龄等连续变量的分布，如果有异常值，也非常容易查看。</p>
@@ -93,7 +96,274 @@ plot_scatterplot(split_columns(gData_dt)$continuous, by = &quot;M2BW&quot;)</cod
 plot_correlation(gData_dt, type = &quot;continuous&quot;)</code></pre>
 <p><img src="/post/2019-06-13-how-to-tidy-data-and-pedigree-before-performing-genetic-evaluation_files/figure-html/check_data-4.png" width="672" /></p>
 </div>
-<div id="section-6" class="section level3">
+<div id="section-7" class="section level3">
+<h3>2.2 数据清洗</h3>
+<p>数据分析的需求是经常变动和碎片化的，因此需要掌握熟练的数据清洗技能。数据清洗主流的R包有<a href="https://dplyr.tidyverse.org/">dplyr</a>和<a href="https://github.com/Rdatatable/data.table/wiki">data.table</a>等包。网络上关于二者的比较也有<a href="https://stackoverflow.com/questions/21435339/data-table-vs-dplyr-can-one-do-something-well-the-other-cant-or-does-poorly">不少</a>。前者的优势是有一个较为完善的数据处理体系，具体参见<a href="https://www.tidyverse.org/">tidyverse</a>包合集。data.table的优势是特别适合处理大数据，读入、处理和写入的速度<a href="https://github.com/Rdatatable/data.table/wiki/Benchmarks-:-Grouping">非常快</a>。考虑到测序和分型数据都是上G的数据量，推荐利用data.table包。data.table包理解起来，一开始可能有些门槛，不过跟着<a href="https://github.com/Rdatatable/data.table/wiki/Getting-started">教程</a>，很快就会熟悉了。我也跟着官方英文教程写了几个学习的blog(<a href="https://luansheng.netlify.com/tags/data.table/" class="uri">https://luansheng.netlify.com/tags/data.table/</a>)，供大家参考。百度、知乎上也有不少data.table的使用方法介绍，大家自行参考，具体data.table的使用就不在此赘述了。这里举几个在育种数据分析中用到data.table的例子：</p>
+<div id="section-8" class="section level4">
+<h4>2.2.1 数据提取</h4>
+<p>(1)提取雄虾数据<br />
+有时候，审稿人可能会要求我们单独分析雄虾数据的遗传参数，这就要求我们提取雄虾的数据，利用data.table，实现起来很简单。注意<code>%chin%</code>操作符是data.table单独针对字符类型重构的，速度较快。数值类型，可以直接用&gt;、&lt;等符号。</p>
+<pre class="r"><code>gData_dt[SexID %chin% c(&quot;Female&quot;)]</code></pre>
+<pre><code>##              AnimalID          SireID           DamID Generation
+##    1: OXHMB17G010D158 OXHMB16G000A389 OXHMB16G000B754        G01
+##    2: OXHMB17G010D261 OXHMB16G000A012 MRTZD16G000F031        G01
+##    3: OXHMB17G0101515 OXHMB16G000F297 OXHMB16G000E364        G01
+##    4: OXHMB17G0109465 OXHMB16G000A343 MRTZD16G000F026        G01
+##    5: OXHMB17G0103104 OXHMB16G000A765  OXHMB16G00X110        G01
+##   ---                                                           
+## 4477: OXHMB17G0108813 OXHMB16G000A275 MRTZD16G000F001        G01
+## 4478: OXHMB17G0000146 MRTZD16B000M002 MRTZD16B000F002        G01
+## 4479: OXHMB17G0110114 MRTZD16G000M052 MRTZD16G000F052        G01
+## 4480: OXHMB17G0106486 OXHMB16G000F132 OXHMB16G000F371        G01
+## 4481: OXHMB17G010F177 MRTZD16G000M021 OXHMB16G000B013        G01
+##              FamilyID TankID  SexID  Birthday    S2Date    M1Date M1BW
+##    1: OXHMB17G0100482    P11 Female 4/22/2117 5/14/2117  7/9/2117 16.4
+##    2: OXHMB17G0100891    P11 Female 4/24/2117 5/15/2117 7/10/2117 14.7
+##    3: OXHMB17G0100211    P10 Female 4/19/2117  5/9/2117  7/8/2117 15.2
+##    4: OXHMB17G0100881    P10 Female 4/18/2117 5/11/2117  7/8/2117 13.6
+##    5: OXHMB17G0100323    P10 Female  5/1/2117 5/23/2117 7/12/2117 13.0
+##   ---                                                                 
+## 4477: OXHMB17G0100831    P10 Female 4/20/2117  5/9/2117  7/8/2117 16.4
+## 4478: OXHMB17G0001021    P10 Female 5/10/2117 5/29/2117 7/14/2117  8.7
+## 4479: OXHMB17G0100933    P10 Female 4/30/2117 5/22/2117 7/12/2117 11.3
+## 4480: OXHMB17G0100611    P10 Female 4/28/2117 5/20/2117 7/11/2117 12.8
+## 4481: OXHMB17G0100771    P10 Female 4/14/2117  5/4/2117  7/6/2117 15.4
+##          M2Date M2Age1 M2Age2 M2BW M2BL
+##    1: 9/28/2117    159    137  430  113
+##    2: 9/28/2117    157    136  488  117
+##    3: 10/9/2117    173    153  337  111
+##    4: 10/9/2117    174    151  273  103
+##    5: 10/9/2117    161    139  355  109
+##   ---                                  
+## 4477: 10/9/2117    172    153  362  111
+## 4478: 10/9/2117    152    133  276  102
+## 4479: 10/9/2117    162    140  157   85
+## 4480: 10/9/2117    164    142  201   98
+## 4481: 10/9/2117    178    158  689  133</code></pre>
+<p>举一反三，如何提取体重大于700的个体记录集？</p>
+<pre class="r"><code>gData_dt[M2BW &gt;700]</code></pre>
+<pre><code>##           AnimalID          SireID           DamID Generation
+## 1: OXHMB17G010D260 OXHMB16G000F302 OXHMB16G000B783        G01
+## 2: OXHMB17G010D342 OXHMB16G000A316 OXHMB16G000F439        G01
+## 3: OXHMB17G010D872 MRTZD16G000M021 OXHMB16G000B013        G01
+## 4: OXHMB17G010F039 OXHMB16G000C612 OXHMB16G000B679        G01
+## 5: OXHMB17G010F063 MRTZD16G000M001  OXHMB16G00X112        G01
+## 6: OXHMB17G010F087 MRTZD16G000M021 OXHMB16G000B013        G01
+## 7: OXHMB17G010F216 OXHMB16G000A805 OXHMB16G000F485        G01
+## 8: OXHMB17G010F254 OXHMB16G000C612 OXHMB16G000B679        G01
+## 9: OXHMB17G010F899 OXHMB16G000C612 OXHMB16G000B679        G01
+##           FamilyID TankID SexID  Birthday    S2Date    M1Date M1BW
+## 1: OXHMB17G0100461    P11  Male 4/14/2117  5/4/2117  7/7/2117 19.7
+## 2: OXHMB17G0100131    P11  Male 4/13/2117  5/1/2117  7/6/2117 17.8
+## 3: OXHMB17G0100771    P10  Male 4/14/2117  5/4/2117  7/6/2117 15.4
+## 4: OXHMB17G0100232    P10  Male 4/14/2117  5/2/2117  7/6/2117 17.4
+## 5: OXHMB17G0100731    P10  Male 4/25/2117 5/16/2117 7/11/2117 13.8
+## 6: OXHMB17G0100771    P10  Male 4/14/2117  5/4/2117  7/6/2117 15.4
+## 7: OXHMB17G0100441    P10  Male 4/15/2117  5/6/2117  7/7/2117 16.1
+## 8: OXHMB17G0100232    P10  Male 4/14/2117  5/2/2117  7/6/2117 17.4
+## 9: OXHMB17G0100232    P10  Male 4/14/2117  5/2/2117  7/6/2117 17.4
+##       M2Date M2Age1 M2Age2 M2BW M2BL
+## 1: 9/28/2117    167    147  774  130
+## 2: 9/28/2117    168    150  706  125
+## 3: 10/9/2117    178    158  725  130
+## 4: 10/9/2117    178    160  744  130
+## 5: 10/9/2117    167    146  741  130
+## 6: 10/9/2117    178    158  703  128
+## 7: 10/9/2117    177    156  770  126
+## 8: 10/9/2117    178    160  850  132
+## 9: 10/9/2117    178    160  709  129</code></pre>
+<p>(2)提取指定家系的雄虾数据<br />
+如果想提取特定几个家系，如编号为OXHMB17G0100482、OXHMB17G0100891、OXHMB17G0100211家系的雄虾，如何处理？<code>&amp;</code>是R中的逻辑运算符，表示两边条件都满足时，才返回TRUE。</p>
+<pre class="r"><code>gData_dt[(FamilyID %chin% c(&quot;OXHMB17G0100482&quot;, &quot;OXHMB17G0100891&quot;, &quot;OXHMB17G0100211&quot;)) &amp; (SexID %chin% c(&quot;Male&quot;))]</code></pre>
+<pre><code>##             AnimalID          SireID           DamID Generation
+##   1: OXHMB17G0105286 OXHMB16G000A389 OXHMB16G000B754        G01
+##   2: OXHMB17G0101510 OXHMB16G000F297 OXHMB16G000E364        G01
+##   3: OXHMB17G010A413 OXHMB16G000A012 MRTZD16G000F031        G01
+##   4: OXHMB17G010A418 OXHMB16G000F297 OXHMB16G000E364        G01
+##   5: OXHMB17G010A438 OXHMB16G000A012 MRTZD16G000F031        G01
+##  ---                                                           
+## 191: OXHMB17G0109666 OXHMB16G000A012 MRTZD16G000F031        G01
+## 192: OXHMB17G0109667 OXHMB16G000A012 MRTZD16G000F031        G01
+## 193: OXHMB17G0109668 OXHMB16G000A012 MRTZD16G000F031        G01
+## 194: OXHMB17G0109669 OXHMB16G000A012 MRTZD16G000F031        G01
+## 195: OXHMB17G0109670 OXHMB16G000A012 MRTZD16G000F031        G01
+##             FamilyID TankID SexID  Birthday    S2Date    M1Date M1BW
+##   1: OXHMB17G0100482    P11  Male 4/22/2117 5/14/2117  7/9/2117 16.4
+##   2: OXHMB17G0100211    P11  Male 4/19/2117  5/9/2117  7/8/2117 16.2
+##   3: OXHMB17G0100891    P11  Male 4/24/2117 5/15/2117 7/10/2117 14.7
+##   4: OXHMB17G0100211    P11  Male 4/19/2117  5/9/2117  7/8/2117 16.2
+##   5: OXHMB17G0100891    P11  Male 4/24/2117 5/15/2117 7/10/2117 14.7
+##  ---                                                                
+## 191: OXHMB17G0100891    P10  Male 4/24/2117 5/15/2117 7/10/2117 15.4
+## 192: OXHMB17G0100891    P10  Male 4/24/2117 5/15/2117 7/10/2117 15.4
+## 193: OXHMB17G0100891    P10  Male 4/24/2117 5/15/2117 7/10/2117 15.4
+## 194: OXHMB17G0100891    P10  Male 4/24/2117 5/15/2117 7/10/2117 15.4
+## 195: OXHMB17G0100891    P10  Male 4/24/2117 5/15/2117 7/10/2117 15.4
+##         M2Date M2Age1 M2Age2 M2BW M2BL
+##   1: 9/28/2117    159    137  169   89
+##   2: 9/28/2117    162    142  417  111
+##   3: 9/28/2117    157    136  522  118
+##   4: 9/28/2117    162    142  604  121
+##   5: 9/28/2117    157    136  515  120
+##  ---                                  
+## 191: 10/9/2117    168    147  333  103
+## 192: 10/9/2117    168    147  360  109
+## 193: 10/9/2117    168    147  241  102
+## 194: 10/9/2117    168    147  414  109
+## 195: 10/9/2117    168    147  444  113</code></pre>
+<p>(3)插入新列<br />
+譬如给整个数据集加入一个流水号，用于后续数据整理。请注意，<code>:=</code>会直接在原数据集中插入新的一列。如果你不想改变原有数据集，需要提前拷贝原数据集，再插入新列。</p>
+<pre class="r"><code>gData_new_dt &lt;- copy(gData_dt)
+gData_new_dt[,&quot;:=&quot;(SerialNum=.I)]
+gData_new_dt</code></pre>
+<pre><code>##               AnimalID          SireID           DamID Generation
+##     1: OXHMB17G010A338 OXHMB16G000F302 OXHMB16G000B783        G01
+##     2: OXHMB17G010A339 OXHMB16G000C364  OXHMB16G00X751        G01
+##     3: OXHMB17G010A340 OXHMB16G000C863 OXHMB16G000B274        G01
+##     4: OXHMB17G0101354 OXHMB16G000C625 OXHMB16G000F625        G01
+##     5: OXHMB17G010A341 OXHMB16G000A300 MRTZD16G000F021        G01
+##    ---                                                           
+## 11409: OXHMB17G0104360 OXHMB16G000C514 OXHMB16G000E734        G01
+## 11410: OXHMB17G0110468 MRTZD16G000M071 MRTZD16G000F071        G01
+## 11411: OXHMB17G0000260 MRTZD16B000M003 MRTZD16B000F003        G01
+## 11412: OXHMB17G0000513 MRTZD16B000M005 MRTZD16B000F005        G01
+## 11413: OXHMB17G0104470 OXHMB16G000F703 OXHMB16G000F694        G01
+##               FamilyID TankID SexID  Birthday    S2Date    M1Date M1BW
+##     1: OXHMB17G0100461    P11  Male 4/14/2117  5/4/2117  7/7/2117 19.7
+##     2: OXHMB17G0100411    P11  Male 4/14/2117  5/1/2117  7/6/2117 16.0
+##     3: OXHMB17G0100661    P11  Male 4/24/2117 5/15/2117 7/10/2117 15.2
+##     4: OXHMB17G0100201    P11  Male 4/21/2117 5/14/2117  7/9/2117 15.6
+##     5: OXHMB17G0100871    P11  Male 4/12/2117  5/1/2117  7/6/2117 18.2
+##    ---                                                                
+## 11409: OXHMB17G0100422    P10  Male  5/1/2117 5/23/2117 7/12/2117 14.2
+## 11410: OXHMB17G0100971    P10  Male 4/25/2117 5/16/2117 7/11/2117 15.1
+## 11411: OXHMB17G0001031    P10  Male 5/10/2117 5/29/2117 7/14/2117  9.1
+## 11412: OXHMB17G0001051    P10  Male 5/10/2117 5/30/2117 7/14/2117  7.7
+## 11413: OXHMB17G0100433    P10  Male  5/8/2117 5/28/2117 7/13/2117 12.0
+##           M2Date M2Age1 M2Age2 M2BW M2BL SerialNum
+##     1: 9/28/2117    167    147  395  113         1
+##     2: 9/28/2117    167    150  408  112         2
+##     3: 9/28/2117    157    136  465  120         3
+##     4: 9/28/2117    160    137  355  112         4
+##     5: 9/28/2117    169    150  581  123         5
+##    ---                                            
+## 11409: 10/9/2117    161    139  214   94     11409
+## 11410: 10/9/2117    167    146  156   85     11410
+## 11411: 10/9/2117    152    133  142   83     11411
+## 11412: 10/9/2117    152    132  174   89     11412
+## 11413: 10/9/2117    154    134   50   59     11413</code></pre>
+<p><code>.I</code>是data.table中定义的特殊字符，有特殊的含义，这里表示会生成一个从1开始，间隔为1的序列。因此也可以这样实现:</p>
+<pre class="r"><code>gData_new_dt[,&quot;:=&quot;(SerialNum=seq(from=1, to=nrow(gData_new_dt), by=1))]
+gData_new_dt</code></pre>
+<pre><code>##               AnimalID          SireID           DamID Generation
+##     1: OXHMB17G010A338 OXHMB16G000F302 OXHMB16G000B783        G01
+##     2: OXHMB17G010A339 OXHMB16G000C364  OXHMB16G00X751        G01
+##     3: OXHMB17G010A340 OXHMB16G000C863 OXHMB16G000B274        G01
+##     4: OXHMB17G0101354 OXHMB16G000C625 OXHMB16G000F625        G01
+##     5: OXHMB17G010A341 OXHMB16G000A300 MRTZD16G000F021        G01
+##    ---                                                           
+## 11409: OXHMB17G0104360 OXHMB16G000C514 OXHMB16G000E734        G01
+## 11410: OXHMB17G0110468 MRTZD16G000M071 MRTZD16G000F071        G01
+## 11411: OXHMB17G0000260 MRTZD16B000M003 MRTZD16B000F003        G01
+## 11412: OXHMB17G0000513 MRTZD16B000M005 MRTZD16B000F005        G01
+## 11413: OXHMB17G0104470 OXHMB16G000F703 OXHMB16G000F694        G01
+##               FamilyID TankID SexID  Birthday    S2Date    M1Date M1BW
+##     1: OXHMB17G0100461    P11  Male 4/14/2117  5/4/2117  7/7/2117 19.7
+##     2: OXHMB17G0100411    P11  Male 4/14/2117  5/1/2117  7/6/2117 16.0
+##     3: OXHMB17G0100661    P11  Male 4/24/2117 5/15/2117 7/10/2117 15.2
+##     4: OXHMB17G0100201    P11  Male 4/21/2117 5/14/2117  7/9/2117 15.6
+##     5: OXHMB17G0100871    P11  Male 4/12/2117  5/1/2117  7/6/2117 18.2
+##    ---                                                                
+## 11409: OXHMB17G0100422    P10  Male  5/1/2117 5/23/2117 7/12/2117 14.2
+## 11410: OXHMB17G0100971    P10  Male 4/25/2117 5/16/2117 7/11/2117 15.1
+## 11411: OXHMB17G0001031    P10  Male 5/10/2117 5/29/2117 7/14/2117  9.1
+## 11412: OXHMB17G0001051    P10  Male 5/10/2117 5/30/2117 7/14/2117  7.7
+## 11413: OXHMB17G0100433    P10  Male  5/8/2117 5/28/2117 7/13/2117 12.0
+##           M2Date M2Age1 M2Age2 M2BW M2BL SerialNum
+##     1: 9/28/2117    167    147  395  113         1
+##     2: 9/28/2117    167    150  408  112         2
+##     3: 9/28/2117    157    136  465  120         3
+##     4: 9/28/2117    160    137  355  112         4
+##     5: 9/28/2117    169    150  581  123         5
+##    ---                                            
+## 11409: 10/9/2117    161    139  214   94     11409
+## 11410: 10/9/2117    167    146  156   85     11410
+## 11411: 10/9/2117    152    133  142   83     11411
+## 11412: 10/9/2117    152    132  174   89     11412
+## 11413: 10/9/2117    154    134   50   59     11413</code></pre>
+</div>
+<div id="section-9" class="section level4">
+<h4>2.2.2 数据统计</h4>
+<p>(1)获得雌雄虾体重的均值</p>
+<pre class="r"><code>gData_dt[, .(MeanM2BW=mean(M2BW)), by=.(SexID)]</code></pre>
+<pre><code>##     SexID MeanM2BW
+## 1:   Male 365.4177
+## 2: Female 295.4953</code></pre>
+<p>(2)进一步统计雌雄虾在不同池塘间的体重均值：</p>
+<pre class="r"><code>gData_dt[, .(MeanM2BW=mean(M2BW)), by=.(SexID, TankID)]</code></pre>
+<pre><code>##     SexID TankID MeanM2BW
+## 1:   Male    P11 350.4550
+## 2: Female    P11 459.0000
+## 3: Female    P10 295.4223
+## 4:   Male    P10 376.7736</code></pre>
+<p>(3)继续增加需求，在统计变量中，加入体长：</p>
+<pre class="r"><code>gData_dt[, .(MeanM2BW=mean(M2BW), MeanM2BL=mean(M2BL)), by=.(SexID, TankID)]</code></pre>
+<pre><code>##     SexID TankID MeanM2BW MeanM2BL
+## 1:   Male    P11 350.4550 105.5232
+## 2: Female    P11 459.0000 115.0000
+## 3: Female    P10 295.4223 103.3449
+## 4:   Male    P10 376.7736 108.2390</code></pre>
+<p>(3)需求一直在变：进一步统计P11池塘收获了多少尾母虾？</p>
+<pre class="r"><code>gData_dt[, .(MeanM2BW=mean(M2BW), MeanM2BL=mean(M2BL), N=.N), by=.(TankID, SexID)]</code></pre>
+<pre><code>##    TankID  SexID MeanM2BW MeanM2BL    N
+## 1:    P11   Male 350.4550 105.5232 2991
+## 2:    P11 Female 459.0000 115.0000    2
+## 3:    P10 Female 295.4223 103.3449 4479
+## 4:    P10   Male 376.7736 108.2390 3941</code></pre>
+<p>.N也是data.table中定义的一个特殊符号，表示每个分组的行数。</p>
+<p>(4)思考如何满足这样一个需求？提取的数据集，要求每个家系每个池塘母虾数量大于30尾。</p>
+<pre class="r"><code>gData_dt[, &quot;:=&quot;(Size=.N), by=.(FamilyID, TankID, SexID)]
+setorder(gData_dt,-Size)
+gData_dt[Size &gt;= 30]</code></pre>
+<pre><code>##              AnimalID          SireID           DamID Generation
+##    1: OXHMB17G0100507 OXHMB16G000A414  OXHMB16G00X015        G01
+##    2: OXHMB17G010E349 OXHMB16G000A414  OXHMB16G00X015        G01
+##    3: OXHMB17G0100508 OXHMB16G000A414  OXHMB16G00X015        G01
+##    4: OXHMB17G0100509 OXHMB16G000A414  OXHMB16G00X015        G01
+##    5: OXHMB17G010E394 OXHMB16G000A414  OXHMB16G00X015        G01
+##   ---                                                           
+## 7903: OXHMB17G0105768 OXHMB16G000F063 OXHMB16G000E752        G01
+## 7904: OXHMB17G0102731 OXHMB16G000A116 OXHMB16G000E255        G01
+## 7905: OXHMB17G0106033 OXHMB16G000C751 OXHMB16G000E570        G01
+## 7906: OXHMB17G0102732 OXHMB16G000A116 OXHMB16G000E255        G01
+## 7907: OXHMB17G0102733 OXHMB16G000A116 OXHMB16G000E255        G01
+##              FamilyID TankID  SexID  Birthday    S2Date    M1Date M1BW
+##    1: OXHMB17G0100072    P10 Female 4/23/2117 5/15/2117 7/10/2117 17.3
+##    2: OXHMB17G0100072    P10 Female 4/23/2117 5/15/2117 7/10/2117 17.3
+##    3: OXHMB17G0100072    P10 Female 4/23/2117 5/15/2117 7/10/2117 17.3
+##    4: OXHMB17G0100072    P10 Female 4/23/2117 5/15/2117 7/10/2117 17.3
+##    5: OXHMB17G0100072    P10 Female 4/23/2117 5/15/2117 7/10/2117 17.3
+##   ---                                                                 
+## 7903: OXHMB17G0100522    P10   Male 4/21/2117 5/11/2117  7/9/2117 13.9
+## 7904: OXHMB17G0100302    P10   Male 4/24/2117 5/18/2117 7/11/2117 13.7
+## 7905: OXHMB17G0100561    P10   Male 4/23/2117 5/15/2117 7/10/2117 11.1
+## 7906: OXHMB17G0100302    P10   Male 4/24/2117 5/18/2117 7/11/2117 13.7
+## 7907: OXHMB17G0100302    P10   Male 4/24/2117 5/18/2117 7/11/2117 13.7
+##          M2Date M2Age1 M2Age2 M2BW M2BL Size
+##    1: 10/9/2117    169    147  294  104   76
+##    2: 10/9/2117    169    147  328  107   76
+##    3: 10/9/2117    169    147  284  103   76
+##    4: 10/9/2117    169    147  306  105   76
+##    5: 10/9/2117    169    147  354  109   76
+##   ---                                       
+## 7903: 10/9/2117    171    151  509  118   30
+## 7904: 10/9/2117    168    144  285   98   30
+## 7905: 10/9/2117    169    147  395  112   30
+## 7906: 10/9/2117    168    144  508  120   30
+## 7907: 10/9/2117    168    144  420  115   30</code></pre>
+</div>
+</div>
+<div id="section-10" class="section level3">
 <h3>3.预处理系谱、提纯系谱、数字化系谱</h3>
 <p>visPedigree包中的tidyped()函数，主要有两个功能:</p>
 <ul>
@@ -132,7 +402,7 @@ gPed_tidy_dt &lt;- tidyped(ped = gPed_dt, cand  = gData_dt$AnimalID)</code></pre
 ## 11918: 2017 unknown  TRUE   4  11918     350    332</code></pre>
 <p>整理后系谱的包含的个体数，要少于原始系谱。</p>
 </div>
-<div id="section-7" class="section level3">
+<div id="section-11" class="section level3">
 <h3>4.画出个体的系谱树</h3>
 <p>侧面验证一下提纯后的系谱，是否正确。</p>
 <p>从数据集中最后一尾虾，画出系谱图。</p>
@@ -144,7 +414,7 @@ gPed_tidy_dt &lt;- tidyped(ped = gPed_dt, cand  = gData_dt$AnimalID)</code></pre
 visped(ped = one_ped_dt)</code></pre>
 <p><img src="/post/2019-06-13-how-to-tidy-data-and-pedigree-before-performing-genetic-evaluation_files/figure-html/plotPedigree-1.png" width="100%" /></p>
 </div>
-<div id="section-8" class="section level3">
+<div id="section-12" class="section level3">
 <h3>5.输出系谱</h3>
 <p>输出系谱时，设置缺失的父本和母本编号为0。</p>
 <p><code>fwrite()</code>函数来自data.table包。</p>
