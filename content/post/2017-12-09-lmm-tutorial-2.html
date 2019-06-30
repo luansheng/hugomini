@@ -6,13 +6,15 @@ categories:
   - lmm
 tags:
   - 固定效应
+  - 混合效应
   - 随机效应
+  - 线性
 slug: lmm-tutorial-2
 ---
 
 
 
-<p><a href="http://luansheng.netlify.com/post/lmm-tutorial-1/">上接线性混合效应模型教程1</a></p>
+<p><a href="http://luansheng.netlify.com/2017/11/19/lmm-tutorial-1/">上接线性混合效应模型教程1</a></p>
 <p>本部分可能会用到的R包，请提前安装：</p>
 <ul>
 <li>ggplot2 #优秀的作图包</li>
@@ -176,7 +178,7 @@ summary(shrimp.lm.9)</code></pre>
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 <p>把<a href="#8">模型8</a>的Residual standard error的平方，与<a href="#9">模型9</a> Random Effects部分对比，你会发现，如果不考虑家系结构，残差方差明显被高估,估计值为18.4559804 。考虑家系结构后，残差方差为12.5267429, 明显变小， 从残差中分离出了大部分的家系方差。由家系随机效应产生的方差，估计值为5.9328232，占表型方差的32%。</p>
-<p>从anova方差分析(如果对基础概念不了解，可参考这篇blog：<a href="https://luansheng.netlify.com/post/df-and-anova/">自由度和方差分析</a>)的角度看，加入家系随机效应后，群体固定效应（PopID）尽管仍然也达到了显著水平，但是均方和F值明显变小。这表明存在这样一种风险，<strong>如果考虑群体内的家系结构，本来两个群体的差异可能达不到显著水平，但是如果忽视了这种家系结构，两个群体间的差异统计上会表现为显著水平</strong>，从而误判群体间的实际性能差别。</p>
+<p>从anova方差分析(如果对基础概念不了解，可参考这篇blog：<a href="https://luansheng.netlify.com/2017/12/18/df-and-anova/">自由度和方差分析</a>)的角度看，加入家系随机效应后，群体固定效应（PopID）尽管仍然也达到了显著水平，但是均方和F值明显变小。这表明存在这样一种风险，<strong>如果考虑群体内的家系结构，本来两个群体的差异可能达不到显著水平，但是如果忽视了这种家系结构，两个群体间的差异统计上会表现为显著水平</strong>，从而误判群体间的实际性能差别。</p>
 <p>我们看一下，基于模型9（不包括家系的随机效应），预测四个群体家系的性能，如下图所示：你会发现，每个群体中特别大的家系效应，已经被剔除掉了。</p>
 <p>ps：拟合值反应的是包括所有固定和随机效应的结果，lmer中通过fitted()函数获得该值。预测值，是可以设定不包括随机效应的，lmer中通过predict()函数获得该值。</p>
 <pre class="r"><code>shrimp.lm.9.predict &lt;- predict(shrimp.lm.9,re.form=NA) #拟合值
@@ -225,7 +227,7 @@ Figure 3: 四个对虾群体体重的预测值
 <div id="section-2" class="section level3">
 <h3>4.5 获得每个群体的性能</h3>
 <p>调用emmeans包中的函数，计算四个群体的估计边际均值(estimated marginal means)，或者说最小二乘均值(least-squares means)。根据边际均值，我们可以对群体的性能进行排序和比较。</p>
-<p>关于emmeans包，请参考日志<a href="http://luansheng.netlify.com/post/least-squares-means-note-1/">最小二乘均值的估计模型</a>。尽管该日志介绍的是lsmeans包，但用法跟emmeans包都是一样的。而且根据作者介绍，在不久的将来，emmeans包要替代lsmeans包。</p>
+<p>关于emmeans包，请参考日志<a href="http://luansheng.netlify.com/2017/06/10/least-squares-means-note-1/">最小二乘均值的估计模型</a>。尽管该日志介绍的是lsmeans包，但用法跟emmeans包都是一样的。而且根据作者介绍，在不久的将来，emmeans包要替代lsmeans包。</p>
 <p>注意，安装emmeans还需要pbkrtest包，这个包没有自动安装，需要手动安装。</p>
 <pre class="r"><code>require(emmeans)</code></pre>
 <pre><code>## Loading required package: emmeans</code></pre>

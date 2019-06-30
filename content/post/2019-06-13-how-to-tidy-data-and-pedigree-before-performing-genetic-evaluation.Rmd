@@ -44,8 +44,8 @@ library(DataExplorer)
 
 
 ### 1.读取系谱和数据文件
-[数据文件](/post/datasets/g2016G0to2017G1Ped.csv)和[系谱文件](/post/datasets/g2016G0to2017G1Data.csv)可以点击下载。
-
+[数据文件](/post/datasets/g2016G0to2017G1Ped.csv)和[系谱文件](/post/datasets/g2016G0to2017G1Data.csv)可以点击下载。      
+运行R代码前的注意事项和Rstudio编辑器配置和运行等，参见另外一个[blog](https://luansheng.netlify.com/2017/11/19/lmm-tutorial-1/)。      
 下载后，跟R代码放在同一目录下，如果不打算修改下述代码，那么把数据和系谱文件放在一个新建目录datasets下。datasets文件夹和R脚本文件在同一个目录下。
 ```{r readData&Ped}
 gPed_dt <-

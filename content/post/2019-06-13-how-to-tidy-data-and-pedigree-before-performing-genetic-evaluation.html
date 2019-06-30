@@ -51,8 +51,9 @@ library(visPedigree)
 library(DataExplorer)</code></pre>
 <div id="section-4" class="section level3">
 <h3>1.读取系谱和数据文件</h3>
-<p><a href="/post/datasets/g2016G0to2017G1Ped.csv">数据文件</a>和<a href="/post/datasets/g2016G0to2017G1Data.csv">系谱文件</a>可以点击下载。</p>
-<p>下载后，跟R代码放在同一目录下，如果不打算修改下述代码，那么把数据和系谱文件放在一个新建目录datasets下。datasets文件夹和R脚本文件在同一个目录下。</p>
+<p><a href="/post/datasets/g2016G0to2017G1Ped.csv">数据文件</a>和<a href="/post/datasets/g2016G0to2017G1Data.csv">系谱文件</a>可以点击下载。<br />
+运行R代码前的注意事项和Rstudio编辑器配置和运行等，参见另外一个<a href="https://luansheng.netlify.com/2017/11/19/lmm-tutorial-1/">blog</a>。<br />
+下载后，跟R代码放在同一目录下，如果不打算修改下述代码，那么把数据和系谱文件放在一个新建目录datasets下。datasets文件夹和R脚本文件在同一个目录下。</p>
 <pre class="r"><code>gPed_dt &lt;-
   fread(
     file = &quot;datasets/g2016G0to2017G1Ped.csv&quot;,
