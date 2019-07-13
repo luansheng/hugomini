@@ -1,5 +1,5 @@
 ---
-title: 配置中文环境的ubuntu和Rstudio
+title: 配置ubuntu和R的中文环境，用于作图
 author: Sheng Luan
 date: '2019-07-13'
 slug: drawing-a-figure-with-cjk-character
@@ -25,6 +25,7 @@ tags:
 * 通过`locale-gen zh_CN.UTF-8`命令产生中文locale。       
 * 通过`localectl set-locale LANG=zh_CN.utf8`命令设置系统缺省的locale环境为中文。ps：这是为了图省事，你也可以为每个用户、每个session单独设置独立的locale，具体参见[这里](https://www.shellhacks.com/linux-define-locale-language-settings/)。       
 * 再次通过`echo $LANG`命令查看系统的默认locale是否修改为中文utf-8。       
+* 通过`apt-get install xfonts-wqy`命令安装中文字体，譬如文泉驿等。
 * 然后`reboot`命令重启一下服务器。
 
 #### 2. 设置R中文环境
@@ -33,9 +34,10 @@ tags:
 * 通过`library(showtext)`函数加载showtext包后，通过`font_install(source_han_serif())`命令安装中文字体。会安装开源的文泉驿、黑体和宋体等字体。      
 * 通过`font_families()`函数查看是否已经安装了wqy-microhei和source-han-serif-cn等字体家族。
 
-#### 3. 将图形保存为文件形式
 
-进行了上述设置后，在Rstudio中plot面板上的图形仍然不是中文，推测可能是Rstudio软件本身的问题。因此试着利用`ggsave()`函数把ggplot2画出的图形保存为jpeg等文件，再打开发现中文可以正常显示了。
+#### 3. 中文显示
+
+进行了上述设置后，重启启动R，在Rstudio中plot面板上的图形应该可以显示中文了。如果还不可以，试着利用`ggsave()`函数把ggplot2画出的图形保存为jpeg等文件，再打开发现中文可以正常显示了。
 
 题外话：Cairo是R中一个用于创建高质量的矢量图形(PDF, PostScript, SVG) 和 位图(PNG, JPEG, TIFF)的包，建议安装。在阿里云ubuntu 18.04系统中安装遇到了问题，通过安装以下两个库解决了:
 
