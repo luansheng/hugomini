@@ -47,9 +47,30 @@ GBLUP假定性状为多基因结构，即所有的分型标记效应相同，用
 * 训练群体：从102个家系中选择50个家系，共计1473尾鱼进行SNP分型；其中25个家系（40尾/家系）与验证群体是全同胞关系；另外25个家系（~20尾/家系），与testing samples之间的遗传联系很弱；
 * 验证群体：测试样本由930尾鱼组成,包括25个家系（31-44尾鱼/家系），这些家系与训练群体中的25个家系是一致的；
 * 验证群体以家系为基础的BCWD抗性育种值，通过以系谱为基础的BLUP方法利用同一世代 7893尾个体计算得到；验证群体利用GS模型和同一世代数据，也可以得到GEBV。
-* 从验证群体中选择193尾个体，交配产生下一世代即YC 2015世代138个后代测试家系(Progeny Testing Familiy, PTF)。来自138个家系共计9968尾个体进行BCWD抗性测试，计算平均后代表型(Mean progeny phenotype, MPP)
+* 从验证群体中选择193尾个体，交配产生下一世代即YC 2015世代138个后代测试家系(Progeny Testing Familiy, PTF)。对来自138个家系共计9968尾个体进行BCWD抗性测试，计算平均后代表型(Mean progeny phenotype, MPP)。
+
+### BCWD抗性表型
+主要有两个性状参数：
+
+* DAYS 存活天数。整个侵染测试21天，记录在测试期内的存活天数。如果21天时还存活的个体，记为21天；
+* STATUS 21d测试期后仍然存活的个体，记为2；测试期内死亡的个体记为1；
+
+### SNP 分型平台
+
+* [Rainbow Trout Axiom® 57 K SNP array](#3). 剔除一些不符合期望孟德尔分离的SNP位点（校正Bonferroni到p<0.10）
+* 从训练组中剔除了2尾鱼，根据系谱找不到亲本
+* 质控后，分型数据集共计有41868个SNP标记
+
+进一步用BLUPF90进行后续质控
+
+* SNP位点的分型检出率大于0.9
+* MAF 大于0.05
+* 偏离Hardy-Weinberg equilibrium 要小于0.15 ，指期望杂合度与观测杂合度之差
+
+
 
 参考文献：      
 <a id="1">1</a> Leeds TD, Silverstein JT, Weber GM, Vallejo RL, Palti Y, Rexroad CE, et al. Response to selection for bacterial cold water disease resistance in rainbow trout. J Anim Sci.
 2010;88:1936–46.      
 <a id="2">2</a> Silverstein JT, Vallejo RL, Palti Y, Leeds TD, Rexroad CE 3rd, Welch TJ, et al. Rainbow trout resistance to bacterial cold-water disease is moderately heritable and is not adversely correlated with growth. J Anim Sci. 2009;87:860–7.
+<a id="3">3</a> Palti Y, Gao G, Liu S, Kent MP, Lien S, Miller MR, et al. The development and characterization of a 57 K single nucleotide polymorphism array for rainbow trout. Mol Ecol Resour. 2015;15:662–72.
