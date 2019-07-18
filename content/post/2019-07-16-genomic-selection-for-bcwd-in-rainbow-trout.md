@@ -98,7 +98,13 @@ i指的是相关个体偏离群体均值的平均偏差，p是死亡率的发生
 * 利用R包CODA评估MCMC迭代的混合和收敛是否正常？（proper mixing and convergence） ；确保MCMC samples were drawn from the full posterior distribution。
 
 ### 利用ssGBLUP方法估计育种值
-采用ssGBLUP和wssGBLUP两种方法估计验证群体的GEBV。这里需要注意，验证群体没有进行BCWD抗性测试。在wssGBLUP分析中，
+采用ssGBLUP和wssGBLUP两种方法估计验证群体的GEBV。这里需要注意，验证群体没有进行BCWD抗性测试。在wssGBLUP分析中，在第一次迭代中，每一个SNP的加权值均是1s，这表示所有的SNP都有相同的加权值，也就是标准的ssGBLUP；在接下来的迭代过程中，利用上一个迭代估计得到的SNP效应值和相应的等位基因频率计算个体的SNP方差用作加权值。[需要具体研究一下]
+
+与BayesB方法相比，ssGBLUP也使用了其他没有分型的YC 2013世代6420尾个体的表型数据。
+
+DAYS性状用的是线性模型，STATUS性状用的是阈值模型。利用BLUPF90完成ssGBLUP和sssGBLUP分析。
+
+对于STATUS性状，在执行ssGBLUP和wssGBLUP分析前，先利用贝叶斯分析方法计算出遗传参数，用作先验值。贝叶斯分析的方法，同上。
 
 
 
