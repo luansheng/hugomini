@@ -82,7 +82,7 @@ GBLUP假定性状为多基因结构，即所有的分型标记效应相同，用
 
 对于阈值性状，在本文中指的是STATUS（binary trait），估计得到的遗传力利用公式进行了转换：      
 
-$$h^{2}_{observed}=(h^{2}_{liability}i^{2}p)/(1-p)$$
+`$$h^{2}_{observed}=(h^{2}_{liability}i^{2}p)/(1-p)$$`
 
 i指的是相关个体偏离群体均值的平均偏差，p是死亡率的发生率。这个公式有些晦涩难懂。这个公式需要后续再仔细分析。
 
@@ -98,6 +98,7 @@ i指的是相关个体偏离群体均值的平均偏差，p是死亡率的发生
 * 利用R包CODA评估MCMC迭代的混合和收敛是否正常？（proper mixing and convergence） ；确保MCMC samples were drawn from the full posterior distribution。
 
 ### 利用ssGBLUP方法估计育种值
+采用ssGBLUP和wssGBLUP两种方法估计验证群体的GEBV。这里需要注意，验证群体没有进行BCWD抗性测试。在wssGBLUP分析中，
 
 
 
