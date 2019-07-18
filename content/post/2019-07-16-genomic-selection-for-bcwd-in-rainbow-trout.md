@@ -97,6 +97,8 @@ i指的是相关个体偏离群体均值的平均偏差，p是死亡率的发生
 * 剩下的20万个samples中，每40个sample保留1个，共计保留5000个samples用于分析；
 * 利用R包CODA评估MCMC迭代的混合和收敛是否正常？（proper mixing and convergence） ；确保MCMC samples were drawn from the full posterior distribution。
 
+### 利用ssGBLUP方法估计育种值
+
 
 
 
