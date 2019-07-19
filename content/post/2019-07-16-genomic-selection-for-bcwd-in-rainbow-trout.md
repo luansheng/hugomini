@@ -136,6 +136,9 @@ EBV和GEBV，也就是加性遗传效应的预测能力，通过中亲（mid-par
 * 方案4：与方案2相比，训练群体仅保留第一组25个家系；
 * 方案5：与方案1相比，训练群体仅保留第二组家系；
 
+评估GS实验设计对GEBV准确性的影响时，用的是基于BayesB方法估计获得的GEBV，因为该方法获得的GEBV准确性最高。
+
+
 参考文献：      
 <a id="1">1</a> Leeds TD, Silverstein JT, Weber GM, Vallejo RL, Palti Y, Rexroad CE, et al. Response to selection for bacterial cold water disease resistance in rainbow trout. J Anim Sci.
 2010;88:1936–46.      
