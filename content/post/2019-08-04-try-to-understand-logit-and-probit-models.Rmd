@@ -79,7 +79,7 @@ ggplot(default_fitted_dt,aes(x,y)) + geom_point() +
 针对上述问题，寻找合适转换函数的基本原则（**这三个原则特别重要**）：        
 
 * 需要找到针对P(x)的函数，确保对任意X值，输出范围在0-1之间。
-* 满足$\mu_{i}=P(\eta_{i})=P(\alpha+\beta x_{i})$要求的概率累积分布函数（cumulative distribution function, CDF）优先考虑。
+* 满足$P(\alpha+\beta x_{i})$要求的概率累积分布函数（cumulative distribution function, CDF）优先考虑。
 * 转换函数需要是平滑和对称的，渐近线（asymptotes）分别为0和1。
 
 ### 2.1 一般推导
