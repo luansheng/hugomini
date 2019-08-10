@@ -1,0 +1,263 @@
+---
+title: Logit和probit模型阅读笔记
+author: Sheng Luan
+date: '2019-08-04'
+slug: try-to-understand-logit-and-probit-models
+categories:
+  - 数量遗传学
+tags:
+  - GLMM
+---
+
+
+
+<p>首先加载本篇blog用到的三个包。data.table用于处理数据；ggplot2画图；ISLR包来自<a href="http://faculty.marshall.usc.edu/gareth-james/ISL/">《An Introduction to Statistical Learning with Applications in R 》</a>这本书，这个包提供了书中用到的数据。本文使用了一个关于信用卡违约的模拟数据集Default。这三个包均可从cran上直接安装，</p>
+<pre class="r"><code>knitr::opts_chunk$set(fig.align = &quot;center&quot;)
+library(data.table)
+library(ggplot2)
+library(ISLR)</code></pre>
+<p>Logit和probit连接函数，是在处理二分变量或者分类变量时，经常用的两个函数。但对于为什么要使用它们的原因并不是很清楚。本文试着把近期看到的一些材料理解并记录下来。</p>
+<p>本文参考了以下材料：</p>
+<ul>
+<li>Fox John, 2010. Logit and Probit Models notes.</li>
+<li>王济川, 郭志刚, 2001. Logistic回归模型——方法与应用全书.</li>
+<li>James G, et al, 2017. An Introduction to Statistical Learning with Applications in R.</li>
+</ul>
+<div id="logistic" class="section level2">
+<h2>1. 当因变量为分类变量时，为什么要引入Logistic分布函数处理模型?</h2>
+<p>如果反应变量即因变量(response or dependent variable) 属于连续变量（continuous variable)类型，通常用线性混合模型处理。譬如社会科学中关于个人收入相关的模型；自然科学中动物收获体重的相关模型等。<br />
+然而当因变量为分类变量（categorical variable）类型时，如社会科学中一个人的信用卡还款是否违约；自然科学中一尾虾的存活状态（0,1）等，利用线性模型就不合适了。</p>
+<p>利用ISLR包中的信用卡违约数据集Default来作为例子说明。数据探索性分析见散点和箱线图。</p>
+<pre class="r"><code>Default_dt &lt;- as.data.table(Default)
+Default_dt</code></pre>
+<pre><code>##        default student   balance   income
+##     1:      No      No  729.5265 44361.63
+##     2:      No     Yes  817.1804 12106.13
+##     3:      No      No 1073.5492 31767.14
+##     4:      No      No  529.2506 35704.49
+##     5:      No      No  785.6559 38463.50
+##    ---                                   
+##  9996:      No      No  711.5550 52992.38
+##  9997:      No      No  757.9629 19660.72
+##  9998:      No      No  845.4120 58636.16
+##  9999:      No      No 1569.0091 36669.11
+## 10000:      No     Yes  200.9222 16862.95</code></pre>
+<pre class="r"><code>ggplot(data = Default_dt, aes(x = balance, 
+                           y = income, 
+                           color = default, 
+                           shape = default)) + 
+  geom_point(alpha = 0.3) +
+  labs(x=&quot;信用卡欠款(balance)&quot;, y=&quot;收入(income)&quot;) </code></pre>
+<div class="figure" style="text-align: center"><span id="fig:explore1"></span>
+<img src="/post/2019-08-04-try-to-understand-logit-and-probit-models_files/figure-html/explore1-1.png" alt="个人收入与信用卡欠款散点图" width="672" />
+<p class="caption">
+Figure 1: 个人收入与信用卡欠款散点图
+</p>
+</div>
+<p>首先建立一个线性模型：
+<span class="math display">\[y_{i}=\alpha+\beta x_{i}+\varepsilon_{i}\]</span></p>
+<p><span class="math inline">\(y_{i}\)</span>是一个二分变量，违约=1，不违约=0；<span class="math inline">\(\varepsilon_{i}\)</span>为独立残差，<span class="math inline">\(\varepsilon_{i}\)</span>~<span class="math inline">\(N(0,\sigma^{2}_{\varepsilon})\)</span> 。如果x是随机的，应该与<span class="math inline">\(\varepsilon\)</span>的关系是独立。<br />
+<span class="math inline">\(y_{i}\)</span>的期望可以表述为：
+<span class="math display">\[E(y_{i}|x_{i})=E(\alpha+\beta x_{i}+\varepsilon_{i})=\alpha+\beta x_{i}\]</span>
+因为<span class="math inline">\(y_{i}\)</span>是二分变量，取值为0或者1，因此可以推导出来，<span class="math inline">\(y_{i}\)</span>的期望实际上是：<span class="math inline">\(E(y_{i}|x_{i})=P(y_{i}=1|x_{i})\)</span>，可以解释为第i个人信用卡违约的概率测量。因此可以把方程的左侧作为事件发生的概率来解释。因变量为二分类型的线性模型也被称为线性概率模型（Linear Probability Model, LPM）。
+LPM模型在处理二分变量（binary or dichotomous variable）时，存在以下缺陷：</p>
+<ul>
+<li>非正态性。因为因变量为二分变量，因此残差也是二分变量，不符合正态性。然而，参考中心极限定理，正态性的假定条件对于利用最小二乘法进行参数估计的正态概率模型，并不是特别关键的限制因素。</li>
+<li>残差并不固定。<span class="math inline">\(Var(\varepsilon_{i})=P(y_{i}=1|x_{i})×P(y_{i}=0|x_{i})\)</span>。从这个公式中，可以看到残差方差受自变量x的影响，不同的自变量有不同的方差，产生方差的非齐性，违反了x与残差互相独立的原则。</li>
+<li>因变量(二分变量)与自变量之间，截距和斜率并不是固定的，在不同的区间，有不同的值。当<span class="math inline">\(x_{i} &lt;= -\frac{\alpha}{\beta}\)</span>时，截距和斜率都为0；当<span class="math inline">\(-\frac{\alpha}{\beta} &lt;= x_{i} &lt;= \frac{(1-\alpha)}{\beta}\)</span>时，截距为<span class="math inline">\(\alpha\)</span>，斜率为<span class="math inline">\(\beta\)</span>；当<span class="math inline">\(x_{i} &gt;=\frac{(1-\alpha)}{\beta}\)</span>时，截距为1，斜率为0。LPM模型无法拟合这种非线性关系，会出现概率小于0或者大于1的情况。</li>
+</ul>
+<pre class="r"><code>ggplot(data = Default_dt, aes(x = default,
+                           y = balance, 
+                           color = default)) + 
+  geom_boxplot() +
+  labs(x=&quot;违约（default）&quot;, y=&quot;信用卡欠款(balance)&quot;) </code></pre>
+<div class="figure" style="text-align: center"><span id="fig:explore2"></span>
+<img src="/post/2019-08-04-try-to-understand-logit-and-probit-models_files/figure-html/explore2-1.png" alt="信用卡是否违约用户欠款箱线图" width="672" />
+<p class="caption">
+Figure 2: 信用卡是否违约用户欠款箱线图
+</p>
+</div>
+<p>如果基于信用卡欠款<strong>balance</strong>，建立线性回归模型，预测一个人是否会违约，由于因变量只有0和1两种状态，当balance非常小时，预测值出现负值，预测不准确。</p>
+<pre class="r"><code>Default_dt[default %in% c(&quot;No&quot;), default_num:=0]
+Default_dt[default %in% c(&quot;Yes&quot;), default_num:=1]
+default_lm1 &lt;- lm(default_num ~ balance, data=Default_dt)
+summary(default_lm1)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = default_num ~ balance, data = Default_dt)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.23533 -0.06939 -0.02628  0.02004  0.99046 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) -7.519e-02  3.354e-03  -22.42   &lt;2e-16 ***
+## balance      1.299e-04  3.475e-06   37.37   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.1681 on 9998 degrees of freedom
+## Multiple R-squared:  0.1226, Adjusted R-squared:  0.1225 
+## F-statistic:  1397 on 1 and 9998 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>default_fitted_dt &lt;- data.table(x=Default_dt$balance, y=default_lm1$fitted.values)
+ggplot(default_fitted_dt,aes(x,y)) + geom_point() +
+  geom_hline(yintercept = 0) + geom_hline(yintercept = 1) +
+    labs(y=&quot;违约概率（default）&quot;, x=&quot;信用卡欠款额(balance)&quot;) </code></pre>
+<div class="figure" style="text-align: center"><span id="fig:defaultlm"></span>
+<img src="/post/2019-08-04-try-to-understand-logit-and-probit-models_files/figure-html/defaultlm-1.png" alt="信用卡欠款额与违约概率的线性回归预测" width="672" />
+<p class="caption">
+Figure 3: 信用卡欠款额与违约概率的线性回归预测
+</p>
+</div>
+</div>
+<div id="section" class="section level2">
+<h2>2. 转换函数</h2>
+<p>针对上述问题，寻找合适转换函数的基本原则（<strong>这三个原则特别重要</strong>）：</p>
+<ul>
+<li>需要找到针对P(x)的函数，确保对任意X值，输出范围在0-1之间。也就是说要建立一个线性预测公式：<span class="math inline">\(\eta=\alpha+\beta x_{i}\)</span></li>
+<li>满足<span class="math inline">\(\mu_{i}=P(\eta_{i})=P(\alpha+\beta x_{i})\)</span>要求的概率累积分布函数（cumulative distribution function, CDF）优先考虑</li>
+<li>转换函数需要是平滑和对称的，渐近线（asymptotes）分别为0和1</li>
+</ul>
+<div id="section-1" class="section level3">
+<h3>2.1 一般推导</h3>
+<p>假设存在一个连续反应变量<span class="math inline">\(y_{i}^{*}\)</span>，代表事件发生的可能性，当<span class="math inline">\(y_{i}^{*}&gt;0\)</span>时，事件发生，反之则不发生。用下述公式表示：
+<span class="math display">\[
+y_{i} = \left\{\begin{matrix}
+1 &amp; y_{i}^{*} &gt;0 \\
+0 &amp; y_{i}^{*} \leqslant0
+\end{matrix}\right.
+\]</span>
+假设<span class="math inline">\(y_{i}^{*}\)</span>与<span class="math inline">\(x_{i}\)</span>之间存在一种线性关系：
+<span class="math display">\[y_{i}^{*} = \alpha+\beta x_{i}+\varepsilon_{i}\]</span>
+可以推导出，事件发生的概率：
+<span class="math display">\[
+P(y_{i}=1|x_{i}) \\
+= P(y_{i}^{*}&gt;0) \\
+= P((\alpha+\beta x_{i}+\varepsilon_{i})&gt;0) \\
+= P(\varepsilon_{i}&gt;(-\alpha-\beta x_{i}))
+\]</span></p>
+<p>假设残差项<span class="math inline">\(\varepsilon_{i}\)</span>符合逻辑斯蒂logistic分布或者标准正态分布时，根据对称性，上述公式可以做如下转换，推导出累积分布函数形式：
+<span class="math display">\[
+P(y_{i}=1|x_{i}) \\
+= P(\varepsilon_{i}&gt;(-\alpha-\beta x_{i})) \\
+= P(\varepsilon_{i}\leqslant(\alpha+\beta x_{i})) \\
+= F(\alpha+\beta x_{i})
+\]</span>
+分布函数表示残差变量<span class="math inline">\(\varepsilon_{i}\)</span>在区间<span class="math inline">\((-\infty,\alpha+\beta x_{i})\)</span>上的概率，满足前边提到的第二条原则。</p>
+</div>
+<div id="logit" class="section level3">
+<h3>2.2 logit转换</h3>
+<p>logistic累积分布函数（CDF）形式为：
+<span class="math display">\[
+P(y_{i}=1|x_{i}) \\
+= P(\varepsilon_{i}\leqslant(\alpha+\beta x_{i})) \\
+= F(\alpha+\beta x_{i}) \\
+= \frac{e^{\alpha+\beta x_{i}}}{1+e^{\alpha+\beta x_{i}}} \\
+= \frac{1}{1+e^{-(\alpha+\beta x_{i})}} \\
+= \frac{1}{1+e^{-\varepsilon_{i}}}
+\]</span>
+依据logistic累积分布函数计算得到的概率如下图所示，为s曲线，在0和1之间。满足前边提到的第一条原则。</p>
+<pre class="r"><code>x &lt;- seq(-5,5,0.01)
+y &lt;- 1/(1+exp(-x))
+logistic_dt &lt;- data.table(x,y)
+ggplot(data = logistic_dt, aes(x,y)) +geom_point()</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:logisticS"></span>
+<img src="/post/2019-08-04-try-to-understand-logit-and-probit-models_files/figure-html/logisticS-1.png" alt="logistic分布函数的曲线图" width="672" />
+<p class="caption">
+Figure 4: logistic分布函数的曲线图
+</p>
+</div>
+<p>标准logistic分布的概率密度函数(probility density function,PDF)的一般形式为：
+<span class="math display">\[f(x)=\frac{e^{x}}{(1+e^{x})^2}\]</span></p>
+<p>概率密度函数是在计算连续变量的累积分布函数时导入的一个概念，根据概率密度函数进行积分运算，可以得到事件发生的概率。
+<span class="math display">\[F(x) = \int_{-\infty}^{\alpha}\frac{e^{x}}{(1+e^{x})^2}dx \\
+= \frac{e^{\alpha}}{1+e^{\alpha}}
+\]</span>
+因为<span class="math inline">\(\alpha\)</span>可以是任何数，因此可以用x替换<span class="math inline">\(\alpha\)</span>，上述公式可以变为更加普通形式：
+<span class="math display">\[F(x)=\frac{e^{x}}{1+e^{x}}\]</span></p>
+<p>标准logistic分布的平均值为0，方差为<span class="math inline">\(\pi^2/3=3.29\)</span>。具体的推导过程见<a href="https://math.stackexchange.com/questions/1267635/compute-variance-of-logistic-distribution?noredirect=1&amp;lq=1">这里</a>。</p>
+<p>进一步整理思路，用<span class="math inline">\(\mu_{i}\)</span>表示事件发生的概率。</p>
+<p><span class="math display">\[\mu_{i}=\frac{e^{\alpha+\beta x_{i}}}{1+e^{\alpha+\beta x_{i}}}=\frac{1}{1+e^{-(\alpha+\beta x_{i})}}\]</span></p>
+<p>针对上述公式，求解<span class="math inline">\(\alpha\)</span>和<span class="math inline">\(\beta\)</span>等参数非常关键。在实际计算过程中，是通过极大似然法等迭代计算的。譬如，如果我们知道某些样本违约1，某些样本没有违约0，那么利用logistic分布函数，通过极大似然等方法，不断的迭代带入新的<span class="math inline">\(\alpha\)</span>和<span class="math inline">\(\beta\)</span>参数，使所有违约人的<span class="math inline">\(\mu\)</span>接近1，未违约人的<span class="math inline">\(\mu\)</span>值接近0。</p>
+<p><strong>评论：原来以为是直接把0,1数据进行转换，实际上是用logistic分布函数，通过似然法估计模型右手边参数，最后通过分布函数输出的就是概率值，自然在0-1之间了</strong>。</p>
+<p>进一步推导上述公式：
+<span class="math display">\[
+\mu_{i}(1+e^{\alpha+\beta x_{i}})=e^{\alpha+\beta x_{i}}\\
+\mu_{i}(1+e^{\alpha+\beta x_{i}})-e^{\alpha+\beta x_{i}}=0\\
+\mu_{i}=e^{\alpha+\beta x_{i}}-\mu_{i}e^{\alpha+\beta x_{i}}\\
+\mu_{i}=e^{\alpha+\beta x_{i}}(1-\mu_{i})\\
+\frac{\mu_{i}}{1-\mu_{i}}=e^{\alpha+\beta x_{i}}\\
+ln(\frac{\mu_{i}}{1-\mu_{i}})=\alpha+\beta x_{i}\\
+\]</span></p>
+<p>上述公式左手边通常表示事件发生比（Odd）的自然对数，右边是模型。上边的公式推导，最终把连接函数推导出来了。它表示把事件发生比的自然对数与模型连接在一起。</p>
+<p>logit指的是<span class="math inline">\(ln(\frac{\mu_{i}}{1-\mu_{i}})\)</span>。</p>
+<p>我们利用logit连接函数，重新分析信用卡违约数据。可以看到，新建立的模型可以很好地预测违约概率。没有再出现违约概率为负值的情况。</p>
+<pre class="r"><code>default_glm1 &lt;- glm(default_num ~ balance, family = binomial(link = &quot;logit&quot;), data=Default_dt)
+summary(default_glm1)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = default_num ~ balance, family = binomial(link = &quot;logit&quot;), 
+##     data = Default_dt)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -2.2697  -0.1465  -0.0589  -0.0221   3.7589  
+## 
+## Coefficients:
+##               Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept) -1.065e+01  3.612e-01  -29.49   &lt;2e-16 ***
+## balance      5.499e-03  2.204e-04   24.95   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 2920.6  on 9999  degrees of freedom
+## Residual deviance: 1596.5  on 9998  degrees of freedom
+## AIC: 1600.5
+## 
+## Number of Fisher Scoring iterations: 8</code></pre>
+<pre class="r"><code>default_fitted_dt &lt;- data.table(x=Default_dt$balance, y=default_glm1$fitted.values)
+ggplot(default_fitted_dt,aes(x,y)) + geom_point() +
+  geom_hline(yintercept = 0) + geom_hline(yintercept = 1) +
+    labs(y=&quot;违约概率（default）&quot;, x=&quot;信用卡欠款额(balance)&quot;) </code></pre>
+<div class="figure" style="text-align: center"><span id="fig:defaultlogit"></span>
+<img src="/post/2019-08-04-try-to-understand-logit-and-probit-models_files/figure-html/defaultlogit-1.png" alt="信用卡欠款额与违约概率的logistic回归预测" width="672" />
+<p class="caption">
+Figure 5: 信用卡欠款额与违约概率的logistic回归预测
+</p>
+</div>
+<p>手动计算来验证一下结果:</p>
+<pre class="r"><code>x &lt;- Default_dt$balance
+y &lt;- 1/(1+exp(-(-10.65+0.005499*x)))
+default_fitted_dt &lt;- data.table(x=Default_dt$balance, y=default_glm1$fitted.values)
+ggplot(default_fitted_dt,aes(x,y)) + geom_point() +
+  geom_hline(yintercept = 0) + geom_hline(yintercept = 1) +
+    labs(y=&quot;违约概率（default）&quot;, x=&quot;信用卡欠款额(balance)&quot;) </code></pre>
+<div class="figure" style="text-align: center"><span id="fig:artificalcalc"></span>
+<img src="/post/2019-08-04-try-to-understand-logit-and-probit-models_files/figure-html/artificalcalc-1.png" alt="信用卡欠款额与违约概率的logistic回归预测（手动计算）" width="672" />
+<p class="caption">
+Figure 6: 信用卡欠款额与违约概率的logistic回归预测（手动计算）
+</p>
+</div>
+</div>
+<div id="link-functioninverse-link-function" class="section level3">
+<h3>2.3 连接函数（link function）和反向连接函数（inverse link function）</h3>
+<p>在ASReml说明书中，定义logit连接函数为：
+<span class="math display">\[\eta=\frac{\mu}{1-\mu}\]</span></p>
+<p><span class="math display">\[\eta=X\tau\]</span>
+感觉asreml说明书中的这个公式好像不对，正确的应该是：
+<span class="math display">\[\eta=ln(\frac{\mu}{1-\mu})\]</span></p>
+<p>反向连接函数定义为：
+<span class="math display">\[\mu=\frac{1}{1+exp(-\eta)}\]</span>
+上边两个公式中，定义<span class="math inline">\(\mu\)</span>为数据尺度（data scale），这里个人理解为事件发生概率值，等同于<span class="math inline">\(\pi_{i}\)</span>。而<span class="math inline">\(\eta\)</span>指的是underlying scale，应该是基于<span class="math inline">\(\alpha+\beta x_{i}\)</span>模型计算得到的结果。</p>
+<p>个人感觉从反向连接函数到连接函数，理解起来更为顺畅。</p>
+</div>
+<div id="probit" class="section level3">
+<h3>2.4 probit转换</h3>
+<p>probit优先满足转换函数的第二个原则，即累积正态分布。<br />
+反向连接函数公式为：<br />
+<span class="math display">\[\mu_{i} = \frac{1}{\sqrt{2\pi}}\int_{-\infty}^{\alpha+\beta x_{i}}e^{-\frac{1}{2}Z^{2}}dZ\]</span></p>
+</div>
+</div>
