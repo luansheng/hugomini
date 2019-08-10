@@ -26,7 +26,7 @@ library(ISLR)</code></pre>
 <div id="logistic" class="section level2">
 <h2>1. 当因变量为分类变量时，为什么要引入Logistic分布函数处理模型?</h2>
 <p>如果反应变量即因变量(response or dependent variable) 属于连续变量（continuous variable)类型，通常用线性混合模型处理。譬如社会科学中关于个人收入相关的模型；自然科学中动物收获体重的相关模型等。<br />
-然而当因变量为分类变量（categorical variable）类型时，如社会科学中一个人的信用卡还款是否违约；自然科学中一尾虾的存活状态（0,1）等，利用线性模型就不合适了。</p>
+然而当因变量为分类变量（categorical variable）类型时，如社会科学中个人信用卡还款是否违约；自然科学中一尾虾的存活状态（0,1）等，利用线性模型就不合适了。</p>
 <p>利用ISLR包中的信用卡违约数据集Default来作为例子说明。数据探索性分析见散点和箱线图。</p>
 <pre class="r"><code>Default_dt &lt;- as.data.table(Default)
 Default_dt</code></pre>
@@ -54,6 +54,17 @@ Default_dt</code></pre>
 Figure 1: 个人收入与信用卡欠款散点图
 </p>
 </div>
+<pre class="r"><code>ggplot(data = Default_dt, aes(x = default,
+                           y = balance, 
+                           color = default)) + 
+  geom_boxplot() +
+  labs(x=&quot;违约（default）&quot;, y=&quot;信用卡欠款(balance)&quot;) </code></pre>
+<div class="figure" style="text-align: center"><span id="fig:explore2"></span>
+<img src="/post/2019-08-04-try-to-understand-logit-and-probit-models_files/figure-html/explore2-1.png" alt="信用卡是否违约用户欠款箱线图" width="672" />
+<p class="caption">
+Figure 2: 信用卡是否违约用户欠款箱线图
+</p>
+</div>
 <p>首先建立一个线性模型：
 <span class="math display">\[y_{i}=\alpha+\beta x_{i}+\varepsilon_{i}\]</span></p>
 <p><span class="math inline">\(y_{i}\)</span>是一个二分变量，违约=1，不违约=0；<span class="math inline">\(\varepsilon_{i}\)</span>为独立残差，<span class="math inline">\(\varepsilon_{i}\)</span>~<span class="math inline">\(N(0,\sigma^{2}_{\varepsilon})\)</span> 。如果x是随机的，应该与<span class="math inline">\(\varepsilon\)</span>的关系是独立。<br />
@@ -66,17 +77,6 @@ LPM模型在处理二分变量（binary or dichotomous variable）时，存在�
 <li>残差并不固定。<span class="math inline">\(Var(\varepsilon_{i})=P(y_{i}=1|x_{i})×P(y_{i}=0|x_{i})\)</span>。从这个公式中，可以看到残差方差受自变量x的影响，不同的自变量有不同的方差，产生方差的非齐性，违反了x与残差互相独立的原则。</li>
 <li>因变量(二分变量)与自变量之间，截距和斜率并不是固定的，在不同的区间，有不同的值。当<span class="math inline">\(x_{i} &lt;= -\frac{\alpha}{\beta}\)</span>时，截距和斜率都为0；当<span class="math inline">\(-\frac{\alpha}{\beta} &lt;= x_{i} &lt;= \frac{(1-\alpha)}{\beta}\)</span>时，截距为<span class="math inline">\(\alpha\)</span>，斜率为<span class="math inline">\(\beta\)</span>；当<span class="math inline">\(x_{i} &gt;=\frac{(1-\alpha)}{\beta}\)</span>时，截距为1，斜率为0。LPM模型无法拟合这种非线性关系，会出现概率小于0或者大于1的情况。</li>
 </ul>
-<pre class="r"><code>ggplot(data = Default_dt, aes(x = default,
-                           y = balance, 
-                           color = default)) + 
-  geom_boxplot() +
-  labs(x=&quot;违约（default）&quot;, y=&quot;信用卡欠款(balance)&quot;) </code></pre>
-<div class="figure" style="text-align: center"><span id="fig:explore2"></span>
-<img src="/post/2019-08-04-try-to-understand-logit-and-probit-models_files/figure-html/explore2-1.png" alt="信用卡是否违约用户欠款箱线图" width="672" />
-<p class="caption">
-Figure 2: 信用卡是否违约用户欠款箱线图
-</p>
-</div>
 <p>如果基于信用卡欠款<strong>balance</strong>，建立线性回归模型，预测一个人是否会违约，由于因变量只有0和1两种状态，当balance非常小时，预测值出现负值，预测不准确。</p>
 <pre class="r"><code>Default_dt[default %in% c(&quot;No&quot;), default_num:=0]
 Default_dt[default %in% c(&quot;Yes&quot;), default_num:=1]
@@ -115,9 +115,9 @@ Figure 3: 信用卡欠款额与违约概率的线性回归预测
 <h2>2. 转换函数</h2>
 <p>针对上述问题，寻找合适转换函数的基本原则（<strong>这三个原则特别重要</strong>）：</p>
 <ul>
-<li>需要找到针对P(x)的函数，确保对任意X值，输出范围在0-1之间。也就是说要建立一个线性预测公式：<span class="math inline">\(\eta=\alpha+\beta x_{i}\)</span></li>
-<li>满足<span class="math inline">\(\mu_{i}=P(\eta_{i})=P(\alpha+\beta x_{i})\)</span>要求的概率累积分布函数（cumulative distribution function, CDF）优先考虑</li>
-<li>转换函数需要是平滑和对称的，渐近线（asymptotes）分别为0和1</li>
+<li>需要找到针对P(x)的函数，确保对任意X值，输出范围在0-1之间。</li>
+<li>满足<span class="math inline">\(\mu_{i}=P(\eta_{i})=P(\alpha+\beta x_{i})\)</span>要求的概率累积分布函数（cumulative distribution function, CDF）优先考虑。</li>
+<li>转换函数需要是平滑和对称的，渐近线（asymptotes）分别为0和1。</li>
 </ul>
 <div id="section-1" class="section level3">
 <h3>2.1 一般推导</h3>
@@ -145,6 +145,7 @@ P(y_{i}=1|x_{i}) \\
 = F(\alpha+\beta x_{i})
 \]</span>
 分布函数表示残差变量<span class="math inline">\(\varepsilon_{i}\)</span>在区间<span class="math inline">\((-\infty,\alpha+\beta x_{i})\)</span>上的概率，满足前边提到的第二条原则。</p>
+<p><strong>上述公式实际上是证明了，利用概率累积分布函数来转换数据的合法性</strong>。</p>
 </div>
 <div id="logit" class="section level3">
 <h3>2.2 logit转换</h3>
