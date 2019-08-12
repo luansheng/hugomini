@@ -15,13 +15,17 @@ tags:
 <pre class="r"><code>knitr::opts_chunk$set(fig.align = &quot;center&quot;)
 library(data.table)
 library(ggplot2)
-library(ISLR)</code></pre>
+library(ISLR)
+library(VGAM)</code></pre>
+<pre><code>## Loading required package: stats4</code></pre>
+<pre><code>## Loading required package: splines</code></pre>
 <p>Logit和probit连接函数，是在处理二分变量或者分类变量时，经常用的两个函数。但对于为什么要使用它们的原因并不是很清楚。本文试着把近期看到的一些材料理解并记录下来。</p>
 <p>本文参考了以下材料：</p>
 <ul>
 <li>Fox John, 2010. Logit and Probit Models notes.</li>
 <li>王济川, 郭志刚, 2001. Logistic回归模型——方法与应用全书.</li>
 <li>James G, et al, 2017. An Introduction to Statistical Learning with Applications in R.</li>
+<li>Lesson 8: <a href="https://newonlinecourses.science.psu.edu/stat504/node/171/">Multinomial Logistic Regression Models</a>。有实际可运行的R例子，建议关注。</li>
 </ul>
 <div id="logistic" class="section level2">
 <h2>1. 当因变量为分类变量时，为什么要引入Logistic分布函数处理模型?</h2>
@@ -193,7 +197,7 @@ ln(\frac{\mu_{i}}{1-\mu_{i}})=\alpha+\beta x_{i}\\
 \]</span></p>
 <p>上述公式左手边通常表示事件发生比（Odd）的自然对数，右边是模型。上边的公式推导，最终把连接函数推导出来了。它表示把事件发生比的自然对数与模型连接在一起。</p>
 <p>logit指的是<span class="math inline">\(ln(\frac{\mu_{i}}{1-\mu_{i}})\)</span>。</p>
-<p>我们利用logit连接函数，重新分析信用卡违约数据。可以看到，新建立的模型可以很好地预测违约概率。没有再出现违约概率为负值的情况。</p>
+<p>利用logit连接函数，重新分析信用卡违约数据。可以看到，新建立的模型可以很好地预测违约概率。没有再出现违约概率为负值的情况。</p>
 <pre class="r"><code>default_glm1 &lt;- glm(default_num ~ balance, family = binomial(link = &quot;logit&quot;), data=Default_dt)
 summary(default_glm1)</code></pre>
 <pre><code>## 
@@ -255,10 +259,172 @@ Figure 6: 信用卡欠款额与违约概率的logistic回归预测（手动计�
 上边两个公式中，定义<span class="math inline">\(\mu\)</span>为数据尺度（data scale），这里个人理解为事件发生概率值，等同于<span class="math inline">\(\pi_{i}\)</span>。而<span class="math inline">\(\eta\)</span>指的是underlying scale，应该是基于<span class="math inline">\(\alpha+\beta x_{i}\)</span>模型计算得到的结果。</p>
 <p>个人感觉从反向连接函数到连接函数，理解起来更为顺畅。</p>
 </div>
+<div id="polytomous-or-multinomial-variable" class="section level3">
+<h3>2.4 针对多分类因变量（polytomous or multinomial variable）的转换</h3>
+<div id="baseline-category-logit" class="section level4">
+<h4>2.4.1 Baseline-Category Logit模型</h4>
+<p>假设某个性状，如罗氏沼虾的大鳌，根据大小和颜色可以分为小鳌、老头虾蓝色、正常橙色、正常蓝色等<strong>无顺序</strong>的四种，分别编码为1, 2, 3, 4。
+可以通过多变量logistic分布函数，把二分类logit模型扩展为多分类logit模型。</p>
+<p>假设<span class="math inline">\(\mu_{ij}\)</span>表示第<span class="math inline">\(i\)</span>尾虾的大鳌属于第<span class="math inline">\(j\)</span>个分类的概率，即<span class="math inline">\(\mu_{ij}=P(y_{i}=j)\)</span>，其中j=1,2,3,4。</p>
+<p>引入基线或参考分类的概念，对应于二分变量时事件未发生，建立处理方法。譬如大鳌颜色，如果把小鳌作为基线分类，那么可以据此计算其他3个分类的发生概率。</p>
+<p>对于非基线分类j，事件发生的概率根据多变量logistic分布函数（反向连接函数）可以写为：
+<span class="math display">\[
+\mu_{ij} = \frac{e^{\alpha_{0j}+\beta_{1j}x_{i1}+\beta_{2j}x_{i2}+...+\beta_{kj}x_{ik}}}{1+\sum_{l\neq j^{*}} e^{\alpha_{0l}+\beta_{1l}x_{il}+\beta_{2l}x_{i2}+...+\beta_{kl}x_{ik}}}
+\]</span>
+上式中，<span class="math inline">\(j^{*}\)</span>表示基线变量。</p>
+<p>因为<span class="math inline">\(\sum_{j=1}^{m}\mu_{ij} = 1\)</span>。</p>
+<p>因此，对于基线变量<span class="math inline">\(j^{*}\)</span>，事件发生的概率为：
+<span class="math display">\[
+\mu_{ij^{*}} = 1-\sum_{l \neq j^{*}}\mu_{il} \\
+=1-\frac{\sum_{l\neq j^{*}} e^{\alpha_{0l}+\beta_{1l}x_{il}+\beta_{2l}x_{i2}+...+\beta_{kl}x_{ik}}}{1+\sum_{l\neq j^{*}} e^{\alpha_{0l}+\beta_{1l}x_{il}+\beta_{2l}x_{i2}+...+\beta_{kl}x_{ik}}} \\
+=\frac{1}{1+\sum_{l\neq j^{*}} e^{\alpha_{0l}+\beta_{1l}x_{il}+\beta_{2l}x_{i2}+...+\beta_{kl}x_{ik}}}
+\]</span></p>
+<p>连接函数可以写为：
+<span class="math display">\[
+ln(\frac{\mu_{ij}}{\mu_{ij^{*}}})=\alpha_{0j}+\beta_{1j}x_{i1}+\beta_{2j}x_{i2}+...+\beta_{kj}x_{ik},\qquad j \neq j^{*}
+\]</span></p>
+<p>譬如选择分类中第1个水平作为基线，公式写为：
+<span class="math display">\[ln(\frac{\mu_{ij}}{\mu_{i1}})=\alpha_{0j}+\beta_{1j}x_{i1}+\beta_{2j}x_{i2}+...+\beta_{kj}x_{ik}\]</span></p>
+<p>下边通过实例分析来加深对这部分的印象。数据为佛罗里达四个湖219尾短吻鳄（Agresti ）的主要食物来源。食物来源主要分为五类：鱼类（Fish）、无脊椎动物（Invertebrate）、爬行类（Reptile）、鸟（Bird）和其他（Other）。自变量包括湖、性别、鳄鱼规格。数据可以从<a href="https://newonlinecourses.science.psu.edu/stat504/sites/onlinecourses.science.psu.edu.stat504/files/lesson08/gator/index.txt">这里</a>下载。</p>
+<p>数据是按照组分类统计，譬如在oklawaha湖中体长&gt;2.3米的female短吻鳄，胃中食物为Invertebrate的1只，Bird的1只；在oklawaha湖中体长&gt;2.3米的male短吻鳄，胃中食物为Fish的13只，Invertebrate的7只，Reptile的6只。</p>
+<pre class="r"><code>agresti_dt &lt;-  fread(input = &quot;datasets/agresti.txt&quot;)
+agresti_dt</code></pre>
+<pre><code>##     profile Gender Size     Lake Fish Invertebrate Reptile Bird Other
+##  1:       1      f &lt;2.3   george    3            9       1    0     1
+##  2:       2      m &lt;2.3   george   13           10       0    2     2
+##  3:       3      f &gt;2.3   george    8            1       0    0     1
+##  4:       4      m &gt;2.3   george    9            0       0    1     2
+##  5:       5      f &lt;2.3  hancock   16            3       2    2     3
+##  6:       6      m &lt;2.3  hancock    7            1       0    0     5
+##  7:       7      f &gt;2.3  hancock    3            0       1    2     3
+##  8:       8      m &gt;2.3  hancock    4            0       0    1     2
+##  9:       9      f &lt;2.3 oklawaha    3            9       1    0     2
+## 10:      10      m &lt;2.3 oklawaha    2            2       0    0     1
+## 11:      11      f &gt;2.3 oklawaha    0            1       0    1     0
+## 12:      12      m &gt;2.3 oklawaha   13            7       6    0     0
+## 13:      13      f &lt;2.3 trafford    2            4       1    1     4
+## 14:      14      m &lt;2.3 trafford    3            7       1    0     1
+## 15:      15      f &gt;2.3 trafford    0            1       0    0     0
+## 16:      16      m &gt;2.3 trafford    8            6       6    3     5</code></pre>
+<p>定义各种食物的发生概率：</p>
+<ul>
+<li><span class="math inline">\(\mu_{1}\)</span>Fish的概率；</li>
+<li><span class="math inline">\(\mu_{2}\)</span>Invertebrate的概率；</li>
+<li><span class="math inline">\(\mu_{3}\)</span>Reptile的概率；</li>
+<li><span class="math inline">\(\mu_{4}\)</span>Bird的概率；</li>
+<li><span class="math inline">\(\mu_{5}\)</span>Other的概率；</li>
+</ul>
+<p>因为短吻鳄的主要食物是Fish，因此把它作为基底类。logit方程为：
+<span class="math display">\[log(\frac{\mu_{ij}}{\mu_{i1}}) = \alpha_{0j}+\beta_{1j}x_{i1}+...\]</span>
+对于2,3,4,5每个类别，需要估计：</p>
+<ul>
+<li>3个Lake</li>
+<li>1个Sex</li>
+<li>1个Gender</li>
+</ul>
+<p>加上截距，每个类别需要估计6个参数，四个类别共计24个参数。</p>
+<p>设置每个因子的参考水平。</p>
+<pre class="r"><code>cols_factor_v &lt;- c(&quot;Fish&quot;,&quot;Lake&quot;,&quot;Gender&quot;,&quot;Size&quot;)
+agresti_dt[, (cols_factor_v):=lapply(.SD, as.factor), .SDcols = cols_factor_v]
+#set hancock as the base level for Lake
+contrasts(agresti_dt$Lake) &lt;- contr.treatment(levels(agresti_dt$Lake),base=2)
+contrasts(agresti_dt$Lake)</code></pre>
+<pre><code>##          george oklawaha trafford
+## george        1        0        0
+## hancock       0        0        0
+## oklawaha      0        1        0
+## trafford      0        0        1</code></pre>
+<pre class="r"><code>#set male as the base level for Gender
+contrasts(agresti_dt$Gender) &lt;- contr.treatment(levels(agresti_dt$Gender),base=2)
+contrasts(agresti_dt$Gender)</code></pre>
+<pre><code>##   f
+## f 1
+## m 0</code></pre>
+<pre class="r"><code>#set small size (&lt;2.3) as the base level for Size
+contrasts(agresti_dt$Size)=contr.treatment(levels(agresti_dt$Size),base=1)
+contrasts(agresti_dt$Size)</code></pre>
+<pre><code>##      &gt;2.3
+## &lt;2.3    0
+## &gt;2.3    1</code></pre>
+<p>利用vglm函数，建立logit模型进行分析。vglm函数默认cbind中最后一个分类即Fish作为基底或者参考类别。</p>
+<pre class="r"><code>multinomial_logit_m1 &lt;- vglm(cbind(Bird,Invertebrate,Reptile,Other,Fish) ~ Lake + Size + Gender,family = multinomial, data=agresti_dt)
+summary(multinomial_logit_m1)</code></pre>
+<pre><code>## 
+## Call:
+## vglm(formula = cbind(Bird, Invertebrate, Reptile, Other, Fish) ~ 
+##     Lake + Size + Gender, family = multinomial, data = agresti_dt)
+## 
+## Pearson residuals:
+##                        Min      1Q  Median     3Q   Max
+## log(mu[,1]/mu[,5]) -1.1054 -0.7187 -0.1388 0.3534 2.512
+## log(mu[,2]/mu[,5]) -1.4132 -0.5153 -0.0236 0.3771 1.171
+## log(mu[,3]/mu[,5]) -0.8951 -0.7132 -0.4053 0.3445 1.956
+## log(mu[,4]/mu[,5]) -1.3622 -0.5691  0.0165 0.8622 1.135
+## 
+## Coefficients: 
+##                Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept):1  -1.94358    0.76992  -2.524 0.011590 *  
+## (Intercept):2  -1.45492    0.62204  -2.339 0.019339 *  
+## (Intercept):3  -2.26194    0.84717  -2.670 0.007585 ** 
+## (Intercept):4  -0.39670    0.49392  -0.803 0.421881    
+## Lakegeorge:1   -0.60558    0.80142  -0.756 0.449868    
+## Lakegeorge:2    1.58417    0.64066   2.473 0.013409 *  
+## Lakegeorge:3   -1.21278    1.19874  -1.012 0.311677    
+## Lakegeorge:4   -0.86458    0.58604  -1.475 0.140133    
+## Lakeoklawaha:1 -1.23286    1.17965  -1.045 0.295974    
+## Lakeoklawaha:2  2.38896    0.68237   3.501 0.000464 ***
+## Lakeoklawaha:3  1.20582    0.80337   1.501 0.133368    
+## Lakeoklawaha:4 -0.90443    0.74744  -1.210 0.226264    
+## Laketrafford:1  0.36237    0.82608   0.439 0.660912    
+## Laketrafford:2  2.47255    0.69402   3.563 0.000367 ***
+## Laketrafford:3  1.52798    0.81245   1.881 0.060010 .  
+## Laketrafford:4  0.44973    0.59025   0.762 0.446101    
+## Size&gt;2.3:1      0.56473    0.65058   0.868 0.385375    
+## Size&gt;2.3:2     -1.36673    0.42392  -3.224 0.001264 ** 
+## Size&gt;2.3:3      0.40400    0.62831   0.643 0.520226    
+## Size&gt;2.3:4     -0.41873    0.46571  -0.899 0.368589    
+## Genderf:1       0.41531    0.67165   0.618 0.536350    
+## Genderf:2       0.19937    0.40653   0.490 0.623827    
+## Genderf:3       0.23994    0.64944   0.369 0.711789    
+## Genderf:4       0.09075    0.47073   0.193 0.847118    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Names of linear predictors: log(mu[,1]/mu[,5]), log(mu[,2]/mu[,5]), 
+## log(mu[,3]/mu[,5]), log(mu[,4]/mu[,5])
+## 
+## Residual deviance: 46.1046 on 40 degrees of freedom
+## 
+## Log-likelihood: -72.1 on 40 degrees of freedom
+## 
+## Number of Fisher scoring iterations: 5 
+## 
+## No Hauck-Donner effect found in any of the estimates
+## 
+## 
+## Reference group is level  5  of the response</code></pre>
+<p>从summary中可以看出，有四个logit方程来预测log-odds。每个预测方程6个参数，因此共解出了24个系数。参考水平的系数值均为0，包括<span class="math inline">\(\alpha_{Food, Fish}=0\)</span>、<span class="math inline">\(\beta_{Lake, hancock}=0\)</span>、<span class="math inline">\(\beta_{Size,&lt;2.3}=0\)</span>、<span class="math inline">\(\beta_{Gender,male}=0\)</span>。</p>
+<p>四个截距intercept实际上给出的是在参考水平下（Lake=Hancock，size=small&lt;2.3，Gender=male）的log-odd值。譬如，在参考水平下，即Hancock湖小型雄性短尾鳄胃中食物Bird vs Fish的log-odd值为-1.94358，odd值为$exp(-1.94358)=$0.1431904。也表明在该湖中鱼类居多，鸟类较少。</p>
+<p>如果从george湖捕获到一尾雌性短尾鳄，体长&gt;2.3米，预测其胃中的食物类型与Fish相比为Invertebrate的发生率的自然对数值为(注意Invertebrate在系数中排名第二)：
+<span class="math display">\[
+ln(\frac{\mu_{Invertebrate}}{\mu_{Fish}})=\alpha_{Invertebrate}+\beta_{Lake, George}+\beta_{Size,&gt;2.3}+\beta_{Gender,female}) \\
+=(-1.45492)+1.58417+(-1.36673)+0.19937 \\
+=-1.03811
+\]</span></p>
+<p>发生率Odd为$exp(-1.03811)=$0.3541233。这表明，这尾短尾鳄胃中食物是Invertebrated的概率远低于是鱼的概率。</p>
+<p>如果从trafford湖捕获到一尾雄性短尾鳄，体长&lt;2.3米，预测其胃中的食物类型与Fish相比为Invertebrate的发生率的自然对数值为(注意Invertebrate在系数中排名第二)：
+<span class="math display">\[
+ln(\frac{\mu_{Invertebrate}}{\mu_{Fish}})=\alpha_{Invertebrate}+\beta_{Lake, trafford}+\beta_{Size,&lt;2.3}+\beta_{Gender,male}) \\
+=(-1.45492)+2.47255+0+0 \\
+=1.01763
+\]</span>
+发生率Odd为$exp(1.01763)=$2.7666301。这表明，这尾短尾鳄胃中食物是Invertebrated的概率要高于是鱼的概率。</p>
+</div>
+</div>
 <div id="probit" class="section level3">
-<h3>2.4 probit转换</h3>
+<h3>2.5 probit转换</h3>
 <p>probit优先满足转换函数的第二个原则，即累积正态分布。<br />
-反向连接函数公式为：<br />
+反向连接函数公式为：
 <span class="math display">\[\mu_{i} = \frac{1}{\sqrt{2\pi}}\int_{-\infty}^{\alpha+\beta x_{i}}e^{-\frac{1}{2}Z^{2}}dZ\]</span></p>
 </div>
 </div>
