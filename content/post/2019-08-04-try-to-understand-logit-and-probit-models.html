@@ -17,8 +17,8 @@ library(data.table)
 library(ggplot2)
 library(ISLR)
 library(VGAM)</code></pre>
-<pre><code>## Loading required package: stats4</code></pre>
-<pre><code>## Loading required package: splines</code></pre>
+<pre><code>## 载入需要的程辑包：stats4</code></pre>
+<pre><code>## 载入需要的程辑包：splines</code></pre>
 <p>Logit和probit连接函数，是在处理二分变量或者分类变量时，经常用的两个函数。但对于为什么要使用它们的原因并不是很清楚。本文试着把近期看到的一些材料理解并记录下来。</p>
 <p>本文参考了以下材料：</p>
 <ul>
@@ -308,23 +308,23 @@ agresti_dt</code></pre>
 ## 16:      16      m &gt;2.3 trafford    8            6       6    3     5</code></pre>
 <p>定义各种食物的发生概率：</p>
 <ul>
-<li><span class="math inline">\(\mu_{1}\)</span>Fish的概率；</li>
-<li><span class="math inline">\(\mu_{2}\)</span>Invertebrate的概率；</li>
-<li><span class="math inline">\(\mu_{3}\)</span>Reptile的概率；</li>
-<li><span class="math inline">\(\mu_{4}\)</span>Bird的概率；</li>
-<li><span class="math inline">\(\mu_{5}\)</span>Other的概率；</li>
+<li><span class="math inline">\(\mu_{1}\)</span>：Fish的概率；</li>
+<li><span class="math inline">\(\mu_{2}\)</span>：Invertebrate的概率；</li>
+<li><span class="math inline">\(\mu_{3}\)</span>：Reptile的概率；</li>
+<li><span class="math inline">\(\mu_{4}\)</span>：Bird的概率；</li>
+<li><span class="math inline">\(\mu_{5}\)</span>：Other的概率；</li>
 </ul>
 <p>因为短吻鳄的主要食物是Fish，因此把它作为基底类。logit方程为：
 <span class="math display">\[log(\frac{\mu_{ij}}{\mu_{i1}}) = \alpha_{0j}+\beta_{1j}x_{i1}+...\]</span>
 对于2,3,4,5每个类别，需要估计：</p>
 <ul>
-<li>3个Lake</li>
-<li>1个Sex</li>
-<li>1个Gender</li>
+<li>3个Lake水平</li>
+<li>1个Gender水平</li>
+<li>1个Size水平</li>
 </ul>
 <p>加上截距，每个类别需要估计6个参数，四个类别共计24个参数。</p>
 <p>设置每个因子的参考水平。</p>
-<pre class="r"><code>cols_factor_v &lt;- c(&quot;Fish&quot;,&quot;Lake&quot;,&quot;Gender&quot;,&quot;Size&quot;)
+<pre class="r"><code>cols_factor_v &lt;- c(&quot;Lake&quot;,&quot;Gender&quot;,&quot;Size&quot;)
 agresti_dt[, (cols_factor_v):=lapply(.SD, as.factor), .SDcols = cols_factor_v]
 #set hancock as the base level for Lake
 contrasts(agresti_dt$Lake) &lt;- contr.treatment(levels(agresti_dt$Lake),base=2)
@@ -355,70 +355,71 @@ summary(multinomial_logit_m1)</code></pre>
 ##     Lake + Size + Gender, family = multinomial, data = agresti_dt)
 ## 
 ## Pearson residuals:
-##                        Min      1Q  Median     3Q   Max
-## log(mu[,1]/mu[,5]) -1.1054 -0.7187 -0.1388 0.3534 2.512
-## log(mu[,2]/mu[,5]) -1.4132 -0.5153 -0.0236 0.3771 1.171
-## log(mu[,3]/mu[,5]) -0.8951 -0.7132 -0.4053 0.3445 1.956
-## log(mu[,4]/mu[,5]) -1.3622 -0.5691  0.0165 0.8622 1.135
+##                        Min      1Q   Median     3Q   Max
+## log(mu[,1]/mu[,5]) -1.1985 -0.5478 -0.22421 0.3678 3.478
+## log(mu[,2]/mu[,5]) -1.3218 -0.4611  0.01054 0.3810 1.866
+## log(mu[,3]/mu[,5]) -0.7033 -0.5751 -0.35511 0.2610 2.064
+## log(mu[,4]/mu[,5]) -1.6945 -0.2893 -0.10807 1.1236 1.367
 ## 
 ## Coefficients: 
 ##                Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept):1  -1.94358    0.76992  -2.524 0.011590 *  
-## (Intercept):2  -1.45492    0.62204  -2.339 0.019339 *  
-## (Intercept):3  -2.26194    0.84717  -2.670 0.007585 ** 
-## (Intercept):4  -0.39670    0.49392  -0.803 0.421881    
-## Lakegeorge:1   -0.60558    0.80142  -0.756 0.449868    
-## Lakegeorge:2    1.58417    0.64066   2.473 0.013409 *  
-## Lakegeorge:3   -1.21278    1.19874  -1.012 0.311677    
-## Lakegeorge:4   -0.86458    0.58604  -1.475 0.140133    
-## Lakeoklawaha:1 -1.23286    1.17965  -1.045 0.295974    
-## Lakeoklawaha:2  2.38896    0.68237   3.501 0.000464 ***
-## Lakeoklawaha:3  1.20582    0.80337   1.501 0.133368    
-## Lakeoklawaha:4 -0.90443    0.74744  -1.210 0.226264    
-## Laketrafford:1  0.36237    0.82608   0.439 0.660912    
-## Laketrafford:2  2.47255    0.69402   3.563 0.000367 ***
-## Laketrafford:3  1.52798    0.81245   1.881 0.060010 .  
-## Laketrafford:4  0.44973    0.59025   0.762 0.446101    
-## Size&gt;2.3:1      0.56473    0.65058   0.868 0.385375    
-## Size&gt;2.3:2     -1.36673    0.42392  -3.224 0.001264 ** 
-## Size&gt;2.3:3      0.40400    0.62831   0.643 0.520226    
-## Size&gt;2.3:4     -0.41873    0.46571  -0.899 0.368589    
-## Genderf:1       0.41531    0.67165   0.618 0.536350    
-## Genderf:2       0.19937    0.40653   0.490 0.623827    
-## Genderf:3       0.23994    0.64944   0.369 0.711789    
-## Genderf:4       0.09075    0.47073   0.193 0.847118    
+## (Intercept):1   -2.4633     0.7739      NA       NA    
+## (Intercept):2   -2.0745     0.6117  -3.392 0.000695 ***
+## (Intercept):3   -2.9141     0.8856      NA       NA    
+## (Intercept):4   -0.9167     0.4782  -1.917 0.055217 .  
+## Lakegeorge:1    -0.5753     0.7952  -0.723 0.469429    
+## Lakegeorge:2     1.7805     0.6232   2.857 0.004277 ** 
+## Lakegeorge:3    -1.1295     1.1928  -0.947 0.343687    
+## Lakegeorge:4    -0.7666     0.5686  -1.348 0.177563    
+## Lakeoklawaha:1  -1.1256     1.1923  -0.944 0.345132    
+## Lakeoklawaha:2   2.6937     0.6693   4.025 5.70e-05 ***
+## Lakeoklawaha:3   1.4008     0.8105   1.728 0.083926 .  
+## Lakeoklawaha:4  -0.7405     0.7421  -0.998 0.318372    
+## Laketrafford:1   0.6617     0.8461   0.782 0.434145    
+## Laketrafford:2   2.9363     0.6874   4.272 1.94e-05 ***
+## Laketrafford:3   1.9316     0.8253   2.340 0.019263 *  
+## Laketrafford:4   0.7912     0.5879   1.346 0.178400    
+## Size&gt;2.3:1       0.7302     0.6523   1.120 0.262918    
+## Size&gt;2.3:2      -1.3363     0.4112  -3.250 0.001155 ** 
+## Size&gt;2.3:3       0.5570     0.6466   0.861 0.388977    
+## Size&gt;2.3:4      -0.2906     0.4599  -0.632 0.527515    
+## Genderf:1        0.6064     0.6888   0.880 0.378666    
+## Genderf:2        0.4630     0.3955   1.171 0.241796    
+## Genderf:3        0.6276     0.6853   0.916 0.359785    
+## Genderf:4        0.2526     0.4663   0.542 0.588100    
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
 ## Names of linear predictors: log(mu[,1]/mu[,5]), log(mu[,2]/mu[,5]), 
 ## log(mu[,3]/mu[,5]), log(mu[,4]/mu[,5])
 ## 
-## Residual deviance: 46.1046 on 40 degrees of freedom
+## Residual deviance: 50.2637 on 40 degrees of freedom
 ## 
-## Log-likelihood: -72.1 on 40 degrees of freedom
+## Log-likelihood: -73.3221 on 40 degrees of freedom
 ## 
 ## Number of Fisher scoring iterations: 5 
 ## 
-## No Hauck-Donner effect found in any of the estimates
+## Warning: Hauck-Donner effect detected in the following estimate(s):
+## &#39;(Intercept):1&#39;, &#39;(Intercept):3&#39;
 ## 
 ## 
 ## Reference group is level  5  of the response</code></pre>
 <p>从summary中可以看出，有四个logit方程来预测log-odds。每个预测方程6个参数，因此共解出了24个系数。参考水平的系数值均为0，包括<span class="math inline">\(\alpha_{Food, Fish}=0\)</span>、<span class="math inline">\(\beta_{Lake, hancock}=0\)</span>、<span class="math inline">\(\beta_{Size,&lt;2.3}=0\)</span>、<span class="math inline">\(\beta_{Gender,male}=0\)</span>。</p>
-<p>四个截距intercept实际上给出的是在参考水平下（Lake=Hancock，size=small&lt;2.3，Gender=male）的log-odd值。譬如，在参考水平下，即Hancock湖小型雄性短尾鳄胃中食物Bird vs Fish的log-odd值为-1.94358，odd值为$exp(-1.94358)=$0.1431904。也表明在该湖中鱼类居多，鸟类较少。</p>
+<p>四个截距intercept实际上给出的是在参考水平下（Lake=Hancock，size=small&lt;2.3，Gender=male）的log-odd值。譬如，在参考水平下，即Hancock湖小型雄性短尾鳄胃中食物Bird vs Fish的log-odd值为-1.94358，odd值为<span class="math inline">\(exp(-1.94358)\)</span>=0.1431904。也表明在该湖中鱼类居多，鸟类较少。</p>
 <p>如果从george湖捕获到一尾雌性短尾鳄，体长&gt;2.3米，预测其胃中的食物类型与Fish相比为Invertebrate的发生率的自然对数值为(注意Invertebrate在系数中排名第二)：
 <span class="math display">\[
 ln(\frac{\mu_{Invertebrate}}{\mu_{Fish}})=\alpha_{Invertebrate}+\beta_{Lake, George}+\beta_{Size,&gt;2.3}+\beta_{Gender,female}) \\
 =(-1.45492)+1.58417+(-1.36673)+0.19937 \\
 =-1.03811
 \]</span></p>
-<p>发生率Odd为$exp(-1.03811)=$0.3541233。这表明，这尾短尾鳄胃中食物是Invertebrated的概率远低于是鱼的概率。</p>
+<p>发生率Odd为<span class="math inline">\(exp(-1.03811)\)</span>=0.3541233。这表明，这尾短尾鳄胃中食物是Invertebrated的概率远低于是鱼的概率。</p>
 <p>如果从trafford湖捕获到一尾雄性短尾鳄，体长&lt;2.3米，预测其胃中的食物类型与Fish相比为Invertebrate的发生率的自然对数值为(注意Invertebrate在系数中排名第二)：
 <span class="math display">\[
 ln(\frac{\mu_{Invertebrate}}{\mu_{Fish}})=\alpha_{Invertebrate}+\beta_{Lake, trafford}+\beta_{Size,&lt;2.3}+\beta_{Gender,male}) \\
 =(-1.45492)+2.47255+0+0 \\
 =1.01763
 \]</span>
-发生率Odd为$exp(1.01763)=$2.7666301。这表明，这尾短尾鳄胃中食物是Invertebrated的概率要高于是鱼的概率。</p>
+发生率Odd为<span class="math inline">\(exp(1.01763)\)</span>=2.7666301。这表明，这尾短尾鳄胃中食物是Invertebrate的概率要高于是鱼的概率。</p>
 </div>
 </div>
 <div id="probit" class="section level3">

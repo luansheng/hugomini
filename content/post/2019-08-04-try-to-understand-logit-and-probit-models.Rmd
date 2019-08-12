@@ -248,25 +248,25 @@ agresti_dt
 
 定义各种食物的发生概率：
 
-* $\mu_{1}$Fish的概率；
-* $\mu_{2}$Invertebrate的概率；
-* $\mu_{3}$Reptile的概率；
-* $\mu_{4}$Bird的概率；
-* $\mu_{5}$Other的概率；
+* $\mu_{1}$：Fish的概率；
+* $\mu_{2}$：Invertebrate的概率；
+* $\mu_{3}$：Reptile的概率；
+* $\mu_{4}$：Bird的概率；
+* $\mu_{5}$：Other的概率；
 
 因为短吻鳄的主要食物是Fish，因此把它作为基底类。logit方程为：
 $$log(\frac{\mu_{ij}}{\mu_{i1}}) = \alpha_{0j}+\beta_{1j}x_{i1}+...$$
 对于2,3,4,5每个类别，需要估计：
 
-* 3个Lake
-* 1个Sex
-* 1个Gender
+* 3个Lake水平
+* 1个Gender水平
+* 1个Size水平
 
 加上截距，每个类别需要估计6个参数，四个类别共计24个参数。
 
 设置每个因子的参考水平。
 ```{r}
-cols_factor_v <- c("Fish","Lake","Gender","Size")
+cols_factor_v <- c("Lake","Gender","Size")
 agresti_dt[, (cols_factor_v):=lapply(.SD, as.factor), .SDcols = cols_factor_v]
 #set hancock as the base level for Lake
 contrasts(agresti_dt$Lake) <- contr.treatment(levels(agresti_dt$Lake),base=2)
@@ -287,7 +287,7 @@ summary(multinomial_logit_m1)
 ```
 从summary中可以看出，有四个logit方程来预测log-odds。每个预测方程6个参数，因此共解出了24个系数。参考水平的系数值均为0，包括$\alpha_{Food, Fish}=0$、$\beta_{Lake, hancock}=0$、$\beta_{Size,<2.3}=0$、$\beta_{Gender,male}=0$。
 
-四个截距intercept实际上给出的是在参考水平下（Lake=Hancock，size=small<2.3，Gender=male）的log-odd值。譬如，在参考水平下，即Hancock湖小型雄性短尾鳄胃中食物Bird vs Fish的log-odd值为-1.94358，odd值为$exp(-1.94358)=$`r exp(-1.94358)`。也表明在该湖中鱼类居多，鸟类较少。
+四个截距intercept实际上给出的是在参考水平下（Lake=Hancock，size=small<2.3，Gender=male）的log-odd值。譬如，在参考水平下，即Hancock湖小型雄性短尾鳄胃中食物Bird vs Fish的log-odd值为-1.94358，odd值为$exp(-1.94358)$=`r exp(-1.94358)`。也表明在该湖中鱼类居多，鸟类较少。
 
 如果从george湖捕获到一尾雌性短尾鳄，体长>2.3米，预测其胃中的食物类型与Fish相比为Invertebrate的发生率的自然对数值为(注意Invertebrate在系数中排名第二)：
 $$
@@ -296,7 +296,7 @@ ln(\frac{\mu_{Invertebrate}}{\mu_{Fish}})=\alpha_{Invertebrate}+\beta_{Lake, Geo
 =-1.03811
 $$
 
-发生率Odd为$exp(-1.03811)=$`r exp(-1.03811)`。这表明，这尾短尾鳄胃中食物是Invertebrated的概率远低于是鱼的概率。
+发生率Odd为$exp(-1.03811)$=`r exp(-1.03811)`。这表明，这尾短尾鳄胃中食物是Invertebrated的概率远低于是鱼的概率。
 
 如果从trafford湖捕获到一尾雄性短尾鳄，体长<2.3米，预测其胃中的食物类型与Fish相比为Invertebrate的发生率的自然对数值为(注意Invertebrate在系数中排名第二)：
 $$
@@ -304,7 +304,8 @@ ln(\frac{\mu_{Invertebrate}}{\mu_{Fish}})=\alpha_{Invertebrate}+\beta_{Lake, tra
 =(-1.45492)+2.47255+0+0 \\
 =1.01763
 $$
-发生率Odd为$exp(1.01763)=$`r exp(1.01763)`。这表明，这尾短尾鳄胃中食物是Invertebrated的概率要高于是鱼的概率。
+发生率Odd为$exp(1.01763)$=`r exp(1.01763)`。这表明，这尾短尾鳄胃中食物是Invertebrate的概率要高于是鱼的概率。
+
 
 ### 2.5 probit转换
 
