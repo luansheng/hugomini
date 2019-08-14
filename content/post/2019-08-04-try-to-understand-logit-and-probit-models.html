@@ -17,8 +17,9 @@ library(data.table)
 library(ggplot2)
 library(ISLR)
 library(VGAM)</code></pre>
-<pre><code>## 载入需要的程辑包：stats4</code></pre>
-<pre><code>## 载入需要的程辑包：splines</code></pre>
+<pre><code>## Loading required package: stats4</code></pre>
+<pre><code>## Loading required package: splines</code></pre>
+<pre class="r"><code>library(MASS)</code></pre>
 <p>Logit和probit连接函数，是在处理二分变量或者分类变量时，经常用的两个函数。但对于为什么要使用它们的原因并不是很清楚。本文试着把近期看到的一些材料理解并记录下来。</p>
 <p>本文参考了以下材料：</p>
 <ul>
@@ -271,7 +272,7 @@ Figure 6: 信用卡欠款额与违约概率的logistic回归预测（手动计�
 <span class="math display">\[
 \mu_{ij} = \frac{e^{\alpha_{0j}+\beta_{1j}x_{i1}+\beta_{2j}x_{i2}+...+\beta_{kj}x_{ik}}}{1+\sum_{l\neq j^{*}} e^{\alpha_{0l}+\beta_{1l}x_{il}+\beta_{2l}x_{i2}+...+\beta_{kl}x_{ik}}}
 \]</span>
-上式中，<span class="math inline">\(j^{*}\)</span>表示基线变量。</p>
+上式中，<span class="math inline">\(j^{*}\)</span>表示基线变量，<span class="math inline">\(x_{ik}\)</span>表示第i个体第k个自变量，<span class="math inline">\(\beta_{kj}\)</span>表示第j个类别第k个自变量（解释变量）的回归系数。</p>
 <p>因为<span class="math inline">\(\sum_{j=1}^{m}\mu_{ij} = 1\)</span>。</p>
 <p>因此，对于基线变量<span class="math inline">\(j^{*}\)</span>，事件发生的概率为：
 <span class="math display">\[
@@ -405,21 +406,206 @@ summary(multinomial_logit_m1)</code></pre>
 ## 
 ## Reference group is level  5  of the response</code></pre>
 <p>从summary中可以看出，有四个logit方程来预测log-odds。每个预测方程6个参数，因此共解出了24个系数。参考水平的系数值均为0，包括<span class="math inline">\(\alpha_{Food, Fish}=0\)</span>、<span class="math inline">\(\beta_{Lake, hancock}=0\)</span>、<span class="math inline">\(\beta_{Size,&lt;2.3}=0\)</span>、<span class="math inline">\(\beta_{Gender,male}=0\)</span>。</p>
-<p>四个截距intercept实际上给出的是在参考水平下（Lake=Hancock，size=small&lt;2.3，Gender=male）的log-odd值。譬如，在参考水平下，即Hancock湖小型雄性短尾鳄胃中食物Bird vs Fish的log-odd值为-1.94358，odd值为<span class="math inline">\(exp(-1.94358)\)</span>=0.1431904。也表明在该湖中鱼类居多，鸟类较少。</p>
+<p>四个截距intercept实际上给出的是在参考水平下（Lake=Hancock，size=small&lt;2.3，Gender=male）的log-odd值。譬如，在参考水平下，即Hancock湖小型雄性短尾鳄胃中食物Bird vs Fish的log-odd值为-1.94358，odd值为<span class="math inline">\(e^{-1.94358}\)</span>=0.1431904。也表明在该湖中鱼类居多，鸟类较少。</p>
 <p>如果从george湖捕获到一尾雌性短尾鳄，体长&gt;2.3米，预测其胃中的食物类型与Fish相比为Invertebrate的发生率的自然对数值为(注意Invertebrate在系数中排名第二)：
 <span class="math display">\[
 ln(\frac{\mu_{Invertebrate}}{\mu_{Fish}})=\alpha_{Invertebrate}+\beta_{Lake, George}+\beta_{Size,&gt;2.3}+\beta_{Gender,female}) \\
 =(-1.45492)+1.58417+(-1.36673)+0.19937 \\
 =-1.03811
 \]</span></p>
-<p>发生率Odd为<span class="math inline">\(exp(-1.03811)\)</span>=0.3541233。这表明，这尾短尾鳄胃中食物是Invertebrated的概率远低于是鱼的概率。</p>
+<p>发生率Odd为<span class="math inline">\(e^{-1.03811}\)</span>=0.3541233。这表明，这尾短尾鳄胃中食物是Invertebrated的概率远低于是鱼的概率。</p>
 <p>如果从trafford湖捕获到一尾雄性短尾鳄，体长&lt;2.3米，预测其胃中的食物类型与Fish相比为Invertebrate的发生率的自然对数值为(注意Invertebrate在系数中排名第二)：
 <span class="math display">\[
 ln(\frac{\mu_{Invertebrate}}{\mu_{Fish}})=\alpha_{Invertebrate}+\beta_{Lake, trafford}+\beta_{Size,&lt;2.3}+\beta_{Gender,male}) \\
 =(-1.45492)+2.47255+0+0 \\
 =1.01763
 \]</span>
-发生率Odd为<span class="math inline">\(exp(1.01763)\)</span>=2.7666301。这表明，这尾短尾鳄胃中食物是Invertebrate的概率要高于是鱼的概率。</p>
+发生率Odd为<span class="math inline">\(e^{1.01763}\)</span>=2.7666301。这表明，这尾短尾鳄胃中食物是Invertebrate的概率要高于是鱼的概率。</p>
+</div>
+<div id="adjacent-category-logit" class="section level4">
+<h4>2.4.2 Adjacent-category Logit</h4>
+<p>在基线logit模型中，分类是无序的。现在考虑分类是有序的情况下，该如何建立更有优化的模型。譬如对虾卵巢的发育等级，眼柄的磨损程度等性状，均为有序性状。对于无序分类，我们选择其中一个类别作为基线类。而对于有序分类，这样处理更有意义：</p>
+<ul>
+<li>1 vs 2</li>
+<li>2 vs 3</li>
+<li>3 vs 4</li>
+<li>…</li>
+<li>r-1 vs r</li>
+</ul>
+<p>2,3,4,…,r分别作为基线类。邻接分类的比较用于致死率分析会更有意义，</p>
+<p>r-1个邻接Logit方程（连接函数）定义如下：</p>
+<ul>
+<li><span class="math inline">\(L_{1} = ln(\frac{\mu_{1}}{\mu_{2}})\)</span></li>
+<li><span class="math inline">\(L_{2} = ln(\frac{\mu_{2}}{\mu_{3}})\)</span></li>
+<li>…</li>
+<li><span class="math inline">\(L_{r-1} = ln(\frac{\mu_{r-1}}{\mu_{r}})\)</span></li>
+</ul>
+<p>其中<span class="math inline">\(L_{1}\)</span>、<span class="math inline">\(L_{2}\)</span>、…、<span class="math inline">\(L_{r-1}\)</span>等进一步定义为由解释变量组成的方程：
+* <span class="math inline">\(L_{1} = \alpha_{01}+\beta_{11}x_{1}+\beta_{21}x_{2}...+\beta_{k1}x_{k}\)</span>
+* <span class="math inline">\(L_{2} = \alpha_{02}+\beta_{12}x_{1}+\beta_{22}x_{2}...+\beta_{k2}x_{k}\)</span>
+* …
+* <span class="math inline">\(L_{r-1} = \alpha_{0,r-1}+\beta_{1,r-1}x_{1}+\beta_{2,r-1}x_{2}...+\beta_{k,r-1}x_{k}\)</span></p>
+<p><span class="math inline">\(L_{1}\)</span>到<span class="math inline">\(L_{r-1}\)</span>之间可以相互组合，构建不同的logit方程，譬如：</p>
+<p><span class="math display">\[
+ln(\frac{\mu_{3}}{\mu_{1}}) = -L_{2}-L_{1}
+\]</span>
+这是因为：
+<span class="math display">\[
+ln(\frac{\mu_{1}}{\mu_{2}}) = L_{1} \\
+\frac{\mu_{1}}{\mu_{2}} = e^{L_{1}} \\
+\frac{\mu_{2}}{\mu_{1}} = \frac{1}{e^{L_{1}}} \\
+\frac{\mu_{2}}{\mu_{1}} = e^{-L_{1}} \\
+ln(\frac{\mu_{2}}{\mu_{1}}) = -L_{1} \\
+\]</span>
+类似：
+<span class="math display">\[
+ln(\frac{\mu_{2}}{\mu_{3}}) = L_{2} \\
+ln(\frac{\mu_{3}}{\mu_{2}}) = -L_{2} \\
+\]</span>
+所以
+<span class="math display">\[
+ln(\frac{\mu_{3}}{\mu_{1}}) = ln(\frac{\mu_{3}}{\mu_{2}}\frac{\mu_{2}}{\mu_{1}}) \\
+= ln(\frac{\mu_{3}}{\mu_{2}}) + ln(\frac{\mu_{2}}{\mu_{1}}) \\
+= -L_{2}-L_{1}
+\]</span>
+由此可以推测：
+<span class="math display">\[
+ln(\frac{\mu_{r}}{\mu_{1}}) = ln(\frac{\mu_{r}}{\mu_{r-1}}\frac{\mu_{r-1}}{\mu_{r-2}}...\frac{\mu_{2}}{\mu_{1}}) \\
+= ln(\frac{\mu_{r}}{\mu_{r-1}}) + ln(\frac{\mu_{r-1}}{\mu_{r-2}})+...+ln(\frac{\mu_{2}}{\mu_{1}}) \\
+= -L_{r-1}-L_{r-2}+...-L_{1}
+\]</span>
+上述公示表明，基于邻接logit模型可以转换基线logit模型。</p>
+</div>
+<div id="the-proportional-odds-cumulative-logit-model-logit" class="section level4">
+<h4>2.4.3 The proportional-Odds Cumulative Logit Model （百分比发生率累积Logit模型）</h4>
+<p>这个模型可能是对于有序分类最为常用。ASReml中好像用的也是这个模型。<br />
+假设分类变量为<span class="math inline">\(y=1,2,3,...,r\)</span>，每个类别发生的概率分别为<span class="math inline">\(\mu_{1}, \mu_{2},...,\mu_{r}\)</span>，并且<span class="math inline">\(P(y_{i} \le r)=\mu_{1} + \mu_{2} + ... + \mu_{r}\)</span>。</p>
+<p>假定存在一个潜在变量（latent variable）<span class="math inline">\(y^{*}\)</span>，代表事件发生的可能性，并且与解释变量<span class="math inline">\(x\)</span>之间存在一种线性关系:
+<span class="math display">\[
+y_{i}^{*} = \alpha+\beta_{1} x_{i1}+...+\beta_{k} x_{ik}+\varepsilon_{i}
+\]</span>
+如果是二分变量，<span class="math inline">\(y_{i}^{*}\)</span>划分为2个区域；如果是多分类，那么会被划分为r个区域，有r-1个边界。设定r-1个边界值为：<span class="math inline">\(\alpha_{1}&lt;\alpha_{2}&lt;\alpha_{3}...&lt;\alpha_{r-1}\)</span>，分类变量的值为：</p>
+<p><span class="math display">\[
+y_{i} = \left\{\begin{matrix}
+1 &amp; y_{i}^{*} \le \alpha_{1} \\
+2 &amp; \alpha_{1} &lt; y_{i}^{*} \le \alpha_{2} \\
+... \\
+r-1 &amp; \alpha_{r-2} &lt; y_{i}^{*} \le \alpha_{r-1} \\
+r &amp; \alpha_{r-1} &lt; y_{i}^{*} \le \alpha_{r}
+\end{matrix}\right.
+\]</span>
+依据上述设定，<span class="math inline">\(y_{i} \le j\)</span>的概率为：
+<span class="math display">\[
+P(y_{i} \le j) = P(y_{i}^{*} \le \alpha_{j}) \\
+= P(\alpha+\beta_{1} x_{i1}+...+\beta_{k} x_{ik}+\varepsilon_{i} \le \alpha_{r})) \\
+= P(\varepsilon_{i} \le \alpha_{j}-(\alpha+\beta_{1} x_{i1}+...+\beta_{k} x_{ik})) \\
+\]</span>
+其中<span class="math inline">\(y_{i}\)</span>表示第i个样本落在1-j类别之间的概率，<span class="math inline">\(j=1,2,3...,r-1\)</span>。假定残差项<span class="math inline">\(\varepsilon\)</span>独立分布，符合logistic或者标准正态分布，上式实际上为累积分布函数。</p>
+<p>如果残差项<span class="math inline">\(\varepsilon\)</span>符合logistic分布，那么有序的logit模型为：
+<span class="math display">\[
+logit(P(y_{i} \le j)) = ln(\frac{P(y_{i} \le j)}{P(y_{i} &gt; j)}) \\
+=  \alpha_{j}-(\alpha+\beta_{1} x_{i1}+...+\beta_{k} x_{ik}) \\
+= \alpha_{j} - \alpha -\beta_{1} x_{i1}-...-\beta_{k} x_{ik}
+\]</span>
+反之：
+<span class="math display">\[
+logit(P(y_{i} &gt; j)) = ln(\frac{P(y_{i} &gt; j)}{P(y_{i} \le j)}) \\
+= -(\alpha_{j} - \alpha -\beta_{1} x_{i1}-...-\beta_{k} x_{ik}) \\
+= \alpha-\alpha_{j}+\beta_{1} x_{i1}+...+\beta_{k} x_{ik}
+\]</span></p>
+<p>上述公式跟二分变量很相似。假设有四个有序分类<span class="math inline">\(r=1, 2, 3, 4\)</span>，那么logit模型为：
+<span class="math display">\[
+L_{1} = logit(P(y_{i} \le 1)) = ln(\frac{y_{i} \le 1}{y_{i} &gt; 1}) =  \alpha_{1} - \alpha - \beta_{1} x_{i1} - ... - \beta_{k} x_{ik} \\
+L_{2} = logit(P(y_{i} \le 2)) = ln(\frac{y_{i} \le 2}{y_{i} &gt; 2}) =  \alpha_{2} - \alpha - \beta_{1} x_{i1} - ... - \beta_{k} x_{ik} \\
+L_{3} = logit(P(y_{i} \le 3)) = ln(\frac{y_{i} \le 3}{y_{i} &gt; 3}) =  \alpha_{3} - \alpha - \beta_{1} x_{i1} - ... - \beta_{k} x_{ik} \\
+... \\
+L_{r-1} = logit(P(y_{i} \le r-1)) = ln(\frac{y_{i} \le r-1}{y_{i} &gt; r-1}) =  \alpha_{r-1} - \alpha - \beta_{1} x_{i1} - ... - \beta_{k} x_{ik} \\
+\]</span>
+注意<span class="math inline">\(L_{1}, L_{2},...,L_{r-1}\)</span>是累积发生率，可以看作是<strong>类似于事件发生的阈值</strong>。</p>
+<p>上述Logit方程的几个特点：</p>
+<ul>
+<li>所有Logi回归方程的斜率都是一样的，即不同logit方程具有相同的一套<span class="math inline">\(\beta\)</span>值，差别仅在截距上。 因此logit回归曲线在垂直方向上是平行的。</li>
+<li>当两个logit方程右手边的解释变量x，取相同的水平值时，两个方程logit-odd值的差异仅在截距上，譬如类别<span class="math inline">\(j\)</span>和<span class="math inline">\(j^{&#39;}\)</span>，logit-odd差值为<span class="math inline">\(\alpha_{j}-\alpha_{j^{&#39;}}\)</span>。因此，不同类别log-odd值之间，是成比例的。因此，有序logit模型也称为<strong>百分比发生比模型</strong>（proportional-odds model)。与基线分类Logit模型相比，本模型要估计的参数大幅度降低，所有的Logit模型共享一套与解释变量相关的回归系数。</li>
+<li>总共有K+1+r-1=k+r个参数需要估计，即回归系数<span class="math inline">\(\beta\)</span>和不同类别的阈值<span class="math inline">\(\alpha_{j}\)</span>。如果是固定效应，这里k指的是一个处理的水平数；如果有两个固定效应，水平数分别为k和I，那么需要估计的参数应该是k+I+r。</li>
+<li>既然所有的logit方程都有一个共同的常数<span class="math inline">\(\alpha\)</span>，为了简化方程，可以将其设置为0。因此logit方程可简化为<span class="math inline">\(logit(P(y_{i} \le j)) = ln(\frac{P(y_{i} \le j)}{P(y_{i} &gt; j)})= \alpha_{j} -\beta_{1} x_{i1}-...-\beta_{k} x_{ik}\)</span></li>
+</ul>
+<p>下边以四种奶酪的口味评分数据进行实例分析。一共有四种奶酪，评分分为1-9级。</p>
+<pre class="r"><code>cheese_dt &lt;- fread(input=&quot;datasets/cheese.txt&quot;,header = FALSE)
+colnames(cheese_dt) &lt;- c(&quot;Cheese&quot;,paste(&quot;S&quot;,as.character(seq(1,9)),sep=&quot;&quot;),&quot;Total&quot;)
+cheese_dt</code></pre>
+<pre><code>##    Cheese S1 S2 S3 S4 S5 S6 S7 S8 S9 Total
+## 1:      A  0  0  1  7  8  8 19  8  1    52
+## 2:      B  6  9 12 11  7  6  1  0  0    52
+## 3:      C  1  1  6  8 23  7  5  1  0    52
+## 4:      D  0  0  0  1  3  7 14 16 11    52</code></pre>
+<p>利用MASS包中的polr()函数进行proportional-odds model分析。</p>
+<pre class="r"><code>cheese_dt[,Total:=NULL]
+cheese_melt_dt &lt;- melt.data.table(cheese_dt,id.vars = c(&quot;Cheese&quot;),variable.name = c(&quot;Taste&quot;), value.name = &quot;N&quot;)
+#Taste需要是因子类型
+result &lt;- polr(Taste ~ Cheese, weights = N, data = cheese_melt_dt)
+summary(result)</code></pre>
+<pre><code>## 
+## Re-fitting to get Hessian</code></pre>
+<pre><code>## Call:
+## polr(formula = Taste ~ Cheese, data = cheese_melt_dt, weights = N)
+## 
+## Coefficients:
+##          Value Std. Error t value
+## CheeseB -3.352     0.4287  -7.819
+## CheeseC -1.710     0.3715  -4.603
+## CheeseD  1.613     0.3805   4.238
+## 
+## Intercepts:
+##       Value    Std. Error t value 
+## S1|S2  -5.4674   0.5236   -10.4413
+## S2|S3  -4.4122   0.4278   -10.3148
+## S3|S4  -3.3126   0.3700    -8.9522
+## S4|S5  -2.2440   0.3267    -6.8680
+## S5|S6  -0.9078   0.2833    -3.2037
+## S6|S7   0.0443   0.2646     0.1673
+## S7|S8   1.5459   0.3017     5.1244
+## S8|S9   3.1058   0.4057     7.6547
+## 
+## Residual Deviance: 711.3479 
+## AIC: 733.3479</code></pre>
+<p>截距可以认为是不同类别的阈值，即<span class="math inline">\(\alpha_{j}\)</span>。</p>
+<p>根据计算结果，如果想知道奶酪B好吃度落在1-6级的发生比：
+<span class="math display">\[
+logit(P(y_{i} \le 6)) = ln(\frac{P(y_{i} \le 6)}{P(y_{i} &gt; 6)})= \alpha_{6} -\beta_{2} x_{i2} \\
+= 0.0443-(-3.352)=3.3963
+\]</span>
+发生比为<span class="math inline">\(e^{3.3963}\)</span>=29.8534377。发生比数值非常大，这表明奶酪B不好吃的概率非常大。这跟数据也是相符的。</p>
+<p>如果想知道奶酪A好吃度落在1-6级的发生比：
+<span class="math display">\[
+logit(P(y_{i} \le 6)) = ln(\frac{P(y_{i} \le 6)}{P(y_{i} &gt; 6)})= \alpha_{6} -\beta_{1} x_{i1} \\
+= 0.0443-(0)=0.0443
+\]</span>
+发生比为<span class="math inline">\(e^{0.0443}\)</span>=1.0452959。发生比数值远小于奶酪B，这表明奶酪A好吃度落在1-6级的可能性不大，好吃的概率非常大。这跟数据也是相符的。</p>
+<p>利用ASREML分析,给出的结果为：</p>
+<pre class="asreml"><code>  Model_Term                Level                Effect    seEffect
+  Cheese               A                          0.000       0.000    
+  Cheese               B                          3.352      0.4235    
+  Cheese               C                          1.710      0.3731    
+  Cheese               D                         -1.613      0.3778    
+  Trait                         1                -5.467      0.5202    
+  Trait                         2                -4.412      0.4247    
+  Trait                         3                -3.313      0.3697    
+  Trait                         4                -2.244      0.3262    
+  Trait                         5               -0.9078      0.2748    
+  Trait                         6                0.4425E-01  0.2598    
+  Trait                         7                 1.546      0.3042    
+  Trait                         8                 3.106      0.4044  
+</code></pre>
+<p>关于阈值，8个Trait分别对应的值即是，与plor的计算结果也是一致的。但是四种Cheese的回归系数，跟利用plor的计算结果正好是相反的。推测，ASReml直接把模型泛写为<span class="math inline">\(logit(P(y_{i} \le j)) = ln(\frac{P(y_{i} \le j)}{P(y_{i} &gt; j)})= \alpha_{j} + \beta_{1} x_{i1} +...+\beta_{k} x_{ik}\)</span>这种形式了。</p>
+<p>进一步推导一下反向连接函数：
+<span class="math display">\[
+\frac{P(y_{i} \le j)}{P(y_{i} &gt; j)} = e^{\alpha_{j}-(\alpha+\beta_{1} x_{i1}+...+\beta_{k} x_{ik})} \\
+\frac{P(y_{i} \le j)}{1-P(y_{i} \le j)} = e^{\alpha_{j}-(\alpha+\beta_{1} x_{i1}+...+\beta_{k} x_{ik})} \\
+P(y_{i} \le j) = e^{\alpha_{j}-(\alpha+\beta_{1} x_{i1}+...+\beta_{k} x_{ik})} - P(y_{i} \le j)e^{\alpha_{j}-(\alpha+\beta_{1}x_{i1}+...+\beta_{k} x_{ik})} \\
+P(y_{i} \le j) + P(y_{i} \le j)e^{\alpha_{j}-(\alpha+\beta_{1}x_{i1}+...+\beta_{k} x_{ik})}= e^{\alpha_{j}-(\alpha+\beta_{1}x_{i1}+...+\beta_{k} x_{ik})}  \\\
+P(y_{i} \le j)(1 + e^{\alpha_{j}-(\alpha+\beta_{1}x_{i1}+...+\beta_{k} x_{ik})}) = e^{\alpha_{j}-(\alpha+\beta_{1} x_{i1}+...+\beta_{k} x_{ik})} \\
+P(y_{i} \le j) = \frac{e^{\alpha_{j}-(\alpha+\beta_{1} x_{i1}+...+\beta_{k} x_{ik})}}{1 + e^{\alpha_{j}-(\alpha+\beta_{1}x_{i1}+...+\beta_{k} x_{ik})}} 
+\]</span></p>
 </div>
 </div>
 <div id="probit" class="section level3">
