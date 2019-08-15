@@ -9,8 +9,8 @@ tags:
   - GLMM
 ---
 
-首先加载本篇blog用到的三个包。data.table用于处理数据；ggplot2画图；ISLR包来自[《An Introduction to Statistical Learning with Applications in R 》](http://faculty.marshall.usc.edu/gareth-james/ISL/)这本书，这个包提供了书中用到的数据。本文使用了一个关于信用卡违约的模拟数据集Default。这三个包均可从cran上直接安装，
-```{r setup, warning=FALSE}
+首先加载本篇blog用到的5个包。data.table用于处理数据；ggplot2画图；ISLR包来自[《An Introduction to Statistical Learning with Applications in R 》](http://faculty.marshall.usc.edu/gareth-james/ISL/)这本书，这个包提供了书中用到的数据，本文使用了一个关于信用卡违约的模拟数据集Default；VGAM包和MASS分别提供vglm()和polr()函数对多分类变量进行分析。这些包均可从cran上直接下载和安装。
+```{r setup, warning=FALSE,message=FALSE}
 knitr::opts_chunk$set(fig.align = "center")
 library(data.table)
 library(ggplot2)
@@ -19,7 +19,7 @@ library(VGAM)
 library(MASS)
 ```
 
-Logit和probit连接函数，是在处理二分变量或者分类变量时，经常用的两个函数。但对于为什么要使用它们的原因并不是很清楚。本文试着把近期看到的一些材料理解并记录下来。
+Logit和probit连接函数，是在处理二分变量或者分类变量时，经常用到的两个函数。但对于为什么要使用它们的原因并不是很清楚。本文试着把近期看到的一些材料理解并记录下来。
 
 本文参考了以下材料：
 
@@ -32,7 +32,7 @@ Logit和probit连接函数，是在处理二分变量或者分类变量时，经
 如果反应变量即因变量(response or dependent variable) 属于连续变量（continuous variable)类型，通常用线性混合模型处理。譬如社会科学中关于个人收入相关的模型；自然科学中动物收获体重的相关模型等。        
 然而当因变量为分类变量（categorical variable）类型时，如社会科学中个人信用卡还款是否违约；自然科学中一尾虾的存活状态（0,1）等，利用线性模型就不合适了。     
 
-利用ISLR包中的信用卡违约数据集Default来作为例子说明。数据探索性分析见散点和箱线图。
+利用ISLR包中的信用卡还款违约数据集Default来作为例子说明，为什么线性模型不适合处理分类数据。数据集的探索性分析见散点和箱线图。
 ```{r explore1, fig.cap="个人收入与信用卡欠款散点图"}
 Default_dt <- as.data.table(Default)
 Default_dt
@@ -43,7 +43,7 @@ ggplot(data = Default_dt, aes(x = balance,
   geom_point(alpha = 0.3) +
   labs(x="信用卡欠款(balance)", y="收入(income)") 
 ```
-
+从图1散点图中可以看出，个人收入跟信用卡还款是否违约没有关系，但是跟信用卡欠款额有很大关系。图2箱线图进一步验证了这个趋势。
 ```{r explore2, fig.cap="信用卡是否违约用户欠款箱线图"}
 ggplot(data = Default_dt, aes(x = default,
                            y = balance, 
@@ -52,20 +52,20 @@ ggplot(data = Default_dt, aes(x = default,
   labs(x="违约（default）", y="信用卡欠款(balance)") 
 ```
 
-首先建立一个线性模型：
+针对信用开还款是否违约，建立一个线性模型：
 $$y_{i}=\alpha+\beta x_{i}+\varepsilon_{i}$$
 
-$y_{i}$是一个二分变量，违约=1，不违约=0；$\varepsilon_{i}$为独立残差，$\varepsilon_{i}$~$N(0,\sigma^{2}_{\varepsilon})$ 。如果x是随机的，应该与$\varepsilon$的关系是独立。        
+$y_{i}$是一个二分变量，表示第i个样本的信用卡还款状态，违约=1，不违约=0；**如果分析的是信用开不违约的发生率，那么把违约=0，不违约=1**；$\varepsilon_{i}$为独立残差，$\varepsilon_{i}$~$N(0,\sigma^{2}_{\varepsilon})$ 。如果x是随机的，应该与$\varepsilon$的关系是独立。        
 $y_{i}$的期望可以表述为：
 $$E(y_{i}|x_{i})=E(\alpha+\beta x_{i}+\varepsilon_{i})=\alpha+\beta x_{i}$$
-因为$y_{i}$是二分变量，取值为0或者1，因此可以推导出来，$y_{i}$的期望实际上是：$E(y_{i}|x_{i})=P(y_{i}=1|x_{i})$，可以解释为第i个人信用卡违约的概率测量。因此可以把方程的左侧作为事件发生的概率来解释。因变量为二分类型的线性模型也被称为线性概率模型（Linear Probability Model, LPM）。
+因为$y_{i}$是二分变量，取值只能为0或者1。因此，$y_{i}$的期望实：$E(y_{i}|x_{i})=P(y_{i}=1|x_{i})$，可以解释为第i个人信用卡违约的概率。因此可以把方程的左侧作为事件发生的概率来解释。因变量为二分类型的线性模型也被称为线性概率模型（Linear Probability Model, LPM）。
 LPM模型在处理二分变量（binary or dichotomous variable）时，存在以下缺陷：        
 
 * 非正态性。因为因变量为二分变量，因此残差也是二分变量，不符合正态性。然而，参考中心极限定理，正态性的假定条件对于利用最小二乘法进行参数估计的正态概率模型，并不是特别关键的限制因素。
 * 残差并不固定。$Var(\varepsilon_{i})=P(y_{i}=1|x_{i})×P(y_{i}=0|x_{i})$。从这个公式中，可以看到残差方差受自变量x的影响，不同的自变量有不同的方差，产生方差的非齐性，违反了x与残差互相独立的原则。
 * 因变量(二分变量)与自变量之间，截距和斜率并不是固定的，在不同的区间，有不同的值。当$x_{i} <= -\frac{\alpha}{\beta}$时，截距和斜率都为0；当$-\frac{\alpha}{\beta} <= x_{i} <= \frac{(1-\alpha)}{\beta}$时，截距为$\alpha$，斜率为$\beta$；当$x_{i} >=\frac{(1-\alpha)}{\beta}$时，截距为1，斜率为0。LPM模型无法拟合这种非线性关系，会出现概率小于0或者大于1的情况。
 
-如果基于信用卡欠款**balance**，建立线性回归模型，预测一个人是否会违约，由于因变量只有0和1两种状态，当balance非常小时，预测值出现负值，预测不准确。  
+如果基于信用卡欠款变量**balance**，建立线性回归模型，预测一个人是否会违约，由于因变量只有0和1两种状态，当balance非常小时，预测值将会出现负值（图3），预测不准确。  
 ```{r defaultlm, fig.cap="信用卡欠款额与违约概率的线性回归预测"}
 Default_dt[default %in% c("No"), default_num:=0]
 Default_dt[default %in% c("Yes"), default_num:=1]
@@ -79,14 +79,9 @@ ggplot(default_fitted_dt,aes(x,y)) + geom_point() +
 
 
 ## 2. 转换函数
-针对上述问题，寻找合适转换函数的基本原则（**这三个原则特别重要**）：        
-
-* 需要找到针对P(x)的函数，确保对任意X值，输出范围在0-1之间。
-* 满足$P(\alpha+\beta x_{i})$要求的概率累积分布函数（cumulative distribution function, CDF）优先考虑。
-* 转换函数需要是平滑和对称的，渐近线（asymptotes）分别为0和1。
-
-### 2.1 一般推导
-假设存在一个连续反应变量$y_{i}^{*}$，代表事件发生的可能性，当$y_{i}^{*}>0$时，事件发生，反之则不发生。用下述公式表示：
+针对上述问题，当前的思路是寻找合适的转换函数，将模型输出为不同分类事件发生的概率。
+### 2.1 将模型转换为概率的合理性证明
+假设存在一个连续反应变量$y_{i}^{*}$，代表事件发生的可能性，当$y_{i}^{*}>0$时，事件发生（$y_{i}=1$），反之则不发生($y_{i}=0$)。用下述公式表示：
 $$
 y_{i} = \left\{\begin{matrix}
 1 & y_{i}^{*} >0 \\
@@ -110,11 +105,15 @@ P(y_{i}=1|x_{i}) \\
 = P(\varepsilon_{i}\leqslant(\alpha+\beta x_{i})) \\
 = F(\alpha+\beta x_{i})
 $$
-分布函数表示残差变量$\varepsilon_{i}$在区间$(-\infty,\alpha+\beta x_{i})$上的概率，满足前边提到的第二条原则。
+分布函数表示残差变量$\varepsilon_{i}$在区间$(-\infty,\alpha+\beta x_{i})$上的概率。**上述公式实际上是证明了，利用概率累积分布函数来转换数据的合法性**。
 
-**上述公式实际上是证明了，利用概率累积分布函数来转换数据的合法性**。
+接下来看转换的基本原则（**这三个原则特别重要**）：        
 
-### 2.2 logit转换
+* 需要找到针对$P(x)$的函数，确保对任意$x$值，输出范围在0-1之间。
+* 满足$P(\alpha+\beta x_{i})$要求的概率累积分布函数（cumulative distribution function, CDF）优先考虑。
+* 转换函数需要是平滑和对称的，渐近线（asymptotes）分别为0和1。
+
+### 2.2 Logit转换
 
 logistic累积分布函数（CDF）形式为：
 $$
@@ -125,14 +124,13 @@ P(y_{i}=1|x_{i}) \\
 = \frac{1}{1+e^{-(\alpha+\beta x_{i})}} \\
 = \frac{1}{1+e^{-\varepsilon_{i}}}
 $$
-依据logistic累积分布函数计算得到的概率如下图所示，为s曲线，在0和1之间。满足前边提到的第一条原则。
+依据logistic累积分布函数计算得到的概率如图4所示，为s曲线，在0和1之间。满足前边提到的第1条原则。
 ```{r logisticS, fig.cap="logistic分布函数的曲线图"}
 x <- seq(-5,5,0.01)
 y <- 1/(1+exp(-x))
 logistic_dt <- data.table(x,y)
 ggplot(data = logistic_dt, aes(x,y)) +geom_point()
 ```
-
 
 标准logistic分布的概率密度函数(probility density function,PDF)的一般形式为：
 $$f(x)=\frac{e^{x}}{(1+e^{x})^2}$$
@@ -150,7 +148,7 @@ $$F(x)=\frac{e^{x}}{1+e^{x}}$$
 
 $$\mu_{i}=\frac{e^{\alpha+\beta x_{i}}}{1+e^{\alpha+\beta x_{i}}}=\frac{1}{1+e^{-(\alpha+\beta x_{i})}}$$
 
-针对上述公式，求解$\alpha$和$\beta$等参数非常关键。在实际计算过程中，是通过极大似然法等迭代计算的。譬如，如果我们知道某些样本违约1，某些样本没有违约0，那么利用logistic分布函数，通过极大似然等方法，不断的迭代带入新的$\alpha$和$\beta$参数，使所有违约人的$\mu$接近1，未违约人的$\mu$值接近0。
+针对上述公式，求解$\alpha$和$\beta$等参数非常关键。在实际计算过程中，是通过极大似然法等迭代计算的。譬如某些样本违约1，某些样本没有违约0，那么利用logistic分布函数，通过极大似然等方法，不断的迭代带入新的$\alpha$和$\beta$参数，使所有违约人的$\mu$接近1，未违约人的$\mu$值接近0。
 
 **评论：原来以为是直接把0,1数据进行转换，实际上是用logistic分布函数，通过似然法估计模型右手边参数，最后通过分布函数输出的就是概率值，自然在0-1之间了**。
 
@@ -164,11 +162,11 @@ $$
 ln(\frac{\mu_{i}}{1-\mu_{i}})=\alpha+\beta x_{i}\\
 $$
 
-上述公式左手边通常表示事件发生比（Odd）的自然对数，右边是模型。上边的公式推导，最终把连接函数推导出来了。它表示把事件发生比的自然对数与模型连接在一起。
+上述公式左手边通常表示事件发生比（Odd）的自然对数，右边是模型。上边的公式，实际上是把**连接函数**推导出来了。它表示把事件发生比的自然对数与模型连接在一起。
 
-logit指的是$ln(\frac{\mu_{i}}{1-\mu_{i}})$。
+通常logit指的是$ln(\frac{\mu_{i}}{1-\mu_{i}})$。
 
-利用logit连接函数，重新分析信用卡违约数据。可以看到，新建立的模型可以很好地预测违约概率。没有再出现违约概率为负值的情况。
+利用logit连接函数，通过glm()函数重新分析信用卡违约数据。可以看到，新建立的模型可以很好地预测违约概率。没有再出现违约概率为负值的情况（图5）。
 ```{r defaultlogit, fig.cap="信用卡欠款额与违约概率的logistic回归预测"}
 default_glm1 <- glm(default_num ~ balance, family = binomial(link = "logit"), data=Default_dt)
 summary(default_glm1)
@@ -178,7 +176,7 @@ ggplot(default_fitted_dt,aes(x,y)) + geom_point() +
     labs(y="违约概率（default）", x="信用卡欠款额(balance)") 
 ```
 
-手动计算来验证一下结果:
+手动计算信用卡还款违约概率来验证一下结果，与glm函数计算得到的概率是一致的:
 ```{r artificalcalc, fig.cap="信用卡欠款额与违约概率的logistic回归预测（手动计算）"}
 x <- Default_dt$balance
 y <- 1/(1+exp(-(-10.65+0.005499*x)))
@@ -188,8 +186,6 @@ ggplot(default_fitted_dt,aes(x,y)) + geom_point() +
     labs(y="违约概率（default）", x="信用卡欠款额(balance)") 
 
 ```
-
-
 ### 2.3 连接函数（link function）和反向连接函数（inverse link function）
 
 在ASReml说明书中，定义logit连接函数为：
@@ -201,7 +197,7 @@ $$\eta=ln(\frac{\mu}{1-\mu})$$
 
 反向连接函数定义为：
 $$\mu=\frac{1}{1+exp(-\eta)}$$
-上边两个公式中，定义$\mu$为数据尺度（data scale），这里个人理解为事件发生概率值，等同于$\pi_{i}$。而$\eta$指的是underlying scale，应该是基于$\alpha+\beta x_{i}$模型计算得到的结果。
+上边两个公式中，定义$\mu$为数据尺度（data scale），这里个人理解为事件发生概率值。而$\eta$指的是underlying scale，应该是基于$\alpha+\beta x_{i}$模型计算得到的结果。
 
 个人感觉从反向连接函数到连接函数，理解起来更为顺畅。
 
