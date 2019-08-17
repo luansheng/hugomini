@@ -29,8 +29,9 @@ library(MASS)</code></pre>
 <div id="logistic" class="section level2">
 <h2>1. 当因变量为分类变量时，为什么要引入Logistic分布函数处理模型?</h2>
 <p>如果反应变量即因变量(response or dependent variable) 属于连续变量（continuous variable)类型，通常用线性混合模型处理。譬如社会科学中关于个人收入相关的模型；自然科学中动物收获体重的相关模型等。<br />
-然而当因变量为分类变量（categorical variable）类型时，如社会科学中个人信用卡还款是否违约；自然科学中一尾虾的存活状态（0,1）等，利用线性模型就不合适了。</p>
-<p>利用ISLR包中的信用卡还款违约数据集Default来作为例子说明，为什么线性模型不适合处理分类数据。数据集的探索性分析见散点和箱线图。</p>
+然而当因变量为分类变量（categorical variable）类型时，如社会科学中个人信用卡还款是否违约；自然科学中一尾虾的存活状态等，利用线性模型就不合适了。</p>
+<p>为了处理分类性状，统计学家引入了哑变量或虚拟变量的概念（Dummy variable），对不同的类别用数字表示。譬如一尾虾的存活状态，存活=1，死亡=0等。</p>
+<p>下边，利用ISLR包中的信用卡还款违约数据集Default来作为例子说明，为什么线性模型不适合处理分类数据。数据集的探索性分析见散点和箱线图。</p>
 <pre class="r"><code>Default_dt &lt;- as.data.table(Default)
 Default_dt</code></pre>
 <pre><code>##        default student   balance   income
@@ -69,7 +70,7 @@ Figure 1: 个人收入与信用卡欠款散点图
 Figure 2: 信用卡是否违约用户欠款箱线图
 </p>
 </div>
-<p>针对信用开还款是否违约，建立一个线性模型：
+<p>针对信用卡还款是否违约，建立一个线性模型：
 <span class="math display">\[y_{i}=\alpha+\beta x_{i}+\varepsilon_{i}\]</span></p>
 <p><span class="math inline">\(y_{i}\)</span>是一个二分变量，表示第i个样本的信用卡还款状态，违约=1，不违约=0；<strong>如果分析的是信用卡不违约的发生率，那么违约=0，不违约=1</strong>；<span class="math inline">\(\varepsilon_{i}\)</span>为独立残差，<span class="math inline">\(\varepsilon_{i}\)</span>~<span class="math inline">\(N(0,\sigma^{2}_{\varepsilon})\)</span> 。如果x是随机的，应该与<span class="math inline">\(\varepsilon\)</span>的关系是独立。<br />
 <span class="math inline">\(y_{i}\)</span>的期望可以表述为：
