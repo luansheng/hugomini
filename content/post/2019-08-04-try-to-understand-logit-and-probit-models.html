@@ -174,8 +174,18 @@ ggplot(data = logistic_dt, aes(x,y)) +geom_point()</code></pre>
 Figure 4: logistic分布函数的曲线图
 </p>
 </div>
-<p>标准logistic分布的概率密度函数(probility density function,PDF)的一般形式为：
+<p>标准logistic分布的概率密度函数(probility density function, PDF)的一般形式为：
 <span class="math display">\[f(x)=\frac{e^{x}}{(1+e^{x})^2}\]</span></p>
+<pre class="r"><code>x &lt;- seq(-5,5,0.01)
+y &lt;- exp(x)/((1+exp(x))^2)
+logistic_PDF_dt &lt;- data.table(x,y)
+ggplot(data = logistic_PDF_dt, aes(x,y)) +geom_point()</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:logisticPDFs"></span>
+<img src="/post/2019-08-04-try-to-understand-logit-and-probit-models_files/figure-html/logisticPDFs-1.png" alt="logistic分布概率密度曲线" width="672" />
+<p class="caption">
+Figure 5: logistic分布概率密度曲线
+</p>
+</div>
 <p>概率密度函数是在计算连续变量的累积分布函数时导入的一个概念，根据概率密度函数进行积分运算，可以得到事件发生的概率。
 <span class="math display">\[F(x) = \int_{-\infty}^{\alpha}\frac{e^{x}}{(1+e^{x})^2}dx \\
 = \frac{e^{\alpha}}{1+e^{\alpha}}
@@ -183,21 +193,21 @@ Figure 4: logistic分布函数的曲线图
 因为<span class="math inline">\(\alpha\)</span>可以是任何数，因此可以用x替换<span class="math inline">\(\alpha\)</span>，上述公式可以变为更加普通形式：
 <span class="math display">\[F(x)=\frac{e^{x}}{1+e^{x}}\]</span></p>
 <p>标准logistic分布的平均值为0，方差为<span class="math inline">\(\pi^2/3=3.29\)</span>。具体的推导过程见<a href="https://math.stackexchange.com/questions/1267635/compute-variance-of-logistic-distribution?noredirect=1&amp;lq=1">这里</a>。</p>
-<p>进一步整理思路，用<span class="math inline">\(\mu_{i}\)</span>表示事件发生的概率。</p>
-<p><span class="math display">\[\mu_{i}=\frac{e^{\alpha+\beta x_{i}}}{1+e^{\alpha+\beta x_{i}}}=\frac{1}{1+e^{-(\alpha+\beta x_{i})}}\]</span></p>
-<p>针对上述公式，求解<span class="math inline">\(\alpha\)</span>和<span class="math inline">\(\beta\)</span>等参数非常关键。在实际计算过程中，是通过极大似然法等迭代计算的。譬如某些样本违约1，某些样本没有违约0，那么利用logistic分布函数，通过极大似然等方法，不断的迭代带入新的<span class="math inline">\(\alpha\)</span>和<span class="math inline">\(\beta\)</span>参数，使所有违约人的<span class="math inline">\(\mu\)</span>接近1，未违约人的<span class="math inline">\(\mu\)</span>值接近0。</p>
+<p>进一步整理思路，用<span class="math inline">\(p_{i}\)</span>表示事件发生的概率。</p>
+<p><span class="math display">\[p_{i}=\frac{e^{\alpha+\beta x_{i}}}{1+e^{\alpha+\beta x_{i}}}=\frac{1}{1+e^{-(\alpha+\beta x_{i})}}\]</span></p>
+<p>针对上述公式，求解<span class="math inline">\(\alpha\)</span>和<span class="math inline">\(\beta\)</span>等参数非常关键。在实际计算过程中，是通过极大似然法等迭代计算的。譬如某些样本违约1，某些样本没有违约0，那么利用logistic分布函数，通过极大似然等方法，不断的迭代带入新的<span class="math inline">\(\alpha\)</span>和<span class="math inline">\(\beta\)</span>参数，使所有违约人的<span class="math inline">\(p\)</span>接近1，未违约人的<span class="math inline">\(p\)</span>值接近0。</p>
 <p><strong>评论：原来以为是直接把0,1数据进行转换，实际上是用logistic分布函数，通过似然法估计模型右手边参数，最后通过分布函数输出的就是概率值，自然在0-1之间了</strong>。</p>
 <p>进一步推导上述公式：
 <span class="math display">\[
-\mu_{i}(1+e^{\alpha+\beta x_{i}})=e^{\alpha+\beta x_{i}}\\
-\mu_{i}(1+e^{\alpha+\beta x_{i}})-e^{\alpha+\beta x_{i}}=0\\
-\mu_{i}=e^{\alpha+\beta x_{i}}-\mu_{i}e^{\alpha+\beta x_{i}}\\
-\mu_{i}=e^{\alpha+\beta x_{i}}(1-\mu_{i})\\
-\frac{\mu_{i}}{1-\mu_{i}}=e^{\alpha+\beta x_{i}}\\
-ln(\frac{\mu_{i}}{1-\mu_{i}})=\alpha+\beta x_{i}\\
+p_{i}(1+e^{\alpha+\beta x_{i}})=e^{\alpha+\beta x_{i}}\\
+p_{i}(1+e^{\alpha+\beta x_{i}})-e^{\alpha+\beta x_{i}}=0\\
+p_{i}=e^{\alpha+\beta x_{i}}-p_{i}e^{\alpha+\beta x_{i}}\\
+p_{i}=e^{\alpha+\beta x_{i}}(1-p_{i})\\
+\frac{p_{i}}{1-p_{i}}=e^{\alpha+\beta x_{i}}\\
+ln(\frac{p_{i}}{1-p_{i}})=\alpha+\beta x_{i}\\
 \]</span></p>
 <p>上述公式左手边通常表示事件发生比（Odd）的自然对数，右边是模型。上边的公式，实际上是把<strong>连接函数</strong>推导出来了。它表示把事件发生比的自然对数与模型连接在一起。</p>
-<p>通常logit指的是<span class="math inline">\(ln(\frac{\mu_{i}}{1-\mu_{i}})\)</span>。</p>
+<p>通常logit指的是<span class="math inline">\(ln(\frac{p_{i}}{1-p_{i}})\)</span>。</p>
 <p>利用logit连接函数，通过glm()函数重新分析信用卡违约数据。可以看到，新建立的模型可以很好地预测违约概率。没有再出现违约概率为负值的情况（图5）。</p>
 <pre class="r"><code>default_glm1 &lt;- glm(default_num ~ balance, family = binomial(link = &quot;logit&quot;), data=Default_dt)
 summary(default_glm1)</code></pre>
@@ -231,7 +241,7 @@ ggplot(default_fitted_dt,aes(x,y)) + geom_point() +
 <div class="figure" style="text-align: center"><span id="fig:defaultlogit"></span>
 <img src="/post/2019-08-04-try-to-understand-logit-and-probit-models_files/figure-html/defaultlogit-1.png" alt="信用卡欠款额与违约概率的logistic回归预测" width="672" />
 <p class="caption">
-Figure 5: 信用卡欠款额与违约概率的logistic回归预测
+Figure 6: 信用卡欠款额与违约概率的logistic回归预测
 </p>
 </div>
 <p>手动计算信用卡还款违约概率来验证一下结果，与glm函数计算得到的概率是一致的:</p>
@@ -244,20 +254,20 @@ ggplot(default_fitted_dt,aes(x,y)) + geom_point() +
 <div class="figure" style="text-align: center"><span id="fig:artificalcalc"></span>
 <img src="/post/2019-08-04-try-to-understand-logit-and-probit-models_files/figure-html/artificalcalc-1.png" alt="信用卡欠款额与违约概率的logistic回归预测（手动计算）" width="672" />
 <p class="caption">
-Figure 6: 信用卡欠款额与违约概率的logistic回归预测（手动计算）
+Figure 7: 信用卡欠款额与违约概率的logistic回归预测（手动计算）
 </p>
 </div>
 </div>
 <div id="link-functioninverse-link-function" class="section level3">
 <h3>2.3 连接函数（link function）和反向连接函数（inverse link function）</h3>
 <p>在ASReml说明书中，定义logit连接函数为：
-<span class="math display">\[\eta=\frac{\mu}{1-\mu}\]</span></p>
+<span class="math display">\[\eta=\frac{p}{1-p}\]</span></p>
 <p><span class="math display">\[\eta=X\tau\]</span>
 感觉asreml说明书中的这个公式好像不对，正确的应该是：
-<span class="math display">\[\eta=ln(\frac{\mu}{1-\mu})\]</span></p>
+<span class="math display">\[\eta=ln(\frac{p}{1-p})\]</span></p>
 <p>反向连接函数定义为：
-<span class="math display">\[\mu=\frac{1}{1+exp(-\eta)}\]</span>
-上边两个公式中，定义<span class="math inline">\(\mu\)</span>为数据尺度（data scale），这里个人理解为事件发生概率值。而<span class="math inline">\(\eta\)</span>指的是underlying scale，应该是基于<span class="math inline">\(\alpha+\beta x_{i}\)</span>模型计算得到的结果。</p>
+<span class="math display">\[p=\frac{1}{1+exp(-\eta)}\]</span>
+上边两个公式中，定义<span class="math inline">\(p\)</span>为数据尺度（data scale），这里个人理解为事件发生概率值。而<span class="math inline">\(\eta\)</span>指的是underlying scale，应该是基于<span class="math inline">\(\alpha+\beta x_{i}\)</span>模型计算得到的结果。</p>
 <p>个人感觉从反向连接函数到连接函数，理解起来更为顺畅。</p>
 </div>
 <div id="polytomous-or-multinomial-variable" class="section level3">
@@ -266,26 +276,26 @@ Figure 6: 信用卡欠款额与违约概率的logistic回归预测（手动计�
 <h4>2.4.1 基线分类Logit模型（Baseline-Category Logit）</h4>
 <p>假设某个性状，如罗氏沼虾的大鳌，根据大小和颜色可以分为小鳌、老头虾蓝色、正常橙色、正常蓝色等<strong>无顺序</strong>的四种，分别编码为1, 2, 3, 4。
 可以通过多变量logistic分布函数，把二分类logit模型扩展为多分类logit模型。</p>
-<p>假设<span class="math inline">\(\mu_{ij}\)</span>表示第<span class="math inline">\(i\)</span>尾虾的大鳌属于第<span class="math inline">\(j\)</span>个分类的概率，即<span class="math inline">\(\mu_{ij}=P(y_{i}=j)\)</span>，其中j=1,2,3,4。</p>
+<p>假设<span class="math inline">\(p_{ij}\)</span>表示第<span class="math inline">\(i\)</span>尾虾的大鳌属于第<span class="math inline">\(j\)</span>个分类的概率，即<span class="math inline">\(p_{ij}=P(y_{i}=j)\)</span>，其中j=1,2,3,4。</p>
 <p>引入基线或参考分类的概念，对应于二分变量时事件未发生的类别，建立处理方法。譬如大鳌颜色，如果把小鳌作为基线分类，那么可以据此计算其他3个类别的发生概率。</p>
 <p>对于非基线类别j，发生的概率根据多变量logistic分布函数（反向连接函数）可以写为：
 <span class="math display">\[
-\mu_{ij} = \frac{e^{\alpha_{0j}+\beta_{1j}x_{i1}+\beta_{2j}x_{i2}+...+\beta_{kj}x_{ik}}}{1+\sum_{l\neq j^{*}} e^{\alpha_{0l}+\beta_{1l}x_{il}+\beta_{2l}x_{i2}+...+\beta_{kl}x_{ik}}}
+p_{ij} = \frac{e^{\alpha_{0j}+\beta_{1j}x_{i1}+\beta_{2j}x_{i2}+...+\beta_{kj}x_{ik}}}{1+\sum_{l\neq j^{*}} e^{\alpha_{0l}+\beta_{1l}x_{il}+\beta_{2l}x_{i2}+...+\beta_{kl}x_{ik}}}
 \]</span>
 上式中，<span class="math inline">\(j^{*}\)</span>表示基线类别，<span class="math inline">\(x_{ik}\)</span>表示第i个样本第k个自变量，<span class="math inline">\(\beta_{kj}\)</span>表示第j个类别第k个自变量（解释变量）的回归系数。</p>
-<p>因为所有类别的发生概率之和为1，<span class="math inline">\(\sum_{j=1}^{m}\mu_{j} = 1\)</span>，因此
+<p>因为所有类别的发生概率之和为1，<span class="math inline">\(\sum_{j=1}^{m}p_{j} = 1\)</span>，因此
 ，对于基线变量<span class="math inline">\(j^{*}\)</span>，事件发生的概率为：
 <span class="math display">\[
-\mu_{ij^{*}} = 1-\sum_{l \neq j^{*}}\mu_{il} \\
+p_{ij^{*}} = 1-\sum_{l \neq j^{*}}p_{il} \\
 =1-\frac{\sum_{l\neq j^{*}} e^{\alpha_{0l}+\beta_{1l}x_{il}+\beta_{2l}x_{i2}+...+\beta_{kl}x_{ik}}}{1+\sum_{l\neq j^{*}} e^{\alpha_{0l}+\beta_{1l}x_{il}+\beta_{2l}x_{i2}+...+\beta_{kl}x_{ik}}} \\
 =\frac{1}{1+\sum_{l\neq j^{*}} e^{\alpha_{0l}+\beta_{1l}x_{il}+\beta_{2l}x_{i2}+...+\beta_{kl}x_{ik}}}
 \]</span></p>
 <p>连接函数可以写为：
 <span class="math display">\[
-ln(\frac{\mu_{ij}}{\mu_{ij^{*}}})=\alpha_{0j}+\beta_{1j}x_{i1}+\beta_{2j}x_{i2}+...+\beta_{kj}x_{ik},\qquad j \neq j^{*}
+ln(\frac{p_{ij}}{p_{ij^{*}}})=\alpha_{0j}+\beta_{1j}x_{i1}+\beta_{2j}x_{i2}+...+\beta_{kj}x_{ik},\qquad j \neq j^{*}
 \]</span></p>
 <p>譬如选择分类中第1个水平作为基线，公式写为：
-<span class="math display">\[ln(\frac{\mu_{ij}}{\mu_{i1}})=\alpha_{0j}+\beta_{1j}x_{i1}+\beta_{2j}x_{i2}+...+\beta_{kj}x_{ik}\]</span></p>
+<span class="math display">\[ln(\frac{p_{ij}}{p_{i1}})=\alpha_{0j}+\beta_{1j}x_{i1}+\beta_{2j}x_{i2}+...+\beta_{kj}x_{ik}\]</span></p>
 <p>下边通过实例分析来加深对这部分内容的理解。数据为佛罗里达州四个湖共计219尾短吻鳄（Agresti ）的主要食物来源。食物来源主要分为五类：鱼类（Fish）、无脊椎动物（Invertebrate）、爬行类（Reptile）、鸟（Bird）和其他（Other）。自变量包括湖、性别、鳄鱼规格。数据可以从<a href="https://newonlinecourses.science.psu.edu/stat504/sites/onlinecourses.science.psu.edu.stat504/files/lesson08/gator/index.txt">这里</a>下载。</p>
 <p>数据按照自变量不同的组合分别统计。譬如在oklawaha湖中体长&gt;2.3米的雌性短吻鳄，胃中食物为Invertebrate的1只，Bird的1只；在oklawaha湖中体长&gt;2.3米的male短吻鳄，胃中食物为Fish的13只，Invertebrate的7只，Reptile的6只。</p>
 <pre class="r"><code>agresti_dt &lt;-  fread(input = &quot;datasets/agresti.txt&quot;)
@@ -309,14 +319,14 @@ agresti_dt</code></pre>
 ## 16:      16      m &gt;2.3 trafford    8            6       6    3     5</code></pre>
 <p>定义短吻鳄胃中各种食物类别的发生概率：</p>
 <ul>
-<li><span class="math inline">\(\mu_{1}\)</span>：Fish的概率；</li>
-<li><span class="math inline">\(\mu_{2}\)</span>：Invertebrate的概率；</li>
-<li><span class="math inline">\(\mu_{3}\)</span>：Reptile的概率；</li>
-<li><span class="math inline">\(\mu_{4}\)</span>：Bird的概率；</li>
-<li><span class="math inline">\(\mu_{5}\)</span>：Other的概率；</li>
+<li><span class="math inline">\(p_{1}\)</span>：Fish的概率；</li>
+<li><span class="math inline">\(p_{2}\)</span>：Invertebrate的概率；</li>
+<li><span class="math inline">\(p_{3}\)</span>：Reptile的概率；</li>
+<li><span class="math inline">\(p_{4}\)</span>：Bird的概率；</li>
+<li><span class="math inline">\(p_{5}\)</span>：Other的概率；</li>
 </ul>
 <p>因为<strong>短吻鳄的主要食物是Fish</strong>，因此可以把它作为基底类。logit方程为：
-<span class="math display">\[log(\frac{\mu_{ij}}{\mu_{i1}}) = \alpha_{0j}+\beta_{1j}x_{i1}+\beta_{2j}x_{i2}+\beta_{3j}x_{i3}...\]</span>
+<span class="math display">\[log(\frac{p_{ij}}{p_{i1}}) = \alpha_{0j}+\beta_{1j}x_{i1}+\beta_{2j}x_{i2}+\beta_{3j}x_{i3}...\]</span>
 对于j=2,3,4,5每个类别，需要估计的参数：</p>
 <ul>
 <li>3个Lake水平</li>
@@ -409,14 +419,14 @@ summary(multinomial_logit_m1)</code></pre>
 <p>四个logit方程的截距（Intercept）实际上给出的是在参考水平下（Lake=Hancock，size=small&lt;2.3，Gender=male）的发生比对数值（log-odd）。譬如，在参考水平下，即Hancock湖小型雄性短尾鳄胃中食物Bird vs Fish的log-odd值为-1.94358，odd值为<span class="math inline">\(e^{-1.94358}\)</span>=0.1431904。这表明在该湖中鱼类居多，鸟类较少。</p>
 <p>如果从george湖捕获到一尾雌性短尾鳄，体长&gt;2.3米，预测其胃中的食物类型Invertebrate vs Fish的发生比的自然对数值为(注意Invertebrate在系数中排名第二)：
 <span class="math display">\[
-ln(\frac{\mu_{Invertebrate}}{\mu_{Fish}})=\alpha_{Invertebrate}+\beta_{Lake, George}+\beta_{Size,&gt;2.3}+\beta_{Gender,female}) \\
+ln(\frac{p_{Invertebrate}}{p_{Fish}})=\alpha_{Invertebrate}+\beta_{Lake, George}+\beta_{Size,&gt;2.3}+\beta_{Gender,female}) \\
 =(-1.45492)+1.58417+(-1.36673)+0.19937 \\
 =-1.03811
 \]</span></p>
 <p>发生比Odd为<span class="math inline">\(e^{-1.03811}\)</span>=0.3541233。这表明，这尾短尾鳄胃中食物是Invertebrated的概率远低于是鱼的概率。</p>
 <p>如果从trafford湖捕获到一尾雄性短尾鳄，体长&lt;2.3米，预测其胃中的食物类型Invertebrate vs Fish的发生比的自然对数值为(注意Invertebrate在系数中排名第二)：
 <span class="math display">\[
-ln(\frac{\mu_{Invertebrate}}{\mu_{Fish}})=\alpha_{Invertebrate}+\beta_{Lake, trafford}+\beta_{Size,&lt;2.3}+\beta_{Gender,male}) \\
+ln(\frac{p_{Invertebrate}}{p_{Fish}})=\alpha_{Invertebrate}+\beta_{Lake, trafford}+\beta_{Size,&lt;2.3}+\beta_{Gender,male}) \\
 =(-1.45492)+2.47255+0+0 \\
 =1.01763
 \]</span>
@@ -434,10 +444,10 @@ ln(\frac{\mu_{Invertebrate}}{\mu_{Fish}})=\alpha_{Invertebrate}+\beta_{Lake, tra
 </ul>
 <p>2, 3, 4, …, r分别作为基线类。据此，可以建立r-1个邻接Logit方程（连接函数）：</p>
 <ul>
-<li><span class="math inline">\(L_{1} = ln(\frac{\mu_{1}}{\mu_{2}})\)</span></li>
-<li><span class="math inline">\(L_{2} = ln(\frac{\mu_{2}}{\mu_{3}})\)</span></li>
+<li><span class="math inline">\(L_{1} = ln(\frac{p_{1}}{p_{2}})\)</span></li>
+<li><span class="math inline">\(L_{2} = ln(\frac{p_{2}}{p_{3}})\)</span></li>
 <li>…</li>
-<li><span class="math inline">\(L_{r-1} = ln(\frac{\mu_{r-1}}{\mu_{r}})\)</span></li>
+<li><span class="math inline">\(L_{r-1} = ln(\frac{p_{r-1}}{p_{r}})\)</span></li>
 </ul>
 <p>其中<span class="math inline">\(L_{1}\)</span>、<span class="math inline">\(L_{2}\)</span>、…、<span class="math inline">\(L_{r-1}\)</span>等进一步定义为由解释变量组成的方程：</p>
 <ul>
@@ -448,31 +458,31 @@ ln(\frac{\mu_{Invertebrate}}{\mu_{Fish}})=\alpha_{Invertebrate}+\beta_{Lake, tra
 </ul>
 <p><span class="math inline">\(L_{1}\)</span>到<span class="math inline">\(L_{r-1}\)</span>之间可以相互组合，构建不同的logit方程，譬如：</p>
 <p><span class="math display">\[
-ln(\frac{\mu_{3}}{\mu_{1}}) = -L_{2}-L_{1}
+ln(\frac{p_{3}}{p_{1}}) = -L_{2}-L_{1}
 \]</span>
 这是因为：
 <span class="math display">\[
-ln(\frac{\mu_{1}}{\mu_{2}}) = L_{1} \\
-\frac{\mu_{1}}{\mu_{2}} = e^{L_{1}} \\
-\frac{\mu_{2}}{\mu_{1}} = \frac{1}{e^{L_{1}}} \\
-\frac{\mu_{2}}{\mu_{1}} = e^{-L_{1}} \\
-ln(\frac{\mu_{2}}{\mu_{1}}) = -L_{1} \\
+ln(\frac{p_{1}}{p_{2}}) = L_{1} \\
+\frac{p_{1}}{p_{2}} = e^{L_{1}} \\
+\frac{p_{2}}{p_{1}} = \frac{1}{e^{L_{1}}} \\
+\frac{p_{2}}{p_{1}} = e^{-L_{1}} \\
+ln(\frac{p_{2}}{p_{1}}) = -L_{1} \\
 \]</span>
 类似：
 <span class="math display">\[
-ln(\frac{\mu_{2}}{\mu_{3}}) = L_{2} \\
-ln(\frac{\mu_{3}}{\mu_{2}}) = -L_{2} \\
+ln(\frac{p_{2}}{p_{3}}) = L_{2} \\
+ln(\frac{p_{3}}{p_{2}}) = -L_{2} \\
 \]</span>
 所以
 <span class="math display">\[
-ln(\frac{\mu_{3}}{\mu_{1}}) = ln(\frac{\mu_{3}}{\mu_{2}}\frac{\mu_{2}}{\mu_{1}}) \\
-= ln(\frac{\mu_{3}}{\mu_{2}}) + ln(\frac{\mu_{2}}{\mu_{1}}) \\
+ln(\frac{p_{3}}{p_{1}}) = ln(\frac{p_{3}}{p_{2}}\frac{p_{2}}{p_{1}}) \\
+= ln(\frac{p_{3}}{p_{2}}) + ln(\frac{p_{2}}{p_{1}}) \\
 = -L_{2}-L_{1}
 \]</span>
 由此可以推测：
 <span class="math display">\[
-ln(\frac{\mu_{r}}{\mu_{1}}) = ln(\frac{\mu_{r}}{\mu_{r-1}}\frac{\mu_{r-1}}{\mu_{r-2}}...\frac{\mu_{2}}{\mu_{1}}) \\
-= ln(\frac{\mu_{r}}{\mu_{r-1}}) + ln(\frac{\mu_{r-1}}{\mu_{r-2}})+...+ln(\frac{\mu_{2}}{\mu_{1}}) \\
+ln(\frac{p_{r}}{p_{1}}) = ln(\frac{p_{r}}{p_{r-1}}\frac{p_{r-1}}{p_{r-2}}...\frac{p_{2}}{p_{1}}) \\
+= ln(\frac{p_{r}}{p_{r-1}}) + ln(\frac{p_{r-1}}{p_{r-2}})+...+ln(\frac{p_{2}}{p_{1}}) \\
 = -L_{r-1}-L_{r-2}+...-L_{1}
 \]</span>
 上述公示表明，邻接logit模型可以组合构建基线logit模型。</p>
@@ -480,7 +490,7 @@ ln(\frac{\mu_{r}}{\mu_{1}}) = ln(\frac{\mu_{r}}{\mu_{r-1}}\frac{\mu_{r-1}}{\mu_{
 <div id="the-proportional-odds-cumulative-logit-model-logit" class="section level4">
 <h4>2.4.3 The proportional-Odds Cumulative Logit Model （百分比发生比累积Logit模型）</h4>
 <p>这个模型可能是有序分类最为常用的模型。ASReml中好像用的也是这个模型。<br />
-假设分类变量<span class="math inline">\(y=1,2,3,...,r\)</span>，每个类别发生的概率分别为<span class="math inline">\(\mu_{1}, \mu_{2},...,\mu_{r}\)</span>，并且<span class="math inline">\(P(y_{i} \le r)=\mu_{1} + \mu_{2} + ... + \mu_{r}\)</span>。</p>
+假设分类变量<span class="math inline">\(y=1,2,3,...,r\)</span>，每个类别发生的概率分别为<span class="math inline">\(p_{1}, p_{2},...,p_{r}\)</span>，并且<span class="math inline">\(P(y_{i} \le r)=p_{1} + p_{2} + ... + p_{r}\)</span>。</p>
 <p>假定存在一个隐藏变量（latent variable）<span class="math inline">\(y^{*}\)</span>，与解释变量<span class="math inline">\(x\)</span>之间存在一种线性关系:
 <span class="math display">\[
 y_{i}^{*} = \alpha+\beta_{1} x_{i1}+...+\beta_{k} x_{ik}+\varepsilon_{i}
@@ -610,9 +620,102 @@ P(y_{i} \le j) = \frac{e^{\alpha_{j}-(\alpha+\beta_{1} x_{i1}+...+\beta_{k} x_{i
 </div>
 </div>
 <div id="probit" class="section level3">
-<h3>2.5 probit转换</h3>
-<p>probit优先满足转换函数的第二个原则，即累积正态分布。<br />
-反向连接函数公式为：
-<span class="math display">\[\mu_{i} = \frac{1}{\sqrt{2\pi}}\int_{-\infty}^{\alpha+\beta x_{i}}e^{-\frac{1}{2}Z^{2}}dZ\]</span></p>
+<h3>2.5 Probit转换</h3>
+<p>Probit模型是另外一种把模型与概率连接在一起的函数。Probit模型实际上是与正态分布紧密相关的。正态分布曲线，也就是钟形曲线，应该是非常熟悉的，在生物统计学教程中也会经常见到。生成1000个符合标准正态分布的数值，标准差为1，平均值为0。</p>
+<pre class="r"><code>#生成符合正态分布的随机数
+x = rnorm(1000)
+#根据概率密度函数，获得x对应的概率密度
+y = dnorm(x)
+#画出标准正态分布曲线
+xy = data.table(x,y)
+ggplot(data = xy, aes(x,y)) + geom_point()</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:xy"></span>
+<img src="/post/2019-08-04-try-to-understand-logit-and-probit-models_files/figure-html/xy-1.png" alt="正态分布曲线" width="672" />
+<p class="caption">
+Figure 8: 正态分布曲线
+</p>
+</div>
+<p>正态分布的概率密度(PDF)函数为：
+<span class="math display">\[
+f(x) = \frac{1}{\sigma \sqrt{2\pi}}e^{-\frac{(x-\mu)^{2}}{2\sigma^{2}}}
+\]</span>
+其中<span class="math inline">\(\mu\)</span>为均值，<span class="math inline">\(\sigma\)</span>为标准差。如前所述，概率密度函数是为了计算连续变量落在某个区间的概率而产生的一个概念，因此具有以下三个性质：</p>
+<ul>
+<li><span class="math inline">\(f(x) \ge 0\)</span></li>
+<li><span class="math inline">\(\int_{-\infty}^{\infty}f(x)dx = 1\)</span></li>
+<li><span class="math inline">\(P(a &lt; x \le b) = \int_{a}^{b}f(x)dx\)</span></li>
+</ul>
+<p>对于x=0，其概率密度函数值f(x=0)=0.3989423；f(x=2)=0.053991。随机变量取每个具体值的概率为0，但落在每一点处的概率是有相对大小的。x落在0处的概率要大于x落在2处的概率。</p>
+<p>正态分布的累积分布函数为：
+<span class="math display">\[F(x) = \frac{1}{\sigma\sqrt{2\pi}}\int_{-\infty}^{x}e^{-\frac{(t-\mu)^{2}}{2\sigma^{2}}}dt\]</span></p>
+<pre class="r"><code>z = pnorm(x)
+xz = data.table(x,z)
+ggplot(data = xz, aes(x, z)) + geom_point() + geom_hline(yintercept = 0) + geom_hline(yintercept = 1)</code></pre>
+<div class="figure" style="text-align: center"><span id="fig:xz"></span>
+<img src="/post/2019-08-04-try-to-understand-logit-and-probit-models_files/figure-html/xz-1.png" alt="正态累积分布函数" width="672" />
+<p class="caption">
+Figure 9: 正态累积分布函数
+</p>
+</div>
+<p>正态累积分布函数，满足了在2.1部分提到的转换三原则。</p>
+<p>因此，对于一个二项分布，反向连接函数公式可以表述为：
+<span class="math display">\[p_{i} = F(\alpha+\beta x_{i})= \frac{1}{\sigma\sqrt{2\pi}}\int_{-\infty}^{\alpha+\beta x_{i}}e^{-\frac{(t-\mu)^{2}}{2\sigma^{2}}}dt\]</span></p>
+<p>标准正态累积分布函数，指的是平均值为0，标准差为1时的分布函数，记为<span class="math inline">\(\Phi\)</span>：
+<span class="math display">\[p_{i} = \Phi(\alpha+\beta x_{i}) = \frac{1}{\sqrt{2\pi}}\int_{-\infty}^{\alpha+\beta x_{i}}e^{-\frac{t^{2}}{2}}dt\]</span></p>
+<p>probit连接函数为：
+<span class="math display">\[
+\alpha+\beta x_{i} = \Phi^{-1}(p)
+\]</span></p>
+<p>利用probit连接函数，分析信用卡违约数据：</p>
+<pre class="r"><code>default_glm2 &lt;- glm(default_num ~ balance, family = binomial(link = &quot;probit&quot;), data=Default_dt)
+summary(default_glm2)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = default_num ~ balance, family = binomial(link = &quot;probit&quot;), 
+##     data = Default_dt)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -2.0208  -0.1399  -0.0348  -0.0051   4.1690  
+## 
+## Coefficients:
+##               Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept) -5.3539053  0.1697473  -31.54   &lt;2e-16 ***
+## balance      0.0027107  0.0001088   24.91   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 2920.6  on 9999  degrees of freedom
+## Residual deviance: 1605.5  on 9998  degrees of freedom
+## AIC: 1609.5
+## 
+## Number of Fisher Scoring iterations: 8</code></pre>
+<pre class="r"><code>default_glm2_fitted_dt &lt;- data.table(x=Default_dt$balance, y=default_glm2$fitted.values)
+ggplot(default_glm2_fitted_dt, aes(x,y)) + geom_point() +
+  geom_hline(yintercept = 0) + geom_hline(yintercept = 1) +
+    labs(y=&quot;违约概率（default）&quot;, x=&quot;信用卡欠款额(balance)&quot;) </code></pre>
+<div class="figure" style="text-align: center"><span id="fig:defaultprobit"></span>
+<img src="/post/2019-08-04-try-to-understand-logit-and-probit-models_files/figure-html/defaultprobit-1.png" alt="信用卡欠款额与违约概率的logistic回归预测" width="672" />
+<p class="caption">
+Figure 10: 信用卡欠款额与违约概率的logistic回归预测
+</p>
+</div>
+<p>手动计算得到的结果与glm函数的结果存在一定差异，需要进一步查询资料，搞清楚glm函数中probit的计算过程。</p>
+<pre class="r"><code>z = -5.3539053 + 0.0027107*(Default_dt$balance)
+z_mean &lt;- mean(z)
+z_sigma &lt;- sd(z)
+z_new &lt;- (z - z_mean)/z_sigma
+default_fitted_validation_dt &lt;- data.table(x=Default_dt$balance, y=pnorm(z_new))
+ggplot(default_fitted_validation_dt, aes(x,y)) + geom_point() +
+  geom_hline(yintercept = 0) + geom_hline(yintercept = 1) +
+    labs(y=&quot;违约概率（default）&quot;, x=&quot;信用卡欠款额(balance)&quot;) </code></pre>
+<div class="figure" style="text-align: center"><span id="fig:defaultprobitvalidation"></span>
+<img src="/post/2019-08-04-try-to-understand-logit-and-probit-models_files/figure-html/defaultprobitvalidation-1.png" alt="信用卡欠款额与违约概率的logistic回归预测（手动验证）" width="672" />
+<p class="caption">
+Figure 11: 信用卡欠款额与违约概率的logistic回归预测（手动验证）
+</p>
+</div>
 </div>
 </div>
