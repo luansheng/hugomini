@@ -1,0 +1,35 @@
+---
+title: bcftools使用笔记
+author: Sheng Luan
+date: '2019-08-29'
+slug: how-to-use-bcftools
+categories:
+  - 生物信息学
+tags:
+  - bcftools
+---
+
+
+
+<p>什么是vcf?全称是variant call format，是用来记录SNP,INDEL和SV变异信息的文本。在GATK软件中得到最好的支持，当然SAMtools得到的结果也是VCF格式，和GATK的VCF格式有点差别。可参考以下链接文件，深入学习。</p>
+<ul>
+<li><a href="https://www.jianshu.com/p/defbee977fa8">学生信的那些事儿之十六 - 生信技能树VCF格式文件的shell小练习</a></li>
+<li><a href="https://www.jianshu.com/p/aa9f762f5c79">解读vcf格式文件</a></li>
+<li><a href="https://www.jianshu.com/p/38f734ae47f5">VCF格式的学习及对VCF文件的统计</a></li>
+</ul>
+<div id="vcf" class="section level2">
+<h2>1.查看vcf文件的头部信息</h2>
+<p><code>bcftools view -h shrimp.vcf.gz</code></p>
+</div>
+<div id="vcf-1" class="section level2">
+<h2>2.提取指定个体产生新vcf文件</h2>
+<p>如果只想分析vcf文件中部分样本，可以利用view命令中的—S选项过滤个体。</p>
+<p><code>bcftools view -S selectedinds.txt shrimp.vcf.gz -Ov &gt; shrimp104.vcf</code></p>
+<p>-S选项后边跟一个文本文件，每一行为保留个体的ID编号。如果样品少，也可以 在-S 后边直接跟样品的ID号。&gt;为重定向符号，表示把保留的个体信息存到shrimp.vcf文件中；-Ov表示输出未经压缩的vcf文件。</p>
+</div>
+<div id="vcfgz" class="section level2">
+<h2>3.压缩vcf为gz压缩文件</h2>
+<p>bcftools一般要求读入文件为gz格式。而且gz格式的文件，压缩幅度非常大，便于传输。因此可以利用view命令把vcf文件压缩为gz格式。</p>
+<p><code>bcftools view shrimp.vcf -Oz -o shrimp.vcf.gz --threads 8</code></p>
+<p>-Oz表示输出格式为压缩文件gz格式；-o后边跟压缩文件名字；–threads 8 表示通过8个线程并行压缩shrimp.vcf文件。</p>
+</div>
