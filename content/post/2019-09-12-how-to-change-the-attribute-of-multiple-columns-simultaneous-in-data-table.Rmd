@@ -12,7 +12,7 @@ tags:
 在进行模型分析时，如lme4、ASReml和sommer等包，均要求固定效应和随机效应要设置为因子类型。然而通常在读取数据时，为了便于处理数据，一般会把性别，测试池，家系号等作为字符类型读入。
 
 如果把多列字符类型字段一个个转为因子类型，语法看起来不优美。
-```{r}
+```{r example1, eval=FALSE}
 pheno_dt$AnimalID <- as.factor(pheno_dt$AnimalID)
 pheno_dt$SexID <- as.factor(pheno_dt$SexID)
 pheno_dt$FamilyID <- as.factor(pheno_dt$FamilyID)
@@ -20,7 +20,7 @@ pheno_dt$FamilyClass <- as.factor(pheno_dt$FamilyClass)
 ```
 
 下边这种写法比较好：
-```{r}
+```{r example2, eval=FALSE}
 cols_factor_v <-
   c("AnimalID",
     "SexID",
