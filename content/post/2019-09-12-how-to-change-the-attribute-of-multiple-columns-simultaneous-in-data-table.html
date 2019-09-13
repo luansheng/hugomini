@@ -1,0 +1,28 @@
+---
+title: 同时改变data.table中多列的属性
+author: Sheng Luan
+date: '2019-09-12'
+slug: how-to-change-the-attribute-of-multiple-columns-simultaneous-in-data-table
+categories:
+  - R
+tags:
+  - Data.table
+---
+
+
+
+<p>在进行模型分析时，如lme4、ASReml和sommer等包，均要求固定效应和随机效应要设置为因子类型。然而通常在读取数据时，为了便于处理数据，一般会把性别，测试池，家系号等作为字符类型读入。</p>
+<p>如果把多列字符类型字段一个个转为因子类型，语法看起来不优美。</p>
+<pre class="r"><code>pheno_dt$AnimalID &lt;- as.factor(pheno_dt$AnimalID)
+pheno_dt$SexID &lt;- as.factor(pheno_dt$SexID)
+pheno_dt$FamilyID &lt;- as.factor(pheno_dt$FamilyID)
+pheno_dt$FamilyClass &lt;- as.factor(pheno_dt$FamilyClass)</code></pre>
+<p>下边这种写法比较好：</p>
+<pre class="r"><code>cols_factor_v &lt;-
+  c(&quot;AnimalID&quot;,
+    &quot;SexID&quot;,
+    &quot;FamilyID&quot;,
+    &quot;FamilyClass&quot;)
+pheno_dt[, c(cols_factor_v) := lapply(.SD, as.factor),
+                  .SDcols = cols_factor_v]</code></pre>
+<p>如果是要改变很多列，譬如上千列（例如对SNP进行操作），参考<a href="https://stackoverflow.com/questions/16943939/elegantly-assigning-multiple-columns-in-data-table-with-lapply/33000778#33000778">stackoverflow的讨论</a>.</p>
