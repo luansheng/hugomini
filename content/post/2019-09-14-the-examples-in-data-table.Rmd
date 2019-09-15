@@ -83,7 +83,7 @@ DT[, sum(v), by=x][order(x)]    #同上，通过链式表达式操作
 ```
 
 ## 7.快速读取行
-通过[二级索引](https://luansheng.netlify.com/2017/07/13/data-table-note-4/)形式，通过二分法）
+通过[二级索引](https://luansheng.netlify.com/2017/07/13/data-table-note-4/)形式，通过二分法快速查询。
 ```{r}
 DT["a", on="x"] # 获取x列中值为a的所有行，跟DT[x == "a"]结果一致，但是对列x建立主键，二分法搜索，更快
 DT["a", on=.(x)] #更加方便的形式，不用写双引号
