@@ -23,7 +23,8 @@ flights.copy <- copy(flights)
 
 # 1.二级索引（Secondary index）
 ## 1.1 什么是二级索引
-二级索引与主键的区别：    
+二级索引与主键的区别： 
+
 * 不在内存中将整个data.table数据集重新排序。它只会计算某列的顺序，将这个顺序向量保存在一个附件的属性index里面。
 * 一个data.table可以有多个二级索引。
 见下面代码实例。

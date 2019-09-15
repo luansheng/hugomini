@@ -19,7 +19,7 @@ slug: data-table-note-3
 </ul>
 <div id="section" class="section level1">
 <h1>1.主键</h1>
-<p>利用主键进行subset，速度会更加快。</p>
+<p>利用主键进行subset，速度会更加快。<strong>随着data.table的不断升级，很多行为譬如根据条件提取子集，已经进行了优化，设置和不设置主键的性能差异已经不是太大了。</strong></p>
 <div id="section-1" class="section level2">
 <h2>设置主键</h2>
 <p>通过函数<code>setkey()</code>来设置主键。下边代码将origin列设置为主键。</p>
@@ -46,12 +46,12 @@ head(flights)</code></pre>
 <pre><code>## Loading required package: microbenchmark</code></pre>
 <pre class="r"><code>microbenchmark(flights[.(&quot;JFK&quot;)],flights.copy[origin == &quot;JFK&quot;])</code></pre>
 <pre><code>## Unit: milliseconds
-##                           expr     min       lq     mean   median       uq
-##              flights[.(&quot;JFK&quot;)] 12.3942 15.06180 27.28654 18.84455 28.69585
-##  flights.copy[origin == &quot;JFK&quot;] 12.6288 17.62295 29.12429 21.35250 31.06210
-##       max neval
-##  264.5375   100
-##  305.1842   100</code></pre>
+##                           expr     min       lq     mean  median       uq
+##              flights[.(&quot;JFK&quot;)] 11.0625 11.97405 14.82183 12.6537 17.50760
+##  flights.copy[origin == &quot;JFK&quot;] 11.7488 12.97150 17.33587 13.7778 20.57225
+##      max neval
+##  26.2247   100
+##  91.2646   100</code></pre>
 <ul>
 <li>因为已经将主键设置为 origin列了，所以只要直接指定“JFK”就可以了。这里 .()用来在data.table的主键（也就是flights 的 origin列）里，查找“JFK”。</li>
 <li>首先，满足“JFK”条件的行的索引都被获取到。然后，这些行的哪些信息是必要的呢。既然参数j里没有指定任何表达式，这些行的所有列都被返回了。</li>
@@ -397,40 +397,46 @@ print(object.size(DT),units=&quot;Mb&quot;)</code></pre>
 <pre><code>## [1] &quot;x&quot; &quot;y&quot;</code></pre>
 <pre class="r"><code>head(DT)</code></pre>
 <pre><code>##    x y       val
-## 1: a 1 0.8506738
-## 2: a 1 0.4633684
-## 3: a 1 0.8655359
-## 4: a 1 0.6826856
-## 5: a 1 0.6953267
-## 6: a 1 0.6032007</code></pre>
+## 1: a 1 0.5370339
+## 2: a 1 0.8148401
+## 3: a 1 0.5479537
+## 4: a 1 0.2060227
+## 5: a 1 0.1166678
+## 6: a 1 0.3066754</code></pre>
 <p>上边代码产生了一个380M的数据集，用来测试和比较设置主键后的性能优化效果。</p>
 <p>现在要提取x=a 和 y=100的行。来比较直接向量提取和利用主键来做的性能差异。</p>
 <pre class="r"><code>require(microbenchmark)
-microbenchmark(DT[x==&quot;a&quot; &amp; y==100L],DT[.(&quot;a&quot;,100L)])</code></pre>
+microbenchmark(DT[x==&quot;a&quot; &amp; y==100L], DT[.(&quot;a&quot;,100L)])</code></pre>
 <pre><code>## Unit: milliseconds
 ##                      expr    min      lq     mean  median      uq    max
-##  DT[x == &quot;a&quot; &amp; y == 100L] 3.2464 4.27035 4.999132 5.02465 5.56315 7.3173
-##          DT[.(&quot;a&quot;, 100L)] 1.8861 2.57065 2.901156 2.88310 3.14905 6.3639
+##  DT[x == &quot;a&quot; &amp; y == 100L] 2.3902 2.53205 2.747706 2.64780 2.91935 3.5221
+##          DT[.(&quot;a&quot;, 100L)] 1.3863 1.50180 1.699601 1.62685 1.80665 4.3145
 ##  neval
 ##    100
 ##    100</code></pre>
-<p>看起来，快了大约200多倍。的确是非常快。
+<p>看起来，设置主键后的确是快一些。
 看看给出的解释：中文地址在<a href="https://youngspring1.github.io/post/2016/2016-03-22-datatable3/">这里</a></p>
-<p>##向量扫描<br />
-* 在所有两千条数据中，逐行搜索 x列里值为“g”的行。这会生成一个有两千行的逻辑向量，根据和x列的批评结果，它每个元素的取值可能是TRUE, FALSE 以及 NA。
-* 相似的，在所有两千条数据中，逐行搜索 y列里值为“877”的行，再保存在另一个逻辑向量里面。
-* 操作符“&amp;”对上面两个逻辑向量进行“且”运算，返回结果为TRUE的行
-这就是所谓的“向量扫描”。效率非常低，特别是数据量很大、需要重复subset的时候。因为它每次不得不对整个数据全盘扫描。</p>
 <div id="section-3" class="section level2">
+<h2>向量扫描</h2>
+<ul>
+<li>在所有两千条数据中，逐行搜索 x列里值为“g”的行。这会生成一个有两千行的逻辑向量，根据和x列的批评结果，它每个元素的取值可能是TRUE, FALSE 以及 NA。</li>
+<li>相似的，在所有两千条数据中，逐行搜索 y列里值为“877”的行，再保存在另一个逻辑向量里面。</li>
+<li>操作符“&amp;”对上面两个逻辑向量进行“且”运算，返回结果为TRUE的行
+这就是所谓的“向量扫描”。效率非常低，特别是数据量很大、需要重复subset的时候。因为它每次不得不对整个数据全盘扫描。</li>
+</ul>
+</div>
+<div id="section-4" class="section level2">
 <h2>二分法搜索</h2>
 <p>这里有一个简单的示例。看看下面这组排过序的数字：
 1, 5, 10, 19, 22, 23, 30
-假设我们希望找到数字1的位置，用二分法搜索（因为这组数字是排过序的），我们是这么做的：
-* 从中间的数开始，它是19，不是1，而且 1&lt;19。
-* 既然我们要找的数字1小于19，那它应该排在19前面。所以我们可以无视19后面的那一半数据，因为它们都大于19.
-* 现在我们的数据只剩下1, 5, 10。再找到中间的数5，它不是1，而且 1&lt;5。
-* 现在我们的数据只剩下1。符合条件。这就是我们要找的数。
-相反的，向量扫描需要扫描所有的数字，在这个例子中是7。</p>
+假设我们希望找到数字1的位置，用二分法搜索（因为这组数字是排过序的），我们是这么做的：</p>
+<ul>
+<li>从中间的数开始，它是19，不是1，而且 1&lt;19。</li>
+<li>既然我们要找的数字1小于19，那它应该排在19前面。所以我们可以无视19后面的那一半数据，因为它们都大于19.</li>
+<li>现在我们的数据只剩下1, 5, 10。再找到中间的数5，它不是1，而且 1&lt;5。</li>
+<li>现在我们的数据只剩下1。符合条件。这就是我们要找的数。
+相反的，向量扫描需要扫描所有的数字，在这个例子中是7。</li>
+</ul>
 <p>用主键也就是二分法搜索的时间开销是<strong>O(logn)</strong>，而用向量扫描，时间开销是<strong>O(n)</strong>。当n（数据行数）非常大时，性能会差别很大。</p>
 </div>
 </div>

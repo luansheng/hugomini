@@ -12,6 +12,15 @@ output: html_document
 
 加载data.table包后，运行**example("data.table")**可以获得data.table自带的例子代码。本文对代码的意思进行了中文注释，以深入理解data.table的特性。
 
+data.table入门介绍，见[这里](https://cloud.r-project.org/web/packages/data.table/vignettes/datatable-intro.html)。相关中文翻译，见本博客日志：
+
+* [data.table学习笔记1：入门介绍](https://luansheng.netlify.com/2017/07/03/data-table-note-1/)
+* [data.table学习笔记2：用:=更新数据集](https://luansheng.netlify.com/2017/07/07/data-table-note-2/)
+* [data.table学习笔记3：设置主键](https://luansheng.netlify.com/2017/07/12/data-table-note-3/)
+* [data.table学习笔记4：二级索引](https://luansheng.netlify.com/2017/07/13/data-table-note-4/)
+
+其实本部分内容在早期日志[data.table学习笔记5](https://luansheng.netlify.com/2017/09/03/data-table-note-5/)中翻译了一部分，没有翻译完。本次作为一个新的日志，全新翻译了一次。
+
 ```{r}
 library(data.table)
 ```
@@ -47,7 +56,7 @@ DT[, .(v)]                  #同上，.()是list()的缩写
 DT[, sum(v)]                #列v所有值的和，返回一个向量
 DT[, .(sum(v))]             #同上，返回一个data.table
 DT[, .(sv=sum(v))]          #同上，但列被命名为sv
-DT[, .(v, v*2)]             #返回一个data.table，包括两列：v和2v
+DT[, .(v, v*2)]             #返回一个data.table，包括两列：v和V2
 ```
 
 ## 4.对部分行进行列操作
@@ -70,6 +79,138 @@ DT[["y"]]             #同DT[, y]，返回向量，但读取速度更快
 ```{r}
 DT[, sum(v), by=x]              #根据x进行分组，每组求v列的和
 DT[, sum(v), keyby=x]           #同上，但输出结果根据x排序
-DT[, sum(v), by=x][order(x)]    #同上，通过链式排序
+DT[, sum(v), by=x][order(x)]    #同上，通过链式表达式操作
+```
+
+## 7.快速读取行
+通过[二级索引](https://luansheng.netlify.com/2017/07/13/data-table-note-4/)形式，通过二分法）
+```{r}
+DT["a", on="x"] # 获取x列中值为a的所有行，跟DT[x == "a"]结果一致，但是对列x建立主键，二分法搜索，更快
+DT["a", on=.(x)] #更加方便的形式，不用写双引号
+DT[.("a"), on=.(x)] #同上
+DT[x=="a"] #同上，然而针对单个==内部进行了优化，速度同上
+DT[x!="b" | y!=3]  #没有进行优化，仍然采用向量扫描提取子集
+DT[.("b", 3), on=c("x", "y")]  # 对两列x和y设置二级索引，利用二分法查找，速度快
+DT[.("b", 3), on=.(x, y)]  #同上, .()代替
+DT[.("b", 1:2), on=c("x", "y")]  #没有匹配返回NA，y中没有2，因此返回的v值为NA
+DT[.("b", 1:2), on=c("x", "y"), nomatch = NULL] #没有匹配的行，不返回值
+DT[.("b", 1:2), on=c("x", "y"), roll=Inf]   # 没有匹配，返回上一行值
+DT[.("b", 1:2), on=.(x, y), roll=-Inf] #没有匹配，返回下一行值
+DT["b", sum(v*y), on="x"]  # 对于所有x=="b"的行, 列v与y相乘，求和，注意返回的是向量
+```
+
+## 8.综合小练习
+```{r}
+DT[x!="a", sum(v), by=x]  # 提取x不等于"a"的所有行，根据x进行分组，计算每一组v列数值之和
+DT[!"a", sum(v), by=.EACHI, on="x"] # 同上，.EACHI 代表x列中每一类元素
+DT[c("b","c"), sum(v), by=.EACHI, on="x"] #同上
+DT[c("b","c"), sum(v), by=.EACHI, on=.(x)] #同上
+
+```
+
+## 9.数据集连接、合并等操作
+```{r}
+X = data.table(x=c("c","b"), v=8:7, foo=c(4,2))  #创建一个新的数据集
+X
+DT[X, on="x"] # 把DT并入x，根据X中的x列，优先并入DT中其他列，X中的剩余列在最后，如果有跟DT重复的列名，加i.作为前缀；加i指明了这一列来自X
+X[DT, on="x"] # 把X并入DT，根据DT中的x列，优先并入X中其他列，DT中的剩余列在最后，如果有跟X重复的列名，加i.作为前缀；加i指明了这一列来自DT，不匹配的用NA填充
+X[DT, on="x", nomatch=NULL]  #屏蔽不匹配的行
+DT[!X, on="x"]  #不合并数据集
+DT[X, on=c(y="v")] #通过DT中的y列与X中的v列进行连接
+DT[X, on="y==v"]  #同上
+DT[X, on=.(y<=foo)] # 只要DT中y列的值小于等于X列中foo值，两行就连接在一起；注意再返回的结果，y列实际是X中foo列的值
+DT[X, on="y<=foo"] #同上
+DT[X, on=c("y<=foo")] #同上
+DT[X, on=c("y>=foo")] #只要DT中y列的值大于等于X列中foo值，两行就连接在一起；注意再返回的结果，y列实际是X中foo列的值
+DT[X, on=.(x, y<=foo)] #依据共有x列（即x==x）和y<=foo两个条件，把DT并入X中；
+DT[X, .(x,y,x.y,v), on=.(x, y>=foo)] # 当X是一个data.table时，x.y 指的是DT中的y；i.x值得时X中的x
+DT[X, on="x", mult="first"]  #返回每个组的第一行
+DT[X, on="x", mult="last"] #返回每个组的最后一行
+DT[X, sum(v), by=.EACHI, on="x"] #基于连接后数据集，依据x分组评估每个组的v列值之和
+DT[X, sum(v)*foo, by=.EACHI, on="x"] #原理同上，依据x分组评估每个组的v列值之和与foo之积
+DT[X, sum(y)*foo, on=.(x, v>=v), by=.EACHI]  #连接条件：DT与X中x列相等，DT中v列大于X中v列
+DT[X, on=.(x)] 
+DT[X, on=.(x, v>=v)]
+```
+
+## 10.设置和使用主键
+```{r}
+kDT = copy(DT)  #深层拷贝
+setkey(kDT,x)   # 设置主键为x列
+setkeyv(kDT,"x") # 同上v表示向量
+v = "x"
+setkeyv(kDT, v) #同上
+#key(kDT) <- v 已经废弃
+haskey(kDT) #判断是否存在主键
+key(kDT)  #列出主键
+kDT["a"]  # 根据x==a进行过滤
+kDT["a", on="x"]  #更明晰的写法
+kDT[!"a", sum(v), by=.EACHI] #依据x列中元素分组（不包括"a"，每一组求v列值之和
+setkey(kDT,x,y) #设置多列作为主键
+setkeyv(kDT,c("x","y"))   #同上
+kDT[.("a", 3:6)]  # 根据x和y列进行过滤
+```
+
+## 11.特殊符号
+主要包括：.N (行数), .SD (所有列), .SDcols (指定列), .I (行序列), .GRP (分组序列)等。
+```{r}
+DT[.N]  #.N总行数。返回最后一行
+DT[, .N] #返回总行数
+DT[, .N, by=.(x)] #返回每一组行数
+DT[, .SD, .SDcols = x:y]  #.SD表示选择的特定列，DT数据集中从x到y列之间的所有列，包括x和y
+DT[, .SD, .SDcols = !x:y]   #选择特定的列，剔除DT数据集中从x到y列之间的所有列，包括x和y
+DT[ , .SD, .SDcols = patterns('^[xv]')] # 通过模式匹配选择特定的列。返回列名中包括x或者v的数据集。可以模式匹配是个好东西！
+DT[, .SD[1]] #返回第一行
+DT[, .SD[1], by=x] #返回每一组中的第一行
+DT[, c(.N, lapply(.SD, sum)), by=x] #根据x分组。获得每一个分组的行数，以及y和v列之和
+DT[, .I[1], by=x] #定义每一行的顺序编号。每一组中第一行的顺序编号
+DT[, grp := .GRP, by=x] #定义每一组顺序编号
+DT
+DT[, grp := .GRP, keyby=x] #x排好序，再定义组号
+DT
+X[, DT[.BY, y, on="v"], by=v] # .BY 接受v分组后两个值（8,7），对DT进行过滤，获取y值。返回一个data.table，其中v来自X，V1来自DT中的y。
+
+```
+
+## 12.通过reference方式增加/更新/删除列
+```{r}
+DT[, z:=42L]  #通过reference 方式增加z列，值为42
+DT
+DT[, z:=NULL] #删除z列
+DT["a", v:=42L, on="x"] #对列x中值为a的行，修改列v的值为42
+DT["b", v2:=84L, on="x"] #对列x中值为b的行，修改列v的值为84
+DT[, m:=mean(v), by=x][] #根据x分组，求每组v列均值，作为新列m
+```
+
+## 高级用法
+
+```{r}
+DT = data.table(
+  x = rep(c("b", "a", "c"), each = 3),
+  v = c(1, 1, 1, 2, 2, 1, 1, 2, 2),
+  y = c(1, 3, 6),
+  a = 1:9,
+  b = 9:1
+)
+DT[, sum(v), by=.(y%%2)] # by中也可以指定表达式。 %%-余数，分组0和1
+DT[, sum(v), by=.(bool = y%%2)] #同上，改变分组列名为bool
+DT[, .SD[2], by=x] #获得每个分组的第二行
+DT[, tail(.SD,2), by=x] #获得每个分组的最后两行
+DT[, lapply(.SD, sum), by=x] #对每个分组，每一列求和
+DT[, .SD[which.min(v)], by=x] #每个分组中v最小值多在行集合
+DT[, list(MySum=sum(v),
+           MyMin=min(v),
+           MyMax=max(v)),
+     by=.(x, y%%2)]       # 统计每个组合（x和y%%2）的v列和，最大和最小值
+DT[, .(a = .(a), b = .(b)), by=x] #这个有意思,a和b列的属性是列表
+DT[, .(seq = min(a):max(b)), by=x] # 返回的seq列值：b-1:9, a-4:6, c-7:3
+DT[, sum(v), by=x][V1<20]  #根据x分组，对v求和，然后对新数据，筛选和小于20的行
+DT[, sum(v), by=x][order(-V1)]  #对新数据集降序排列
+DT[, c(.N, lapply(.SD,sum)), by=x]  #汇总每个分组的行数，每一列的和
+DT[, {tmp <- mean(y);
+       .(a = a-tmp, b = b-tmp)
+     }, by=x] # 这个高级，可以自定义小函数
+DT[, plot(a,b), by=x] # 也可以直接画图，牛
+DT[, c(.(y=max(y)), lapply(.SD, min)), by=rleid(v), .SDcols=v:b] #这个也很复杂 rleid函数功能类似.GRP
 ```
 

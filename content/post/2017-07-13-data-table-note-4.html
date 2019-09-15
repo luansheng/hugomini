@@ -21,10 +21,12 @@ slug: data-table-note-4
 <h1>1.二级索引（Secondary index）</h1>
 <div id="section" class="section level2">
 <h2>1.1 什么是二级索引</h2>
-<p>二级索引与主键的区别：<br />
-* 不在内存中将整个data.table数据集重新排序。它只会计算某列的顺序，将这个顺序向量保存在一个附件的属性index里面。
-* 一个data.table可以有多个二级索引。
-见下面代码实例。</p>
+<p>二级索引与主键的区别：</p>
+<ul>
+<li>不在内存中将整个data.table数据集重新排序。它只会计算某列的顺序，将这个顺序向量保存在一个附件的属性index里面。</li>
+<li>一个data.table可以有多个二级索引。
+见下面代码实例。</li>
+</ul>
 <pre class="r"><code>setindex(flights,origin)
 head(flights)</code></pre>
 <pre><code>##    year month day dep_time dep_delay arr_time arr_delay cancelled carrier
@@ -190,7 +192,7 @@ print(object.size(dt),units = &quot;Mb&quot;)</code></pre>
 <p>第一次使用<code>==</code>或<code>%in%</code>时，会自动创建一个二级索引，用来进行subset。</p>
 <pre class="r"><code>(t1 &lt;- system.time(ans &lt;- dt[x==989L]))</code></pre>
 <pre><code>##    user  system elapsed 
-##    1.24    0.08    0.36</code></pre>
+##    1.11    0.08    0.33</code></pre>
 <pre class="r"><code>names(attributes(dt))</code></pre>
 <pre><code>## [1] &quot;names&quot;             &quot;row.names&quot;         &quot;class&quot;            
 ## [4] &quot;.internal.selfref&quot; &quot;index&quot;</code></pre>
@@ -204,7 +206,7 @@ print(object.size(dt),units = &quot;Mb&quot;)</code></pre>
 <pre class="r"><code>setindex(dt,NULL)
 (t3 &lt;- system.time(ans &lt;- dt[x&gt;=989L]))</code></pre>
 <pre><code>##    user  system elapsed 
-##    0.22    0.05    0.23</code></pre>
+##    0.14    0.04    0.15</code></pre>
 <pre class="r"><code>indices(dt)</code></pre>
 <pre><code>## NULL</code></pre>
 </div>
