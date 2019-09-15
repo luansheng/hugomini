@@ -1,0 +1,218 @@
+---
+title: data.table自带例子注解
+author: Sheng Luan
+date: '2019-09-14'
+slug: the-examples-in-data-table
+categories:
+  - R
+tags:
+  - Data.table
+output: html_document
+---
+
+
+
+<p>加载data.table包后，运行<strong>example(“data.table”)</strong>可以获得data.table自带的例子代码。本文对代码的意思进行了中文注释，以深入理解data.table的特性。</p>
+<pre class="r"><code>library(data.table)</code></pre>
+<div id="section" class="section level2">
+<h2>1.生成数据集</h2>
+<p>生成DF和DT数据集，类型分别为data frame和data.table。二者本质上均为<strong>list</strong>类型。</p>
+<pre class="r"><code>DF = data.frame(x=rep(c(&quot;b&quot;,&quot;a&quot;,&quot;c&quot;),each=3), y=c(1,3,6), v=1:9)
+DT = data.table(x=rep(c(&quot;b&quot;,&quot;a&quot;,&quot;c&quot;),each=3), y=c(1,3,6), v=1:9)
+DF</code></pre>
+<pre><code>##   x y v
+## 1 b 1 1
+## 2 b 3 2
+## 3 b 6 3
+## 4 a 1 4
+## 5 a 3 5
+## 6 a 6 6
+## 7 c 1 7
+## 8 c 3 8
+## 9 c 6 9</code></pre>
+<pre class="r"><code>DT</code></pre>
+<pre><code>##    x y v
+## 1: b 1 1
+## 2: b 3 2
+## 3: b 6 3
+## 4: a 1 4
+## 5: a 3 5
+## 6: a 6 6
+## 7: c 1 7
+## 8: c 3 8
+## 9: c 6 9</code></pre>
+<pre class="r"><code>identical(DF$a, DT$a) </code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.list(DF)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>is.list(DT)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+</div>
+<div id="section-1" class="section level2">
+<h2>2.行操作</h2>
+<pre class="r"><code>DT[2]                          # 提取第二行数据</code></pre>
+<pre><code>##    x y v
+## 1: b 3 2</code></pre>
+<pre class="r"><code>DT[3:2]                        # 提取第三行和第二行数据</code></pre>
+<pre><code>##    x y v
+## 1: b 6 3
+## 2: b 3 2</code></pre>
+<pre class="r"><code>DT[order(x)]                   # 根据x升序对DT进行排序</code></pre>
+<pre><code>##    x y v
+## 1: a 1 4
+## 2: a 3 5
+## 3: a 6 6
+## 4: b 1 1
+## 5: b 3 2
+## 6: b 6 3
+## 7: c 1 7
+## 8: c 3 8
+## 9: c 6 9</code></pre>
+<pre class="r"><code>DT[order(x), ]                 # 这样写也可以，不如上一行简洁</code></pre>
+<pre><code>##    x y v
+## 1: a 1 4
+## 2: a 3 5
+## 3: a 6 6
+## 4: b 1 1
+## 5: b 3 2
+## 6: b 6 3
+## 7: c 1 7
+## 8: c 3 8
+## 9: c 6 9</code></pre>
+<pre class="r"><code>DT[y&gt;2]                        # 提取所有y&gt;2 的行</code></pre>
+<pre><code>##    x y v
+## 1: b 3 2
+## 2: b 6 3
+## 3: a 3 5
+## 4: a 6 6
+## 5: c 3 8
+## 6: c 6 9</code></pre>
+<pre class="r"><code>DT[y&gt;2 &amp; v&gt;5]                 # 提取满足条件：y&gt; 2 并且 v&gt; 5的行</code></pre>
+<pre><code>##    x y v
+## 1: a 6 6
+## 2: c 3 8
+## 3: c 6 9</code></pre>
+<pre class="r"><code>DT[!2:4]                      #提取除2, 3,4行外的其他行</code></pre>
+<pre><code>##    x y v
+## 1: b 1 1
+## 2: a 3 5
+## 3: a 6 6
+## 4: c 1 7
+## 5: c 3 8
+## 6: c 6 9</code></pre>
+<pre class="r"><code>DT[-(2:4)]                   #同上</code></pre>
+<pre><code>##    x y v
+## 1: b 1 1
+## 2: a 3 5
+## 3: a 6 6
+## 4: c 1 7
+## 5: c 3 8
+## 6: c 6 9</code></pre>
+</div>
+<div id="section-2" class="section level2">
+<h2>3.列操作</h2>
+<pre class="r"><code>DT[, v]                      #提取列名为v的该列所有值，返回一个向量</code></pre>
+<pre><code>## [1] 1 2 3 4 5 6 7 8 9</code></pre>
+<pre class="r"><code>DT[, list(v)]                #提取列名为v的该列所有值，返回一个data.table</code></pre>
+<pre><code>##    v
+## 1: 1
+## 2: 2
+## 3: 3
+## 4: 4
+## 5: 5
+## 6: 6
+## 7: 7
+## 8: 8
+## 9: 9</code></pre>
+<pre class="r"><code>DT[, .(v)]                  #同上，.()是list()的缩写</code></pre>
+<pre><code>##    v
+## 1: 1
+## 2: 2
+## 3: 3
+## 4: 4
+## 5: 5
+## 6: 6
+## 7: 7
+## 8: 8
+## 9: 9</code></pre>
+<pre class="r"><code>DT[, sum(v)]                #列v所有值的和，返回一个向量</code></pre>
+<pre><code>## [1] 45</code></pre>
+<pre class="r"><code>DT[, .(sum(v))]             #同上，返回一个data.table</code></pre>
+<pre><code>##    V1
+## 1: 45</code></pre>
+<pre class="r"><code>DT[, .(sv=sum(v))]          #同上，但列被命名为sv</code></pre>
+<pre><code>##    sv
+## 1: 45</code></pre>
+<pre class="r"><code>DT[, .(v, v*2)]             #返回一个data.table，包括两列：v和2v</code></pre>
+<pre><code>##    v V2
+## 1: 1  2
+## 2: 2  4
+## 3: 3  6
+## 4: 4  8
+## 5: 5 10
+## 6: 6 12
+## 7: 7 14
+## 8: 8 16
+## 9: 9 18</code></pre>
+</div>
+<div id="section-3" class="section level2">
+<h2>4.对部分行进行列操作</h2>
+<p>譬如，仅对2,3行v列进行求和操作。</p>
+<pre class="r"><code>DT[2:3, sum(v)]</code></pre>
+<pre><code>## [1] 5</code></pre>
+<pre class="r"><code>DT[2:3, .(sum(v))]</code></pre>
+<pre><code>##    V1
+## 1:  5</code></pre>
+<pre class="r"><code>DT[2:3, .(sv=sum(v))] </code></pre>
+<pre><code>##    sv
+## 1:  5</code></pre>
+<pre class="r"><code>DT[2:5, cat(v, &quot;\n&quot;)]</code></pre>
+<pre><code>## 2 3 4 5</code></pre>
+<pre><code>## NULL</code></pre>
+</div>
+<div id="data-frame" class="section level2">
+<h2>5.通过data frame方式选择列</h2>
+<pre class="r"><code>DT[, 2]               #通过数字方式选择列，返回一个data.table</code></pre>
+<pre><code>##    y
+## 1: 1
+## 2: 3
+## 3: 6
+## 4: 1
+## 5: 3
+## 6: 6
+## 7: 1
+## 8: 3
+## 9: 6</code></pre>
+<pre class="r"><code>col_num = 2
+DT[, ..col_num]       #..后跟随变量表示该变量名不是DT中的某一列，它存储的值为DT中的列名。</code></pre>
+<pre><code>##    y
+## 1: 1
+## 2: 3
+## 3: 6
+## 4: 1
+## 5: 3
+## 6: 6
+## 7: 1
+## 8: 3
+## 9: 6</code></pre>
+<pre class="r"><code>DT[[&quot;y&quot;]]             #同DT[, y]，返回向量，但读取速度更快</code></pre>
+<pre><code>## [1] 1 3 6 1 3 6 1 3 6</code></pre>
+</div>
+<div id="section-4" class="section level2">
+<h2>6.分组操作</h2>
+<pre class="r"><code>DT[, sum(v), by=x]              #根据x进行分组，每组求v列的和</code></pre>
+<pre><code>##    x V1
+## 1: b  6
+## 2: a 15
+## 3: c 24</code></pre>
+<pre class="r"><code>DT[, sum(v), keyby=x]           #同上，但输出结果根据x排序</code></pre>
+<pre><code>##    x V1
+## 1: a 15
+## 2: b  6
+## 3: c 24</code></pre>
+<pre class="r"><code>DT[, sum(v), by=x][order(x)]    #同上，通过链式排序</code></pre>
+<pre><code>##    x V1
+## 1: a 15
+## 2: b  6
+## 3: c 24</code></pre>
+</div>
