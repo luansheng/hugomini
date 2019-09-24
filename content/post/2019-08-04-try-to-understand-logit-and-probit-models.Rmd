@@ -134,6 +134,7 @@ y <- 1/(1+exp(-x))
 logistic_dt <- data.table(x,y)
 ggplot(data = logistic_dt, aes(x,y)) +geom_point()
 ```
+ps：在机器学习中，logistic函数也被称为sigmoid函数，在神经网络中，作为[激活函数](https://baike.baidu.com/item/%E6%BF%80%E6%B4%BB%E5%87%BD%E6%95%B0/2520792?fr=aladdin)。
 
 标准logistic分布的概率密度函数(probility density function, PDF)的一般形式为：
 $$f(x)=\frac{e^{x}}{(1+e^{x})^2}$$
