@@ -177,6 +177,24 @@ EBV和GEBV，也就是加性遗传效应的预测能力，通过中亲（mid-par
 
 对于BCWD性状，如果BCWD性状由超过500个loci控制，那么参考群体为1473，遗传力为0.3，根据这篇文章[Accuracy of Predicting the Genetic Risk of Disease Using a Genome-Wide Approach](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2561058/)推测，预测能力期望可以达到0.68（根据。本文BayesB的预测结果也与此相似。如果假定BCWD性状受超过500个独立的loci控制（少数主效基因和多数为微效多基因），在遗传力为0.3的水平下，当参考群体个体数为3000和10000时，GEBV的期望预测能力可以分别达到0.8和0.93。
 
+在奶牛中，利用大参考群体（欧洲荷斯坦奶牛，参考群超过4000头牛），获得性能产奶量性状的基因组预测的准确性超过0.8，健康相关性状则超过0.7。该群体后裔测试公牛组成，其产奶性能通过平均女儿性能进行准确测定。而本文研究的一个亮点，是基于一个较小的参考群体，获得了一个较高预测准确性。（It was remarkable to have genomic evaluation with an accuracy of 0.71 using a relatively small training dataset)。**群体样本数达到1473，已经很高了，对虾类而言，如果每尾分型成本500元，意味着要花掉70到80万人民币！**本文作者推测，这样一个高选择准确性是由于：
+
+* 参考群和验证群之间的较高的亲缘关系；
+* 虹鳟群体的有效群体大小比较小，导致连锁不平衡扩大（entensive linkage disequilibrium），从而需要估计的有效染色体区段效应变少，因此可以更好地预测和更好的准确性。
+
+在混合鲑鳟鱼群体（Admixed salmonid population）中，广泛观察到大范围连锁不平衡(Long-range LD）。
+
+这种高度的大范围连锁不平衡，是由于不同群体在选育过程中不断混合产生的。这种群体混合也会减少小范围连锁不平衡（short-range LD）。遗传分离群体的混合（Admixture of genetically divergent populations）能够显著的提升跨大基因组区域、多世代间的连锁不平衡。由于重组，不连锁基因间由混合产生的LD（ADmixture-generated LD，ALD）会快速衰减（2-4代内），但是连锁基因间的ALD衰减会很慢。**对那些间隔1cM的位点，10代和20代后，仍然分别有90%和82%的ALD保留。**在[大西洋鲑](https://www.frontiersin.org/articles/10.3389/fgene.2014.00402/full)中，利用一个小的训练群体（n=1963），由于存在高度的ALD，同样获得了较高的预测准确性。
+
+参考群体和验证群体的样本数要大于此前GS研究的样本数，因此与此前的研究相比，有一个更好的GEBV预测准确性。在本文研究中，从获得的高预测准确性来看，训练群体和验证群体的样本数可能接近于最优化了。尽管如此（Nonetheless），根据理论预测，继续增加参考群体的样本数到3000甚至100000，预测的准确性将进一步提高。
+
+性状的遗传力对预测GEBV的准确性影响非常大。对于DAYS和STATUS性状，本文基于P-BLUP模型获得的遗传力和通过GS模型利用标记解释的方差组分，与以前报道的BCWD抗性的遗传力非常接近。
+
+### 模型比较
+
+
+
+
 
 
 
@@ -190,3 +208,4 @@ EBV和GEBV，也就是加性遗传效应的预测能力，通过中亲（mid-par
 <a id="2">2</a> Silverstein JT, Vallejo RL, Palti Y, Leeds TD, Rexroad CE 3rd, Welch TJ, et al. Rainbow trout resistance to bacterial cold-water disease is moderately heritable and is not adversely correlated with growth. J Anim Sci. 2009;87:860–7.          
 <a id="3">3</a> Palti Y, Gao G, Liu S, Kent MP, Lien S, Miller MR, et al. The development and characterization of a 57 K single nucleotide polymorphism array for rainbow trout. Mol Ecol Resour. 2015;15:662–72.          
 <a id="rt2016">4</a> Vallejo RL, Leeds TD, Fragomeni BO, Gao G, Hernandez AG, Misztal I, et al. Evaluation of genome-enabled selection for bacterial cold water disease resistance using progeny performance data in rainbow trout: insights on genotyping methods and genomic prediction models. Front Genet. 2016;7:96.
+<a id="4">4</a> Genomic prediction in an admixed population of Atlantic salmon (Salmo salar). Front Genet. 2014;
