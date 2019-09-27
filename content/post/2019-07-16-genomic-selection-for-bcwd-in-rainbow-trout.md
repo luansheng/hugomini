@@ -198,9 +198,37 @@ BCWD抗性通过分析发现是寡基因遗传模式（Oligogenic inheritance）
 
 总体来讲，**选择什么模型取决于性状的遗传结构**。对于微效多基因结构，GBLUP和ssGBLUP模型好用。对于寡基因结构，BayesB和wssGBLUP模型好用。
 
+### GS试验设计比较
+
+这部分结果特别有意思。方案3比方案1的参考样本数少了494个，但是二者预测GEBV的准确性相当。原因可能是：
+
+ * 方案3的参考群样本与验证群体的亲缘关系要高于方案1的原因。（1.0 vs 0.66）
+ * 方案3参考群样本间的亲缘关系也要高于方案1
+ 
+这给我们设计GS方案一个非常重要的启发：**需要根据候选群体，选择跟它亲缘关系最近的个体构建参考群，并且参考群个体间的亲缘关系也要近。**
+ 
+方案3比方案2的准确性要高，也是因为上述原因。
+
+而方案3好于方案4，是因为每个家系的个体数量更多。
+
+方案5的预测准确性最差，是因为该方案参考群与与验证群间的亲缘关非常远，而且样本量也非常小。
+
+两个特别启示：
+
+* 跨群体进行GS评估，譬如参考群体来自一个群体，候选群体来自另外一个群体，效果非常差，GS的准确性会很低；
+* 针对不同的世代，参考群体需要更新；
 
 
+### 附加评论
+与畜牧大动物相比，在以规模化家系为基础的水产动物育种体系开展GS研究，最大的挑战在于候选个体（selection candidate）的数量多，并且与分型成本相比，单尾个体价值低。
 
+在抗病性选育项目中，传统的同胞测试方案需要重新设计，以利用GS的优势来提高选择的准确性，增加遗传进展。作者建议：
+
+* 首先利用传统的同胞测试，预选出抗性强的家系
+* 从抗性强的家系中选择个体，进行分型，降低分型成本
+* 对候选个体（来自预选家系）进行基因分型，预测其GEBV
+
+在畜牧中利用GS的优势，是会增加育种值和选择反应的准确性，但是不会增加甚至降低近交率。
 
 
 
@@ -216,4 +244,4 @@ BCWD抗性通过分析发现是寡基因遗传模式（Oligogenic inheritance）
 <a id="2">2</a> Silverstein JT, Vallejo RL, Palti Y, Leeds TD, Rexroad CE 3rd, Welch TJ, et al. Rainbow trout resistance to bacterial cold-water disease is moderately heritable and is not adversely correlated with growth. J Anim Sci. 2009;87:860–7.          
 <a id="3">3</a> Palti Y, Gao G, Liu S, Kent MP, Lien S, Miller MR, et al. The development and characterization of a 57 K single nucleotide polymorphism array for rainbow trout. Mol Ecol Resour. 2015;15:662–72.          
 <a id="rt2016">4</a> Vallejo RL, Leeds TD, Fragomeni BO, Gao G, Hernandez AG, Misztal I, et al. Evaluation of genome-enabled selection for bacterial cold water disease resistance using progeny performance data in rainbow trout: insights on genotyping methods and genomic prediction models. Front Genet. 2016;7:96.         
-<a id="5">5</a> Jørgen Ødegård1, Thomas Moen, Nina Santi, SvenA. Korsvoll, Sissel Kjøglum1 and Theo H.E. Meuwissen. Genomic prediction in an admixed population of Atlantic salmon (Salmo salar). Front Genet. 2014;5:402. doi:
+<a id="5">5</a> Jørgen Ødegård1, Thomas Moen, Nina Santi, SvenA. Korsvoll, Sissel Kjøglum1 and Theo H.E. Meuwissen. Genomic prediction in an admixed population of Atlantic salmon (Salmo salar). Front Genet. 2014;5:402.         
