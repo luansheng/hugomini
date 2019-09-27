@@ -177,7 +177,7 @@ EBV和GEBV，也就是加性遗传效应的预测能力，通过中亲（mid-par
 
 对于BCWD性状，如果BCWD性状由超过500个loci控制，那么参考群体为1473，遗传力为0.3，根据这篇文章[Accuracy of Predicting the Genetic Risk of Disease Using a Genome-Wide Approach](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2561058/)推测，预测能力期望可以达到0.68（根据。本文BayesB的预测结果也与此相似。如果假定BCWD性状受超过500个独立的loci控制（少数主效基因和多数为微效多基因），在遗传力为0.3的水平下，当参考群体个体数为3000和10000时，GEBV的期望预测能力可以分别达到0.8和0.93。
 
-在奶牛中，利用大参考群体（欧洲荷斯坦奶牛，参考群超过4000头牛），获得性能产奶量性状的基因组预测的准确性超过0.8，健康相关性状则超过0.7。该群体后裔测试公牛组成，其产奶性能通过平均女儿性能进行准确测定。而本文研究的一个亮点，是基于一个较小的参考群体，获得了一个较高预测准确性。（It was remarkable to have genomic evaluation with an accuracy of 0.71 using a relatively small training dataset)。**群体样本数达到1473，已经很高了，对虾类而言，如果每尾分型成本500元，意味着要花掉70到80万人民币！**本文作者推测，这样一个高选择准确性是由于：
+在奶牛中，利用大参考群体（欧洲荷斯坦奶牛，参考群超过4000头牛），获得性能产奶量性状的基因组预测的准确性超过0.8，健康相关性状则超过0.7。该群体后裔测试公牛组成，其产奶性能通过平均女儿性能进行准确测定。而本文研究的一个亮点，是基于一个较小的参考群体，获得了一个较高预测准确性。（It was remarkable to have genomic evaluation with an accuracy of 0.71 using a relatively small training dataset)。ps:**群体样本数达到1473，已经很高了，对虾类而言，如果每尾分型成本500元，意味着要花掉70到80万人民币！**本文作者推测，这样一个高选择准确性是由于：
 
 * 参考群和验证群之间的较高的亲缘关系；
 * 虹鳟群体的有效群体大小比较小，导致连锁不平衡扩大（entensive linkage disequilibrium），从而需要估计的有效染色体区段效应变少，因此可以更好地预测和更好的准确性。
@@ -191,6 +191,14 @@ EBV和GEBV，也就是加性遗传效应的预测能力，通过中亲（mid-par
 性状的遗传力对预测GEBV的准确性影响非常大。对于DAYS和STATUS性状，本文基于P-BLUP模型获得的遗传力和通过GS模型利用标记解释的方差组分，与以前报道的BCWD抗性的遗传力非常接近。
 
 ### 模型比较
+
+DAYS性状的预测偏差，要小于STATUS性状。作者给出的解释是：通过阈值模型，对二分变量转换为underlying scale水平进行分析，估计出的方差组分偏高，从而造成预测偏差变大。
+
+BCWD抗性通过分析发现是寡基因遗传模式（Oligogenic inheritance），是由少数几个主效QTL和微效多基因/位点共同组成。因此变量选择模型比GS模型具有更高的GEBV估计准确性。在当前的研究中，这也是wssGBLUP2和BayesB方法具有更高的准确性的原因。
+
+总体来讲，**选择什么模型取决于性状的遗传结构**。对于微效多基因结构，GBLUP和ssGBLUP模型好用。对于寡基因结构，BayesB和wssGBLUP模型好用。
+
+
 
 
 
