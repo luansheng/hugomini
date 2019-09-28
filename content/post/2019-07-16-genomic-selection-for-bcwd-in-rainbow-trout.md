@@ -20,7 +20,7 @@ GS在水产中特别适合宰杀性状、性别连锁性状(只有可以分辨�
 
 GBLUP假定性状为多基因(polygenic)结构，即所有的分型标记效应相同，用于构建基因组亲缘关系G矩阵。与之相反，贝叶斯变量选择模型（Bayesian variable selection model）假定性状的遗传方差可通过部分标记解释。**如果性状受几个具有中高效应值的QTL控制，那么贝叶斯模型的预能力将会好于GBLUP**。GBLUP方法进一步可以扩展为ssGBLUP方法，同时利用系谱和基因组亲缘关系。wssGBLUP方法则是模仿贝叶斯方法，在模型中拟合可解释性状遗传方差的SNP位点。
 
-性状的遗传结构和群体的结构对于基因组预测的准确性具有重要意义。因此，初次开展GS选择评估时，评估不同GS模型的预测能力，并与系谱基础的模型进行对比分析，是非常重要的。
+性状的遗传结构和[群体的结构](#5)对于基因组预测的准确性具有重要意义。*ps:一开始读到这里不太理解，后续看到讨论，明白了，混合群体admixture会增加ALD，从而提高预测准确性*。因此，初次开展GS选择评估时，评估不同GS模型的预测能力，并与系谱基础的模型进行对比分析，是非常重要的。
 
 最近的发表一篇关于[虹鳟BCWD的GS研究](#rt2016)，同样是由NCCCWA（National Center for Cool and Cold Water Aquaculture, Agricultureal Research Service, Unite States)完成的实验，表明GS模型并不能提高预测的准确度。作者认为，主要原因是训练群体样本数较小、验证群体家系样本不平衡等原因造成的。本文与之相比，样本数更大，交配设计更加平衡，家系数量更多。
 
@@ -216,7 +216,7 @@ BCWD抗性通过分析发现是寡基因遗传模式（Oligogenic inheritance）
 两个特别启示：
 
 * 跨群体进行GS评估，譬如参考群体来自一个群体，候选群体来自另外一个群体，效果非常差，GS的准确性会很低；
-* 针对不同的世代，参考群体需要更新；
+* 针对不同的世代，[参考群体需要更新](https://www.cambridge.org/core/journals/animal/article/updating-the-reference-population-to-achieve-constant-genomic-prediction-reliability-across-generations/75BA3F210054FE6C7F8561E5B2862DE2#)；
 
 
 ### 附加评论
@@ -228,20 +228,19 @@ BCWD抗性通过分析发现是寡基因遗传模式（Oligogenic inheritance）
 * 从抗性强的家系中选择个体，进行分型，降低分型成本
 * 对候选个体（来自预选家系）进行基因分型，预测其GEBV
 
-在畜牧中利用GS的优势，是会增加育种值和选择反应的准确性，但是不会增加甚至降低近交率。
+在畜牧中利用GS的优势，是会增加育种值和选择反应的准确性，但是不会增加甚至降低近交率。在水产动物中，GS会大幅度降低近交率，主要是因为改变了传统的同胞测试模式。基因组数据提供了**孟德尔抽样信息**，降低了对**家系选择**的需求，也降低了同胞个体EBV之间的相关性和亲缘关系个体共同选择的概率。既然[Bulmer效应](https://gsejournal.biomedcentral.com/articles/10.1186/1297-9686-44-26)（reduction in variance due to selection）会降低家系间的变异，那么在多代选育过程中，如何利用家系内变异会变得更加重要。而经典的同胞测试，没有利用家系内的变异，在多代选育过程中，GS的优势会不断增加。
+
+水产中应用GS的一大障碍，是需要构建一个大参考群体。本文的研究，给出了一个振奋人心的答案，参考群体达到1000，就可以取得一个比较好的效果。
 
 
-
-
-
-
-
-
-
-参考文献：      
+需要进一步阅读的参考文献：      
 <a id="1">1</a> Leeds TD, Silverstein JT, Weber GM, Vallejo RL, Palti Y, Rexroad CE, et al. Response to selection for bacterial cold water disease resistance in rainbow trout. J Anim Sci.
 2010;88:1936–46.      
 <a id="2">2</a> Silverstein JT, Vallejo RL, Palti Y, Leeds TD, Rexroad CE 3rd, Welch TJ, et al. Rainbow trout resistance to bacterial cold-water disease is moderately heritable and is not adversely correlated with growth. J Anim Sci. 2009;87:860–7.          
 <a id="3">3</a> Palti Y, Gao G, Liu S, Kent MP, Lien S, Miller MR, et al. The development and characterization of a 57 K single nucleotide polymorphism array for rainbow trout. Mol Ecol Resour. 2015;15:662–72.          
 <a id="rt2016">4</a> Vallejo RL, Leeds TD, Fragomeni BO, Gao G, Hernandez AG, Misztal I, et al. Evaluation of genome-enabled selection for bacterial cold water disease resistance using progeny performance data in rainbow trout: insights on genotyping methods and genomic prediction models. Front Genet. 2016;7:96.         
-<a id="5">5</a> Jørgen Ødegård1, Thomas Moen, Nina Santi, SvenA. Korsvoll, Sissel Kjøglum1 and Theo H.E. Meuwissen. Genomic prediction in an admixed population of Atlantic salmon (Salmo salar). Front Genet. 2014;5:402.         
+<a id="5">5</a> Jørgen Ødegård1, Thomas Moen, Nina Santi, SvenA. Korsvoll, Sissel Kjøglum1 and Theo H.E. Meuwissen. Genomic prediction in an admixed population of Atlantic salmon (Salmo salar). Front Genet. 2014;5:402.            
+<a id="6">6</a> Pszczola, M., & Calus, M. (2016). Updating the reference population to achieve constant genomic prediction reliability across generations. Animal, 10(6), 1018-1024. doi:10.1017/S1751731115002785               
+<a id="6">7</a> Rolf MM, Garrick DJ, Fountain T, Ramey HR, Weaber RL, Decker JE, et al.
+Comparison of Bayesian models to estimate direct genomic values in
+multi-breed commercial beef cattle. Genet Sel Evol. 2015;47:23.
