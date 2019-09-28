@@ -143,13 +143,15 @@ EBV和GEBV，也就是加性遗传效应的预测能力，通过中亲（mid-par
 
 ## 结果
 ### 平均后代表型和中亲EBV或者GEBV
-对于反应BCWD抗性的DAYS和STATUS两个性状，基于138个后代测试家系（PTF）数据计算出平均后代表型MPP、中亲EBV和GEBV。结算结果在附件[Table S1](https://static-content.springer.com/esm/art%3A10.1186%2Fs12711-017-0293-6/MediaObjects/12711_2017_293_MOESM1_ESM.xlsx)中。其中对于中亲GEBV，列出了ssGBLUP、wssGBLUP、wssGBLUP2和wssGBLUP3等多种方法的计算结果。
+对于代表应BCWD抗性的DAYS和STATUS两个性状，基于138个后代测试家系（PTF）数据计算出平均后代表型MPP、中亲EBV和GEBV。结算结果在附件[Table S1](https://static-content.springer.com/esm/art%3A10.1186%2Fs12711-017-0293-6/MediaObjects/12711_2017_293_MOESM1_ESM.xlsx)中。其中对于中亲GEBV，列出了ssGBLUP、wssGBLUP、wssGBLUP2和wssGBLUP3等多种方法的计算结果。
 
 ### BCWD抗性的遗传力
-利用P-BLUP模型，获得DAYS和STATUS性状的遗传力分别为0.37和0.35。利用不同的GS模型，获得DAYS的遗传力在0.23-0.33，STAUTS性状的遗传力在0.25-0.35。结果见表1和表2。
+利用P-BLUP模型，获得DAYS和STATUS性状的遗传力分别为0.37和0.35。利用不同的GS模型，获得DAYS的遗传力在0.23-0.33，STATUS性状的遗传力在0.25-0.35。结果见[表1](https://gsejournal.biomedcentral.com/articles/10.1186/s12711-017-0293-6/tables/1)和[表2](https://gsejournal.biomedcentral.com/articles/10.1186/s12711-017-0293-6/tables/2)。
+
+
 
 ### EBV的准确性和偏差
-对于DAYS和STATUS，EBV的准确性分别为0.34和0.36。前者低于后者。预测能力是通过计算MPP与中亲EBV的相关系数得到的。这两个性状的偏差分别为0.86和0.67。由于偏差使用回归系数表示的，DAYS的回归系数更大，更接近1，意味着它的偏差小。
+对于DAYS和STATUS，EBV的准确性分别为0.34和0.36。前者低于后者。预测能力是通过计算MPP与中亲EBV的相关系数得到的。这两个性状的偏差分别为0.86和0.67。通过回归系数表示偏差，DAYS的回归系数更大，更接近1，意味着它的偏差小。
 
 ### GEBV的准确性和偏差
 对于DAYS性状，不同GEBV模型的准确性在0.63-0.71之间，BayesB模型的预测能力最强。预测偏差在0.65-1.16之间，ssGBLUP方法的预测值，偏差最小。
@@ -162,7 +164,7 @@ EBV和GEBV，也就是加性遗传效应的预测能力，通过中亲（mid-par
 对于DAYS和STATUS性状，预测准确性最高的是BayesB方法，与P-BLUP相比，提高了108.8%和97.2%。其次wssGBLUP2，然后是wssGBLUP3，最差是ssGBLUP。即便是ssGBLUP，相比P-BLUP，预测能力也分别提高了85.3%和83.3%。
 
 ### 五个GS方案GEBV的准确性和偏差
-利用BayesB分析了五种GS方案的预测能力。方案1和3预测能力最高（0.69 to 0.72），然后是方案2（0.67），方案4（0.53 to 0.61）和方案5（0.22 to 0.25）。方案5的准确性，甚至低于传统的P-BLUP。
+利用BayesB分析了五种GS方案的预测能力。方案1和3预测能力最高（0.69 to 0.72），然后是方案2（0.67），方案4（0.53 to 0.61）和方案5（0.22 to 0.25）。方案5的准确性，甚至低于传统的P-BLUP。具体结果见[表3](https://gsejournal.biomedcentral.com/articles/10.1186/s12711-017-0293-6/tables/3).
 
 对DAYS性状，利用方案1和3估计的GEBV偏差最小（1.16 and 1.26），利用方案5估计的GEBV偏差最大。对于STATUS性状，方案1偏差最小，方案2和5偏差较大，其中方案5偏差最大。
 
@@ -172,14 +174,16 @@ EBV和GEBV，也就是加性遗传效应的预测能力，通过中亲（mid-par
 利用BayesB获得的DAYS和STATUS性状GEBV的准确性接近（0.71），并且高于ssGBLUP和wssGBLUP。然而，利用ssGBLUP方法获得的STATUS性状GEBV的准确性（0.66-0.70）要高于DAYS性状GEBV的准确性（0.63-0.67）。作者给出的解释有三个：
 
 * 阈值模型可以更好的拟合STATUS；但是对于DAYS性状，实质上是更像分散的分类性状，总共只有21d，利用线性模型不能很好的拟合。
-* 对于侵染实验结束时仍然存活的鱼，DAYS性状设定为21d，性状测量的并不准确。
+* 对于侵染实验结束时仍然存活的鱼，DAYS性状设定为21d，性状测量值并不准确。
 * STATUS的遗传力估计值高于DAYS性状。
 
-对于BCWD性状，如果BCWD性状由超过500个loci控制，那么参考群体为1473，遗传力为0.3，根据这篇文章[Accuracy of Predicting the Genetic Risk of Disease Using a Genome-Wide Approach](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2561058/)推测，预测能力期望可以达到0.68（根据。本文BayesB的预测结果也与此相似。如果假定BCWD性状受超过500个独立的loci控制（少数主效基因和多数为微效多基因），在遗传力为0.3的水平下，当参考群体个体数为3000和10000时，GEBV的期望预测能力可以分别达到0.8和0.93。
+对于BCWD抗性，在参考群体为1473，遗传力为0.3的前提下，如果该性状由超过500个loci控制，根据这篇文章[Accuracy of Predicting the Genetic Risk of Disease Using a Genome-Wide Approach](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2561058/)推测，预测能力期望可以达到0.68，本文BayesB的预测结果也与此相似。
 
-在奶牛中，利用大参考群体（欧洲荷斯坦奶牛，参考群超过4000头牛），获得性能产奶量性状的基因组预测的准确性超过0.8，健康相关性状则超过0.7。该群体后裔测试公牛组成，其产奶性能通过平均女儿性能进行准确测定。而本文研究的一个亮点，是基于一个较小的参考群体，获得了一个较高预测准确性。（It was remarkable to have genomic evaluation with an accuracy of 0.71 using a relatively small training dataset)。ps:**群体样本数达到1473，已经很高了，对虾类而言，如果每尾分型成本500元，意味着要花掉70到80万人民币！**本文作者推测，这样一个高选择准确性是由于：
+如果假定BCWD性状受超过500个独立的loci控制（少数主效基因和多数微效多基因），在遗传力为0.3的水平下，当参考群体个体数分别为3000和10000时，GEBV的期望预测能力分别可以达到0.8和0.93。
 
-* 参考群和验证群之间的较高的亲缘关系；
+在奶牛中，利用大参考群体（欧洲荷斯坦奶牛，参考群超过4000头牛），获得产奶量性状的基因组预测准确性超过0.8，健康相关性状则超过0.7。该群体由进行了后裔测试的公牛组成，其产奶性能通过平均女儿性能进行准确测定。与之相比，本文研究的一个亮点，是基于一个较小的参考群体，获得了一个较高预测准确性。（It was remarkable to have genomic evaluation with an accuracy of 0.71 using a relatively small training dataset)。**ps:群体样本数达到1473，已经很高了，对虾类而言，如果每尾分型成本500元，意味着要花掉70到80万人民币！**本文作者推测，这样一个高选择准确性是由于：
+
+* 参考群和验证群之间的亲缘关系密切；
 * 虹鳟群体的有效群体大小比较小，导致连锁不平衡扩大（entensive linkage disequilibrium），从而需要估计的有效染色体区段效应变少，因此可以更好地预测和更好的准确性。
 
 在混合鲑鳟鱼群体（Admixed salmonid population）中，广泛观察到大范围连锁不平衡(Long-range LD）。
