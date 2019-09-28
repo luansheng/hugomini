@@ -20,7 +20,7 @@ GS在水产中特别适合宰杀性状、性别连锁性状(只有可以分辨�
 
 GBLUP假定性状为多基因(polygenic)结构，即所有的分型标记效应相同，用于构建基因组亲缘关系G矩阵。与之相反，贝叶斯变量选择模型（Bayesian variable selection model）假定性状的遗传方差可通过部分标记解释。**如果性状受几个具有中高效应值的QTL控制，那么贝叶斯模型的预能力将会好于GBLUP**。GBLUP方法进一步可以扩展为ssGBLUP方法，同时利用系谱和基因组亲缘关系。wssGBLUP方法则是模仿贝叶斯方法，在模型中拟合可解释性状遗传方差的SNP位点。
 
-性状的遗传结构和[群体的结构](#5)对于基因组预测的准确性具有重要意义。*ps:一开始读到这里不太理解，后续看到讨论，明白了，混合群体admixture会增加ALD，从而提高预测准确性*。因此，初次开展GS选择评估时，评估不同GS模型的预测能力，并与系谱基础的模型进行对比分析，是非常重要的。
+性状的遗传结构和[群体的结构](#5)对于基因组预测的准确性具有重要意义。**ps:一开始读到这里不太理解，后续看到讨论，明白了，混合群体admixture会增加ALD，从而提高预测准确性**。因此，初次开展GS选择评估时，评估不同GS模型的预测能力，并与系谱基础的模型进行对比分析，是非常重要的。
 
 最近的发表一篇关于[虹鳟BCWD的GS研究](#rt2016)，同样是由NCCCWA（National Center for Cool and Cold Water Aquaculture, Agricultureal Research Service, Unite States)完成的实验，表明GS模型并不能提高预测的准确度。作者认为，主要原因是训练群体样本数较小、验证群体家系样本不平衡等原因造成的。本文与之相比，样本数更大，交配设计更加平衡，家系数量更多。
 
@@ -241,6 +241,5 @@ BCWD抗性通过分析发现是寡基因遗传模式（Oligogenic inheritance）
 <a id="rt2016">4</a> Vallejo RL, Leeds TD, Fragomeni BO, Gao G, Hernandez AG, Misztal I, et al. Evaluation of genome-enabled selection for bacterial cold water disease resistance using progeny performance data in rainbow trout: insights on genotyping methods and genomic prediction models. Front Genet. 2016;7:96.         
 <a id="5">5</a> Jørgen Ødegård1, Thomas Moen, Nina Santi, SvenA. Korsvoll, Sissel Kjøglum1 and Theo H.E. Meuwissen. Genomic prediction in an admixed population of Atlantic salmon (Salmo salar). Front Genet. 2014;5:402.            
 <a id="6">6</a> Pszczola, M., & Calus, M. (2016). Updating the reference population to achieve constant genomic prediction reliability across generations. Animal, 10(6), 1018-1024. doi:10.1017/S1751731115002785               
-<a id="6">7</a> Rolf MM, Garrick DJ, Fountain T, Ramey HR, Weaber RL, Decker JE, et al.
-Comparison of Bayesian models to estimate direct genomic values in
+<a id="7">7</a> Rolf MM, Garrick DJ, Fountain T, Ramey HR, Weaber RL, Decker JE, et al. Comparison of Bayesian models to estimate direct genomic values in
 multi-breed commercial beef cattle. Genet Sel Evol. 2015;47:23.
