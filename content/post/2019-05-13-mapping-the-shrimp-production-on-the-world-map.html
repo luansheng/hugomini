@@ -16,7 +16,8 @@ header:
 
 
 
-<p>最近，Boss交给了一个任务，把各国凡纳滨对虾的产量在世界地图上标注一下。</p>
+<p>UPdate: 2019-10-05，庆祝建国70周年，地图修改为中国红！
+最近，Boss交给了一个任务，把各国凡纳滨对虾的产量在世界地图上标注一下。</p>
 <p>对于生成地图还是很有兴趣的。没想到竟然很有挑战性！</p>
 <p>之前看过几个blog，印象中有不少包可以完成这个任务。</p>
 <p>但最后发现，还是ggplot2包比较好用。为了画地图，用到的包主要有：</p>
@@ -257,10 +258,10 @@ showtext_auto()
 ggplot(map_world_PNV_production_2017_dt,
        aes(x = long, y = lat, group = group)) +
   geom_polygon(aes(fill = Production),color=&quot;grey50&quot;) +
-  #国家绘制为金黄色
+  #国家绘制为朱红色
   scale_fill_gradient(
-    low = &quot;#ffead8&quot;,  ##f3f8f1 绿色
-    high = &quot;#f28500&quot;,  ##228b22
+    low = &quot;#ffdfd5&quot;,  ##f3f8f1 绿色
+    high = &quot;#d83010&quot;,  ##228b22 橙色
     breaks = c(5000, 10000, 50000, 250000, 500000, 1600000),
     space = &quot;Lab&quot;,
     na.value = &quot;#a9a9a9&quot;,
@@ -276,7 +277,7 @@ ggplot(map_world_PNV_production_2017_dt,
     y = NULL
   ) +
   geom_point(aes(x =MeanLong, y= MeanLat),
-             color = &quot;blue&quot;, 
+             color = &quot;green&quot;, 
              size = 1.5,
              data=map_world_PNV_country_position_2017_dt) +
   geom_text_repel(
@@ -301,7 +302,7 @@ ggplot(map_world_PNV_production_2017_dt,
   ) +
   annotate(
     geom = &#39;text&#39;,
-      label = &#39;栾生等，2019.\n数据来源：FAO, 2019.  http://www.fao.org/fishery/statistics/global-aquaculture-production/zh&#39;,
+      label = &#39;数据来源：FAO, 2019.  http://www.fao.org/fishery/statistics/global-aquaculture-production/zh&#39;,
     x = 10, y = -55,
     size = 4,
     family = &#39;heiti&#39;,
