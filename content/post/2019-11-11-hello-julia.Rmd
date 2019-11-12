@@ -1,0 +1,71 @@
+---
+title: Hello Julia
+author: Sheng Luan
+date: '2019-11-11'
+slug: hello-julia
+categories:
+  - 编程
+tags:
+  - Julia
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::knit_engines$set(julia = JuliaCall::eng_juliacall)
+```
+
+Julia越来越火了，有逐渐超越c++、python、R成为下一把屠龙宝刀的潜质。目前语言在1.0版本发布后，已经逐渐稳定。
+
+现在来测试一下Julia的性能。随机生成5亿个数，每500个一组，求均值。对100万个均值，计算处在98%区间内的上限和下限值。
+
+先来看第一种方案：
+
+```{r method1, engine="julia"}
+using Statistics
+@time begin
+    data = Float64[]
+    for _ in 1:10^6
+        group = Float64[]
+        for _ in 1:5*10^2
+            push!(group,rand())
+        end
+        push!(data,mean(group))
+    end
+    println("98% of the means lie in the estimated range:",
+            (quantile(data, 0.01),quantile(data, 0.99)))
+end
+```
+
+再看第二种方法：
+```{r method2, engine="julia"}
+using Statistics
+@time begin
+    data = [mean(rand(5*10^2)) for _ in 1:10^6]
+    println("98% of the means lie in the estimated range:",
+        (quantile(data, 0.01),quantile(data, 0.99)))
+end
+```
+
+处理同样的数据量，**第二种方法显然速度更快**。主要是原因是在第一种方法中，group和data作为两个动态数组，编译器并不知道它们的最终大小，因此push!函数每增加1个元素到数组中，group和data数组就重新分配大小，并拷贝。这样的操作要执行100万次，因此浪费了时间。
+
+在第二种方法中，通过推导式（comprehension）直接给data分配100万个内存空间，`rand(5*10^2)`直接生成500个随机数，对内存空间的需求明确，因此更快。
+
+推导式是一个非常好用的工具。在模拟中，可以方便的生成想要的矩阵和向量。
+
+生成一个矩阵，或者说二维数组
+
+```{julia}
+matrix_1 = [i+j for i in 1:10, j in 1:10];
+matrix_1
+```
+
+也可以加过滤条件，只输出偶数，但是矩阵会坍塌为向量：
+```{julia}
+matrix_2 = [i+j for i in 1:10, j in 1:10 if iseven(i+j)];
+matrix_2
+```
+
+简单尝试了一下，knitr不知道如何装饰julia的输出结果。可以考虑利用IJulia来学习，把总结转换为md文档后，贴到博客上。
+
+
+

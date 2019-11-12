@@ -1,0 +1,63 @@
+---
+title: Hello Julia
+author: Sheng Luan
+date: '2019-11-11'
+slug: hello-julia
+categories:
+  - 编程
+tags:
+  - Julia
+---
+
+
+
+<pre class="r"><code>knitr::opts_chunk$set(echo = TRUE)
+knitr::knit_engines$set(julia = JuliaCall::eng_juliacall)</code></pre>
+<p>Julia越来越火了，有逐渐超越c++、python、R成为下一把屠龙宝刀的潜质。目前语言在1.0版本发布后，已经逐渐稳定。</p>
+<p>现在来测试一下Julia的性能。随机生成5亿个数，每500个一组，求均值。对100万个均值，计算处在98%区间内的上限和下限值。</p>
+<p>先来看第一种方案：</p>
+<pre class="julia"><code>using Statistics
+@time begin
+    data = Float64[]
+    for _ in 1:10^6
+        group = Float64[]
+        for _ in 1:5*10^2
+            push!(group,rand())
+        end
+        push!(data,mean(group))
+    end
+    println(&quot;98% of the means lie in the estimated range:&quot;,
+            (quantile(data, 0.01),quantile(data, 0.99)))
+end</code></pre>
+<pre><code>## 98% of the means lie in the estimated range:(0.4699358373639885, 0.5299895654245624)
+##  21.658480 seconds (10.45 M allocations: 7.997 GiB, 9.57% gc time)</code></pre>
+<p>再看第二种方法：</p>
+<pre class="julia"><code>using Statistics
+@time begin
+    data = [mean(rand(5*10^2)) for _ in 1:10^6]
+    println(&quot;98% of the means lie in the estimated range:&quot;,
+        (quantile(data, 0.01),quantile(data, 0.99)))
+end</code></pre>
+<pre><code>## 98% of the means lie in the estimated range:(0.4699265714058901, 0.5300302633936297)
+##   3.958651 seconds (1.18 M allocations: 3.906 GiB, 18.03% gc time)</code></pre>
+<p>处理同样的数据量，<strong>第二种方法显然速度更快</strong>。主要是原因是在第一种方法中，group和data作为两个动态数组，编译器并不知道它们的最终大小，因此push!函数每增加1个元素到数组中，group和data数组就重新分配大小，并拷贝。这样的操作要执行100万次，因此浪费了时间。</p>
+<p>在第二种方法中，通过推导式（comprehension）直接给data分配100万个内存空间，<code>rand(5*10^2)</code>直接生成500个随机数，对内存空间的需求明确，因此更快。</p>
+<p>推导式是一个非常好用的工具。在模拟中，可以方便的生成想要的矩阵和向量。</p>
+<p>生成一个矩阵，或者说二维数组</p>
+<pre class="julia"><code>matrix_1 = [i+j for i in 1:10, j in 1:10];
+matrix_1</code></pre>
+<pre><code>## 10×10 Array{Int64,2}:
+##   2   3   4   5   6   7   8   9  10  11
+##   3   4   5   6   7   8   9  10  11  12
+##   4   5   6   7   8   9  10  11  12  13
+##   5   6   7   8   9  10  11  12  13  14
+##   6   7   8   9  10  11  12  13  14  15
+##   7   8   9  10  11  12  13  14  15  16
+##   8   9  10  11  12  13  14  15  16  17
+##   9  10  11  12  13  14  15  16  17  18
+##  10  11  12  13  14  15  16  17  18  19
+##  11  12  13  14  15  16  17  18  19  20</code></pre>
+<p>也可以加过滤条件，只输出偶数，但是矩阵会坍塌为向量：</p>
+<pre class="julia"><code>matrix_2 = [i+j for i in 1:10, j in 1:10 if iseven(i+j)];
+matrix_2</code></pre>
+<p>简单尝试了一下，knitr不知道如何装饰julia的输出结果。可以考虑利用IJulia来学习，把总结转换为md文档后，贴到博客上。</p>
