@@ -53,6 +53,7 @@ au BufNewFile,BufRead *.as setlocal filetype=asreml
 ## 3. 效果图
 
 打开一个as文件，如图所示：
-<div align="center">![asreml语法高亮截图](/post/images/asremlsyntax.png)
-
+<div align="center">
+<img src="/post/images/asremlsyntax.png"  alt="asreml语法高亮截图" height= "380" width="100%" >
+</div>
 对于~和*等特殊字符，还没有实现着色。
