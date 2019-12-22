@@ -43,7 +43,7 @@ PWS2010G01 #育种项目顶层文件夹
 -----R #保存清洗数据的R脚本文件           
 -----BLUPF90 #生成H矩阵的BLUPF90脚本         
 
-如果使用ASReml分析数据，as文件中务必使用!OUTFOLDER限定符将不同Path的内容输出到单独文件夹中。关于R文件的编码格式，请参考[[这里](https://luansheng.netlify.com/2019/06/15/r-style-guide-v-1-0/)。
+如果使用ASReml分析数据，as文件中务必使用!OUTFOLDER限定符将不同Path的内容输出到单独文件夹中。关于R文件的编码格式，请参考[这里](https://luansheng.netlify.com/2019/06/15/r-style-guide-v-1-0/)。
 
 ## 数据处理实例
 
