@@ -52,8 +52,9 @@ au BufNewFile,BufRead *.as setlocal filetype=asreml
 
 ## 3. 效果图
 
-打开一个as文件，如图所示：
+打开一个as文件，如图所示（很喜欢主题[seoul256.vim](https://github.com/junegunn/seoul256.vim)主题的配色）：
 <div align="center">
-<img src="/post/images/asremlsyntax.png"  alt="asreml语法高亮截图" height= "380" width="100%" >
+<img src="/post/images/asremlsyntax.png"  alt="asreml语法高亮截图" height= "600" width="100%" >
 </div>
 对于~和*等特殊字符，还没有实现着色。
+
