@@ -15,7 +15,7 @@ header:
 
 
 <p>在动物选择育种中，系谱的作用不言而喻。一方面利用系谱信息，可以提高育种值估计和选择的准确度；另外，可以控制近亲交配，避免性状衰退。因此，一个可靠准确的系谱记录对于选择育种是非常重要的。此外，系谱往往通过个体、父本和母本三列形式保存，很难直观的查看个体的祖先和后代信息。因此，系谱的可视化就变得非常重要。在windows平台下，The University of Minnesota杨达教授课题组开发了一个可用于显示个体系谱的<a href="https://animalgene.umn.edu/pedigraph">pedigraph</a>软件，可以显示很多个体的系谱，功能非常强大，但需要利用参数文件，配置使用。 The University of New England的Brian Kinghorn教授开发了<a href="https://bkinghor.une.edu.au/pedigree.htm">pedigree viewer</a>软件，可以整理、提纯系谱，并且可以在窗口中直观地显示个体的系谱，但如果个体的数量非常多，个体将重叠在一起，系谱显示还需要进一步优化。在R环境下，pedigree，nadiv，optiSel等包均有系谱整理的功能，kinship2, synbreed等包都可以画图，但是一旦系谱包括的个体数量多，画出来的系谱树，个体间重叠非常厉害。</p>
-<p>因此利用data.table和igraph两个包处理数据、绘图能力强的特点，开发了<a href="https://github.com/luansheng/visPedigree">visPedigree</a>包，进一步增强了系谱整理的功能，可以设置世代数，追溯提取任意个体的祖先和后代个体；并通过简化系谱和显示系谱缩略图等方法，自动优化系谱树布局、快速显示包括大量个体(每个世代个体数&gt;10000)的系谱。主要内容包括：</p>
+<p>因此利用data.table和igraph两个包处理数据、绘图能力强的特点，开发了<a href="https://github.com/luansheng/visPedigree">visPedigree</a>包，进一步增强了系谱整理的功能，可以设置世代数，追溯提取任意个体的祖先和后代个体；并通过简化系谱和显示系谱缩略图等方法，自动优化系谱树布局、快速显示包括大量个体(每个世代个体数&gt;10000)的系谱。主要内容包括:</p>
 <p>1 <a href="#1">安装visPedigree包</a><br />
 2 <a href="#2">系谱格式说明</a><br />
 3 <a href="#3">检查和整理系谱</a><br />
@@ -29,20 +29,20 @@ header:
 4.4 <a href="#4.4">应用场景</a><br />
 4.4.1 <a href="#4.4.1">追踪个体的奠基者组成情况</a><br />
 4.4.2 <a href="#4.4.2">观察配种方案中不同家系的贡献情况</a></p>
-<div id="vispedigree" class="section level2">
+<div id="安装vispedigree包" class="section level2">
 <h2><a id="1">1 安装visPedigree包</a></h2>
 <p>目前visPedigree包还没有发布到cran，但利用devtools包，可以从github上进行安装。</p>
 <p>以Rstudio平台为例，如果没有安装devtools包，首先安装，然后加载devtools。</p>
 <pre class="r"><code>is_installed &lt;- require(devtools)</code></pre>
-<pre><code>## Loading required package: devtools</code></pre>
-<pre><code>## Warning: package &#39;devtools&#39; was built under R version 3.5.3</code></pre>
+<pre><code>## 载入需要的程辑包：devtools</code></pre>
+<pre><code>## 载入需要的程辑包：usethis</code></pre>
 <pre class="r"><code>if (!is_installed) {
   install.packages(&quot;devtools&quot;)  
   suppressPackageStartupMessages(require(devtools))  
 }</code></pre>
 <p>从github上安装visPedigree，然后加载visPedigree包。该包基于data.table和igraph包开发，如果这两个包没有安装，也会一并安装。</p>
 <pre class="r"><code>is_installed &lt;- require(visPedigree)</code></pre>
-<pre><code>## Loading required package: visPedigree</code></pre>
+<pre><code>## 载入需要的程辑包：visPedigree</code></pre>
 <pre class="r"><code>if (!is_installed) {
   install_github(&quot;luansheng/visPedigree&quot;)  
   suppressPackageStartupMessages(require(visPedigree))
@@ -60,7 +60,7 @@ header:
 <pre class="r"><code>setwd(&quot;c:/visPedigree&quot;)
 install_local(&quot;visPedigree-master.zip&quot;)</code></pre>
 </div>
-<div id="section" class="section level2">
+<div id="系谱格式说明" class="section level2">
 <h2><a id="2">2 系谱格式说明</a></h2>
 <p>系谱数据的前三列顺序必须为个体、父本和母本ID，系谱文件中可以包括其他信息如性别、出生年月、世代等。</p>
 <p>个体丢失的亲本可以用0、*、“NA”等表示，推荐用0表示。空格和空值也可表示丢失亲本，但是不推荐使用。个体列如果存在这些值，该行将直接被删除。
@@ -79,9 +79,9 @@ head(ped_2)</code></pre>
 ## 5: X0YX0300    0   0 Male    0
 ## 6: X0YX0400    0   0 Male    0</code></pre>
 </div>
-<div id="section-1" class="section level2">
+<div id="检查和整理系谱" class="section level2">
 <h2><a id="3">3 检查和整理系谱</a></h2>
-<div id="section-2" class="section level3">
+<div id="概述" class="section level3">
 <h3><a id="3.1">3.1 概述</a></h3>
 <p>通过tidyped函数可以检查和整理系谱，主要包括：</p>
 <ul>
@@ -126,17 +126,17 @@ simple_ped[Sire %in% c(&quot;0&quot;,&quot;*&quot;,&quot;NA&quot;,NA) | Dam %in%
 <pre class="r"><code>x &lt;- data.table::copy(simple_ped)
 x[ID == &quot;J2F588&quot;,Sire:=&quot;J0Z167&quot;]
 y &lt;- tidyped(x)</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
-## asterisk, or character NA is recognized as a missing parent and is replaced
-## with the missing value NA.</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): The following individuals are
+<pre><code>## Warning in checkped(ped_inter, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced with
+## the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): The following individuals are
 ## simultaneously bisexual.</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): J0Z167</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): J0Z167</code></pre>
 <p>利用tidyped函数整理simple_ped系谱，将丢失的亲本替换为NA，将子代排在亲本前边，在系谱中补充丢失的奠基者个体信息。</p>
 <pre class="r"><code>tidy_simple_ped &lt;- tidyped(simple_ped)</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
-## asterisk, or character NA is recognized as a missing parent and is replaced
-## with the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced with
+## the missing value NA.</code></pre>
 <pre class="r"><code>head(tidy_simple_ped)</code></pre>
 <pre><code>##       Ind Sire  Dam    Sex Gen IndNum SireNum DamNum
 ## 1: J0C032 &lt;NA&gt; &lt;NA&gt; female   1      1       0      0
@@ -158,9 +158,9 @@ y &lt;- tidyped(x)</code></pre>
 <p>整理后的系谱数据集，补充了奠基者个体及其性别信息，并且将亲本排序在后代前边，个体数量变为由31增加为59。个体、父本和母本的列名字重新命名为Ind、Sire和Dam。丢失的亲本统一替换为NA，tidyped函数运行后会有相应提示。tidyped函数整理后的系谱数据集默认增加了Gen和IndNum、SireNum和DamNum四列。如果simple_ped没有包括Sex列，也会增加该列。</p>
 <p>把addgen和addnum参数设置为FALSE，整理后的系谱文件将不返回Gen和IndNum、SireNum和DamNum四列。</p>
 <pre class="r"><code>tidy_simple_ped_no_gen_num &lt;- tidyped(simple_ped,addgen = FALSE,addnum = FALSE)</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
-## asterisk, or character NA is recognized as a missing parent and is replaced
-## with the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced with
+## the missing value NA.</code></pre>
 <pre class="r"><code>head(tidy_simple_ped_no_gen_num)</code></pre>
 <pre><code>##       Ind Sire  Dam  Sex
 ## 1: J0Z333 &lt;NA&gt; &lt;NA&gt; male
@@ -177,7 +177,7 @@ saved_ped[is.na(Dam),Dam:=&quot;0&quot;]
 data.table::fwrite(x=saved_ped,file = &quot;tidysimpleped.csv&quot;,sep=&quot;,&quot;,quote = FALSE)
 head(saved_ped)</code></pre>
 </div>
-<div id="section-3" class="section level3">
+<div id="提取指定个体的系谱" class="section level3">
 <h3><a id="3.2">3.2 提取指定个体的系谱</a></h3>
 <p>设置cand参数，可以追溯指定个体的系谱。并且会在返回的数据集中增加新的一列Cand。TRUE表示该个体为cand个体。</p>
 <pre class="r"><code>tidy_simple_ped_J5X804_ancestors &lt;- tidyped(ped=tidy_simple_ped_no_gen_num,cand=&quot;J5X804&quot;)
@@ -192,21 +192,14 @@ tail(tidy_simple_ped_J5X804_ancestors)</code></pre>
 <p>默认追溯个体至奠基者祖先的系谱。如果只想追溯几代，可以设置tracegen参数。</p>
 <pre class="r"><code>tidy_simple_ped_J5X804_ancestors_2 &lt;- tidyped(ped=tidy_simple_ped_no_gen_num,cand=&quot;J5X804&quot;,tracegen = 2)
 print(tidy_simple_ped_J5X804_ancestors_2)</code></pre>
-<pre><code>##        Ind   Sire    Dam    Sex  Cand Gen IndNum SireNum DamNum
-##  1: J2C161   &lt;NA&gt;   &lt;NA&gt;   male FALSE   1      1       0      0
-##  2: J2C808   &lt;NA&gt;   &lt;NA&gt;   male FALSE   1      2       0      0
-##  3: J2F588   &lt;NA&gt;   &lt;NA&gt; female FALSE   1      3       0      0
-##  4: J2G465   &lt;NA&gt;   &lt;NA&gt;   male FALSE   1      4       0      0
-##  5: J2X544   &lt;NA&gt;   &lt;NA&gt; female FALSE   1      5       0      0
-##  6: J2Z411   &lt;NA&gt;   &lt;NA&gt; female FALSE   1      6       0      0
-##  7: J2Z903   &lt;NA&gt;   &lt;NA&gt;   male FALSE   1      7       0      0
-##  8: J3L886 J2C808 J2F588   male FALSE   2      8       2      3
-##  9: J3X697 J2Z903   &lt;NA&gt; female FALSE   2      9       7      0
-## 10: J3Y620 J2C161 J2Z411   male FALSE   2     10       1      6
-## 11: J3Y771 J2G465 J2X544 female FALSE   2     11       4      5
-## 12: J4E185 J3L886 J3X697 female FALSE   3     12       8      9
-## 13: J4Y326 J3Y620 J3Y771   male FALSE   3     13      10     11
-## 14: J5X804 J4Y326 J4E185 female  TRUE   4     14      13     12</code></pre>
+<pre><code>##       Ind   Sire    Dam    Sex  Cand Gen IndNum SireNum DamNum
+## 1: J3L886   &lt;NA&gt;   &lt;NA&gt;   male FALSE   1      1       0      0
+## 2: J3X697   &lt;NA&gt;   &lt;NA&gt; female FALSE   1      2       0      0
+## 3: J3Y620   &lt;NA&gt;   &lt;NA&gt;   male FALSE   1      3       0      0
+## 4: J3Y771   &lt;NA&gt;   &lt;NA&gt; female FALSE   1      4       0      0
+## 5: J4E185 J3L886 J3X697 female FALSE   2      5       1      2
+## 6: J4Y326 J3Y620 J3Y771   male FALSE   2      6       3      4
+## 7: J5X804 J4Y326 J4E185 female  TRUE   3      7       6      5</code></pre>
 <p>上述代码将追溯个体J5X804两个世代。</p>
 <p>如果对个体的后代感兴趣，可以通过设置trace参数来实现。</p>
 <p>trace参数有三个选项：</p>
@@ -226,13 +219,13 @@ print(tidy_simple_ped_J0Z990_offspring)</code></pre>
 ## 6: J5X804 J4Y326   &lt;NA&gt; female FALSE   6      6       5      0</code></pre>
 <p>追溯J0Z990的子代，可以发现共计有5个后裔个体。</p>
 </div>
-<div id="section-4" class="section level3">
+<div id="数字化系谱" class="section level3">
 <h3><a id="3.3">3.3 数字化系谱</a></h3>
 <p>一些程序，会要求提供数字系谱进行遗传评估。在计算加性遗传相关矩阵时，也要求个体连续编号。
 tidyped函数默认会增加一个三列（IndNum、SireNum和DamNum）的数字系谱。如果不需要，可以设置<code>addnum=FALSE</code>将该功能关闭。</p>
 </div>
 </div>
-<div id="section-5" class="section level2">
+<div id="绘制系谱" class="section level2">
 <h2><a id="4">4 绘制系谱</a></h2>
 <p>利用visped函数，可以绘制多代系谱图。系谱图可以在R、Rstudio默认图形设备显示，并且可以保存在pdf文件中。保存在pdf文件中的系谱图是矢量图，更为清晰、可辨认，个体间不会发生重叠现象。当系谱中个体的数量多，个体的ID编号较长时，适合保存在pdf文件中。如果很多个体为全同胞个体，譬如水产动物的核心育种群体，可以对系谱进行简化显示，这样即使每代个体数量超过10000，也可以非常快的绘制出系谱图。如果每个世代包括的个体数量太多，且个体的ID太长，受限于pdf文件的宽度（最大为200英寸），无法绘制系谱图时，将不显示个体的ID号，只显示一个系谱的缩略图，用于帮助育种者快速浏览核心群体的构建过程，查看是否有外血引入。</p>
 <p><strong>重要提示：</strong>强烈推荐在整理系谱时，指定cand参数。根据cand参数指定的个体提纯的系谱，个体所属世代的推断更加准确，个体在绘制出的系谱图中所在的位置将更为合理。</p>
@@ -241,12 +234,12 @@ tidyped函数默认会增加一个三列（IndNum、SireNum和DamNum）的数字
   tidyped(ped = small_ped,
   cand = c(&quot;Y&quot;,&quot;Z1&quot;,&quot;Z2&quot;))
 visped(tidy_small_ped, compact = TRUE, file=&quot;doc/smallped.pdf&quot;)</code></pre>
-<pre><code>## The vector drawing of the pedigree is saved in the D:/luansheng/Documents/OneDrive/HugoMini/content/post/doc/smallped.pdf file</code></pre>
+<pre><code>## The vector drawing of the pedigree is saved in the C:/Users/luansheng/OneDrive/HugoMini/content/post/doc/smallped.pdf file</code></pre>
 <pre><code>## The cex for individual label is 0.7.</code></pre>
 <pre><code>## Please decrease or increase the value of the parameter cex if the label&#39;s width is longer or shorter than that of the circle or square in the graph.</code></pre>
 <p><img src="/post/2018-09-24-the-first-package-vispedigree-0-1_files/figure-html/smallped-1.png" width="100%" /></p>
 <p>在系谱图中，使用了2种形状和3种颜色来表示各种信息。圆形代表个体；正方形代表简化后的全同胞个体,内部数字为全同胞个体数。暗天蓝色表示雄性，暗金黄色表示雌性，暗橄榄绿表示性别未知。暗天蓝色圆形，内部为字母R，表示雄性个体；暗金黄色圆形，内部为字母W，表示雌性个体；暗橄榄绿色圆形，内部为字母Y，表示性别未知个体；暗橄榄绿色方形，内部为数字2，表示2个全同胞个体，性别未知；个体系谱图上顶端为祖先个体，底部为后裔个体。亲本和子代之间，通过一个点进行连接，子代到中间节点的连线均为深灰色，中间节点连接到父本和母本的线，与父母本各自的颜色相同。</p>
-<div id="section-6" class="section level3">
+<div id="绘制简单系谱图" class="section level3">
 <h3><a id="4.1">4.1 绘制简单系谱图</a></h3>
 <p>绘制整理后的simple_ped系谱图，在R或者Rstudio默认图形设备显示。整理系谱数据集时，需要将tidyped函数的addgen和addnum参数设置为TRUE。</p>
 <pre class="r"><code>visped(tidy_simple_ped)</code></pre>
@@ -259,7 +252,7 @@ visped(tidy_small_ped, compact = TRUE, file=&quot;doc/smallped.pdf&quot;)</code>
 <pre class="r"><code>suppressMessages(visped(tidy_simple_ped, showgraph = FALSE, file=&quot;doc/simpleped.pdf&quot;))</code></pre>
 <p>打开<a href="/post/doc/simpleped.pdf">simpleped.pdf</a>文件，会看到高清晰度的系谱。</p>
 </div>
-<div id="section-7" class="section level3">
+<div id="绘制简化系谱图" class="section level3">
 <h3><a id="4.2">4.2 绘制简化系谱图</a></h3>
 <p>对包自带的deep_ped进行整理，然后绘制系谱图</p>
 <pre class="r"><code>visped(tidyped(deep_ped))</code></pre>
@@ -270,51 +263,51 @@ Rerun visped() function!</code></pre>
 <p>函数提示，某个世代包括的个体数量太多，无法绘制系谱图。建议利用compact或者outline参数来简化系谱图。</p>
 <p>首先尝试一下compact参数，并且输出到deepped1.pdf文件中。在默认图形设备上输出的图片，由于个体数量太多，受限于默认设置的图片尺寸不够大，因此重叠问题严重。</p>
 <pre class="r"><code>visped(tidyped(deep_ped),compact = TRUE, showgraph=TRUE, file=&quot;doc/deepped1.pdf&quot;)</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
-## asterisk, or character NA is recognized as a missing parent and is replaced
-## with the missing value NA.</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): Blank and NA are recoded as a missing sex
-## in the Sex column of the pedigree.</code></pre>
-<pre><code>## The vector drawing of the pedigree is saved in the D:/luansheng/Documents/OneDrive/HugoMini/content/post/doc/deepped1.pdf file</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced with
+## the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): Blank and NA are recoded as a missing
+## sex in the Sex column of the pedigree.</code></pre>
+<pre><code>## The vector drawing of the pedigree is saved in the C:/Users/luansheng/OneDrive/HugoMini/content/post/doc/deepped1.pdf file</code></pre>
 <pre><code>## The cex for individual label is 0.525.</code></pre>
 <pre><code>## Please decrease or increase the value of the parameter cex if the label&#39;s width is longer or shorter than that of the circle or square in the graph.</code></pre>
 <p><img src="/post/2018-09-24-the-first-package-vispedigree-0-1_files/figure-html/reduceped1-1.png" width="100%" />
 打开<a href="/post/doc/deepped1.pdf">deepped1.pdf</a>文件,查看高清的矢量系谱图。最低端个体大部分为正方形，内部的数字是简化后不同家系的全同胞雄性和雌性个体数。如果感觉个体的ID长度小于方形或者圆形，不是很匹配，可以将visped函数给出的cex参数值，进一步变大。cex用来控制图中个体label(ID)的大小，cex越大，个体ID越大，反之亦然。cex取值范围一般为0-1，也可以大于1，每次调整，以0.1作为一个单位。</p>
 <pre class="r"><code>visped(tidyped(deep_ped),compact = TRUE, cex=0.83, showgraph = FALSE, file=&quot;doc/deepped2.pdf&quot;)</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
-## asterisk, or character NA is recognized as a missing parent and is replaced
-## with the missing value NA.</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): Blank and NA are recoded as a missing sex
-## in the Sex column of the pedigree.</code></pre>
-<pre><code>## The vector drawing of the pedigree is saved in the D:/luansheng/Documents/OneDrive/HugoMini/content/post/doc/deepped2.pdf file</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced with
+## the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): Blank and NA are recoded as a missing
+## sex in the Sex column of the pedigree.</code></pre>
+<pre><code>## The vector drawing of the pedigree is saved in the C:/Users/luansheng/OneDrive/HugoMini/content/post/doc/deepped2.pdf file</code></pre>
 <pre><code>## The cex for individual label is 0.83.</code></pre>
 <pre><code>## Please decrease or increase the value of the parameter cex if the label&#39;s width is longer or shorter than that of the circle or square in the graph.</code></pre>
 <p>再打开<a href="/post/doc/deepped2.pdf">deepped2.pdf</a>文件,查看高清的矢量系谱图，ID与图形的匹配度更高。如果感觉不合适，可以继续调整cex。</p>
 </div>
-<div id="section-8" class="section level3">
+<div id="绘制系谱框架图" class="section level3">
 <h3><a id="4.3">4.3 绘制系谱框架图</a></h3>
 <p>设置<code>outline=TRUE</code>绘制系谱的框架图，该图将不会显示系谱个体的ID号。当系谱包括的个体数量特别多时，框架图将非常有效。</p>
 <p>通过这个图，可以更为清晰的发现在某些世代有外血群体引入。生成的pdf文件请点击<a href="/post/doc/deepped3.pdf">这里</a>。</p>
 <pre class="r"><code>suppressMessages(visped(tidyped(deep_ped),compact = TRUE, outline=TRUE, showgraph = TRUE, file=&quot;doc/deepped3.pdf&quot;))</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
-## asterisk, or character NA is recognized as a missing parent and is replaced
-## with the missing value NA.</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): Blank and NA are recoded as a missing sex
-## in the Sex column of the pedigree.</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced with
+## the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): Blank and NA are recoded as a missing
+## sex in the Sex column of the pedigree.</code></pre>
 <p><img src="/post/2018-09-24-the-first-package-vispedigree-0-1_files/figure-html/reduceped3-1.png" width="100%" /></p>
 <p>绘制包中另外一个系谱数据集，其中包括了大量的全同胞个体，只提取2007年出生个体及其祖先的系谱。pdf系谱图见<a href="/post/doc/bigfullsibped.pdf">这里</a>。</p>
 <pre class="r"><code>cand_2007_G8_labels &lt;- big_family_size_ped[(Year == 2007) &amp; (substr(Ind,1,2) == &quot;G8&quot;),Ind]
 cand_2007_G8_tidy_ped &lt;- tidyped(big_family_size_ped,cand=cand_2007_G8_labels)</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
-## asterisk, or character NA is recognized as a missing parent and is replaced
-## with the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced with
+## the missing value NA.</code></pre>
 <pre class="r"><code># 利用suppressMessages，禁止输出提示信息
 suppressMessages(visped(cand_2007_G8_tidy_ped,compact = TRUE, outline=TRUE, showgraph = TRUE, file=&quot;doc/bigfullsibped.pdf&quot;))</code></pre>
 <p><img src="/post/2018-09-24-the-first-package-vispedigree-0-1_files/figure-html/bigfullsibped-1.png" width="100%" /></p>
 </div>
-<div id="section-9" class="section level3">
+<div id="应用场景" class="section level3">
 <h3><a id="4.4">4.4 应用场景</a></h3>
-<div id="section-10" class="section level4">
+<div id="追踪个体的奠基者情况" class="section level4">
 <h4><a id="4.4.1">4.4.1 追踪个体的奠基者情况</a></h4>
 <p>选择育种的过程，实际上就是将分散在多个奠基者个体中的有利基因，通过连续不断的多代交配设计，富集到后代个体中的一个过程。它背后的支持理论，就是大家熟知的微效多基因假说。</p>
 <p>我们选择deep_ped数据集中的一尾个体“K110550H”，可视化它的系谱。pdf系谱图见<a href="/post/doc/K110550Hped.pdf">这里</a>。</p>
@@ -323,7 +316,7 @@ suppressMessages(visped(K110550H_ped,showgraph = TRUE,file=&quot;doc/K110550Hped
 <p><img src="/post/2018-09-24-the-first-package-vispedigree-0-1_files/figure-html/pedofoneind-1.png" width="100%" />
 从上图中可以看出，K110550H个体的奠基者个体（没有亲本）数量为71个，这表示该个体富集了分散在上述奠基者个体的多个有利基因，因此育种目标性状才会表现更加优良。</p>
 </div>
-<div id="section-11" class="section level4">
+<div id="观察配种方案中不同家系贡献个体情况" class="section level4">
 <h4><a id="4.4.2">4.4.2 观察配种方案中不同家系贡献个体情况</a></h4>
 <p>当利用最佳贡献理论进行优化配种时，每个家系贡献的个体数量是不一致，综合选择指数高的家系，贡献更多的个体。通过可视化系谱，可以直观地查看不同家系的贡献比例。</p>
 <p>下边代码，将展示核心育种群2007年出生的106个家系的亲本组成情况。注意在tidyped函数中设置tracegen=2，只展示父母和祖父母两个世代。</p>

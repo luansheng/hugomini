@@ -14,7 +14,7 @@ header:
 
 在动物选择育种中，系谱的作用不言而喻。一方面利用系谱信息，可以提高育种值估计和选择的准确度；另外，可以控制近亲交配，避免性状衰退。因此，一个可靠准确的系谱记录对于选择育种是非常重要的。此外，系谱往往通过个体、父本和母本三列形式保存，很难直观的查看个体的祖先和后代信息。因此，系谱的可视化就变得非常重要。在windows平台下，The University of Minnesota杨达教授课题组开发了一个可用于显示个体系谱的[pedigraph](https://animalgene.umn.edu/pedigraph)软件，可以显示很多个体的系谱，功能非常强大，但需要利用参数文件，配置使用。 The University of New England的Brian Kinghorn教授开发了[pedigree viewer](https://bkinghor.une.edu.au/pedigree.htm)软件，可以整理、提纯系谱，并且可以在窗口中直观地显示个体的系谱，但如果个体的数量非常多，个体将重叠在一起，系谱显示还需要进一步优化。在R环境下，pedigree，nadiv，optiSel等包均有系谱整理的功能，kinship2, synbreed等包都可以画图，但是一旦系谱包括的个体数量多，画出来的系谱树，个体间重叠非常厉害。
 
-因此利用data.table和igraph两个包处理数据、绘图能力强的特点，开发了[visPedigree](https://github.com/luansheng/visPedigree)包，进一步增强了系谱整理的功能，可以设置世代数，追溯提取任意个体的祖先和后代个体；并通过简化系谱和显示系谱缩略图等方法，自动优化系谱树布局、快速显示包括大量个体(每个世代个体数>10000)的系谱。主要内容包括：
+因此利用data.table和igraph两个包处理数据、绘图能力强的特点，开发了[visPedigree](https://github.com/luansheng/visPedigree)包，进一步增强了系谱整理的功能，可以设置世代数，追溯提取任意个体的祖先和后代个体；并通过简化系谱和显示系谱缩略图等方法，自动优化系谱树布局、快速显示包括大量个体(每个世代个体数>10000)的系谱。主要内容包括:
 
 1 [安装visPedigree包](#1)   
 2 [系谱格式说明](#2)   
