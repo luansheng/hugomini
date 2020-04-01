@@ -43,9 +43,8 @@ Therefore, the reliable and accurate pedigree records are very important for a s
 <h2><a id="1">1. Installation of the visPedigree package</a></h2>
 <p>The visPedigree package has not been released in cran, but it can be installed from github(<a href="https://github.com" class="uri">https://github.com</a>) using the devtools package.</p>
 <p>In this blog, all R scripts are runned in Rstudio. If the devtools package is not found in the library, please install it first, then load it.</p>
-<pre class="r"><code>suppressPackageStartupMessages(is_installed &lt;- require(devtools))</code></pre>
-<pre><code>## Warning: package &#39;devtools&#39; was built under R version 3.5.3</code></pre>
-<pre class="r"><code>if (!is_installed) {
+<pre class="r"><code>suppressPackageStartupMessages(is_installed &lt;- require(devtools))
+if (!is_installed) {
   install.packages(&quot;devtools&quot;)  
   suppressPackageStartupMessages(require(devtools))  
 }</code></pre>
@@ -128,17 +127,17 @@ simple_ped[Sire %in% c(&quot;0&quot;,&quot;*&quot;,&quot;NA&quot;,NA) | Dam %in%
 <pre class="r"><code>x &lt;- data.table::copy(simple_ped)
 x[ID == &quot;J2F588&quot;,Sire:=&quot;J0Z167&quot;]
 y &lt;- tidyped(x)</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
-## asterisk, or character NA is recognized as a missing parent and is replaced
-## with the missing value NA.</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): The following individuals are
+<pre><code>## Warning in checkped(ped_inter, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced with
+## the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): The following individuals are
 ## simultaneously bisexual.</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): J0Z167</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): J0Z167</code></pre>
 <p>Moreover, the tidyped function will also sort the simple_ped pedigree, replace the missing parent with “NA”, put the parents behind the offspring, and add the missing founders’ pedigree.</p>
 <pre class="r"><code>tidy_simple_ped &lt;- tidyped(simple_ped)</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
-## asterisk, or character NA is recognized as a missing parent and is replaced
-## with the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced with
+## the missing value NA.</code></pre>
 <pre class="r"><code>head(tidy_simple_ped)</code></pre>
 <pre><code>##       Ind Sire  Dam    Sex Gen IndNum SireNum DamNum
 ## 1: J0C032 &lt;NA&gt; &lt;NA&gt; female   1      1       0      0
@@ -160,9 +159,9 @@ y &lt;- tidyped(x)</code></pre>
 <p>In the prepared <strong>tidy_simple_ped</strong>, the founders’ records including gender were added, and the parents were sorted before the offspring. The number of individuals increases from 31 to 59. The column names of the animal, sire and dam are renamed to Ind, Sire, and Dam.The missing parents are uniformly replaced with “NA”, and there will be corresponding prompts after running tidyped() function. New columns including Gen, IndNum, SireNum and DamNum are added by default in the <strong>tidy_simple_ped</strong>. These columns will be generated when setting the parameters addgen and addnum as FALSE.</p>
 <p>If the <strong>simple_ped</strong> dataset does not include the Sex column, it will be added in the <strong>tidy_simple_ped</strong> dataset.</p>
 <pre class="r"><code>tidy_simple_ped_no_gen_num &lt;- tidyped(simple_ped,addgen = FALSE,addnum = FALSE)</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
-## asterisk, or character NA is recognized as a missing parent and is replaced
-## with the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced with
+## the missing value NA.</code></pre>
 <pre class="r"><code>head(tidy_simple_ped_no_gen_num)</code></pre>
 <pre><code>##       Ind Sire  Dam  Sex
 ## 1: J0Z333 &lt;NA&gt; &lt;NA&gt; male
@@ -194,21 +193,14 @@ tail(tidy_simple_ped_J5X804_ancestors)</code></pre>
 <p>By default, <strong>tidyped()</strong> will trace candidates’ pedigree to ancestors. If you only want to trace back a specific generation number, you can set the tracegen parameter. This parameter can only be used when the trace parameter is not NULL. All generations of the candidates will be traced when the parameter tracegen is NULL.</p>
 <pre class="r"><code>tidy_simple_ped_J5X804_ancestors_2 &lt;- tidyped(ped=tidy_simple_ped_no_gen_num,cand=&quot;J5X804&quot;,tracegen = 2)
 print(tidy_simple_ped_J5X804_ancestors_2)</code></pre>
-<pre><code>##        Ind   Sire    Dam    Sex  Cand Gen IndNum SireNum DamNum
-##  1: J2C161   &lt;NA&gt;   &lt;NA&gt;   male FALSE   1      1       0      0
-##  2: J2C808   &lt;NA&gt;   &lt;NA&gt;   male FALSE   1      2       0      0
-##  3: J2F588   &lt;NA&gt;   &lt;NA&gt; female FALSE   1      3       0      0
-##  4: J2G465   &lt;NA&gt;   &lt;NA&gt;   male FALSE   1      4       0      0
-##  5: J2X544   &lt;NA&gt;   &lt;NA&gt; female FALSE   1      5       0      0
-##  6: J2Z411   &lt;NA&gt;   &lt;NA&gt; female FALSE   1      6       0      0
-##  7: J2Z903   &lt;NA&gt;   &lt;NA&gt;   male FALSE   1      7       0      0
-##  8: J3L886 J2C808 J2F588   male FALSE   2      8       2      3
-##  9: J3X697 J2Z903   &lt;NA&gt; female FALSE   2      9       7      0
-## 10: J3Y620 J2C161 J2Z411   male FALSE   2     10       1      6
-## 11: J3Y771 J2G465 J2X544 female FALSE   2     11       4      5
-## 12: J4E185 J3L886 J3X697 female FALSE   3     12       8      9
-## 13: J4Y326 J3Y620 J3Y771   male FALSE   3     13      10     11
-## 14: J5X804 J4Y326 J4E185 female  TRUE   4     14      13     12</code></pre>
+<pre><code>##       Ind   Sire    Dam    Sex  Cand Gen IndNum SireNum DamNum
+## 1: J3L886   &lt;NA&gt;   &lt;NA&gt;   male FALSE   1      1       0      0
+## 2: J3X697   &lt;NA&gt;   &lt;NA&gt; female FALSE   1      2       0      0
+## 3: J3Y620   &lt;NA&gt;   &lt;NA&gt;   male FALSE   1      3       0      0
+## 4: J3Y771   &lt;NA&gt;   &lt;NA&gt; female FALSE   1      4       0      0
+## 5: J4E185 J3L886 J3X697 female FALSE   2      5       1      2
+## 6: J4Y326 J3Y620 J3Y771   male FALSE   2      6       3      4
+## 7: J5X804 J4Y326 J4E185 female  TRUE   3      7       6      5</code></pre>
 <p>The above codes will trace the pedigree of the J5X804 to ancestors for two generations.</p>
 <p>If you want to trace the descendants of an individual, you can get it by setting the trace parameter as <strong>down</strong>.</p>
 <p>There are three options for the <strong>trace</strong> parameter:</p>
@@ -243,7 +235,7 @@ print(tidy_simple_ped_J0Z990_offspring)</code></pre>
   tidyped(ped = small_ped,
   cand = c(&quot;Y&quot;,&quot;Z1&quot;,&quot;Z2&quot;))
 visped(tidy_small_ped, compact = TRUE, file=&quot;doc/smallped.pdf&quot;)</code></pre>
-<pre><code>## The vector drawing of the pedigree is saved in the D:/luansheng/Documents/OneDrive/HugoMini/content/post/doc/smallped.pdf file</code></pre>
+<pre><code>## The vector drawing of the pedigree is saved in the C:/Users/luansheng/OneDrive/HugoMini/content/post/doc/smallped.pdf file</code></pre>
 <pre><code>## The cex for individual label is 0.7.</code></pre>
 <pre><code>## Please decrease or increase the value of the parameter cex if the label&#39;s width is longer or shorter than that of the circle or square in the graph.</code></pre>
 <p><img src="/post/2018-11-09-vispedigree-use-guide_files/figure-html/smallped-1.png" width="100%" />
@@ -272,23 +264,23 @@ Rerun visped() function!</code></pre>
 <p>The function indicates that too many individuals in one generation to draw a pedigree graph. It is recommended to use the <strong>compact</strong> or <strong>outline</strong> parameters to simplify the pedigree.</p>
 <p>First, let’s try the compact parameter and output it in the deepped1.pdf file. The figure on the default graphic device has serious overlapping problems due to the large number of individuals and the limited plot size.</p>
 <pre class="r"><code>visped(tidyped(deep_ped),compact = TRUE, showgraph=TRUE, file=&quot;doc/deepped1.pdf&quot;)</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
-## asterisk, or character NA is recognized as a missing parent and is replaced
-## with the missing value NA.</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): Blank and NA are recoded as a missing sex
-## in the Sex column of the pedigree.</code></pre>
-<pre><code>## The vector drawing of the pedigree is saved in the D:/luansheng/Documents/OneDrive/HugoMini/content/post/doc/deepped1.pdf file</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced with
+## the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): Blank and NA are recoded as a missing
+## sex in the Sex column of the pedigree.</code></pre>
+<pre><code>## The vector drawing of the pedigree is saved in the C:/Users/luansheng/OneDrive/HugoMini/content/post/doc/deepped1.pdf file</code></pre>
 <pre><code>## The cex for individual label is 0.525.</code></pre>
 <pre><code>## Please decrease or increase the value of the parameter cex if the label&#39;s width is longer or shorter than that of the circle or square in the graph.</code></pre>
 <p><img src="/post/2018-11-09-vispedigree-use-guide_files/figure-html/reduceped1-1.png" width="100%" />
 Let’s open the <a href="/post/doc/deepped1.pdf">deepped1.pdf</a> file and view the high-definition pedigree vectorgraph. Most of shapes are square at the bottom, and the internal numbers are the total number of male or female individuals for each family. The individual label is shorter than square or circle, and it is not matched. The individual label can be magnified by increasing the cex parameter. Cex is used to control the size of the individual label (ID) in the graph. The bigger the cex is, the longer the individual label is, and vice versa. The range of cex is generally 0 to 1, can be greater than 1, with 0.1 as a break for each adjustment. The visped function will output warning messages including the cex value which was used for drawing the pedigreed graph.</p>
 <pre class="r"><code>visped(tidyped(deep_ped),compact = TRUE, cex=0.83, showgraph = FALSE, file=&quot;doc/deepped2.pdf&quot;)</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
-## asterisk, or character NA is recognized as a missing parent and is replaced
-## with the missing value NA.</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): Blank and NA are recoded as a missing sex
-## in the Sex column of the pedigree.</code></pre>
-<pre><code>## The vector drawing of the pedigree is saved in the D:/luansheng/Documents/OneDrive/HugoMini/content/post/doc/deepped2.pdf file</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced with
+## the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): Blank and NA are recoded as a missing
+## sex in the Sex column of the pedigree.</code></pre>
+<pre><code>## The vector drawing of the pedigree is saved in the C:/Users/luansheng/OneDrive/HugoMini/content/post/doc/deepped2.pdf file</code></pre>
 <pre><code>## The cex for individual label is 0.83.</code></pre>
 <pre><code>## Please decrease or increase the value of the parameter cex if the label&#39;s width is longer or shorter than that of the circle or square in the graph.</code></pre>
 <p>Let’s open the <a href="/post/doc/deepped2.pdf">deepped2.pdf</a> file to view the high-definition pedigree vectorgraph. There is higher matching degree between individual labels and shapes compared to deepped1.pdf. If it doesn’t feel right, you can continue to modify the cex.</p>
@@ -298,18 +290,18 @@ Let’s open the <a href="/post/doc/deepped1.pdf">deepped1.pdf</a> file and view
 <p>An outlined pedigree graph will be drawn by setting <code>outline=TRUE</code>. Individual labels will not be shown in the graph. It is very effective for the large pedigree including many individuals.</p>
 <p>In this graph, you can directly observe that there are external individuals introduced in some generations. Please click <a href="/post/doc/deepped3.pdf">here</a> to view the pdf file.</p>
 <pre class="r"><code>suppressMessages(visped(tidyped(deep_ped),compact = TRUE, outline=TRUE, showgraph = TRUE, file=&quot;doc/deepped3.pdf&quot;))</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
-## asterisk, or character NA is recognized as a missing parent and is replaced
-## with the missing value NA.</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): Blank and NA are recoded as a missing sex
-## in the Sex column of the pedigree.</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced with
+## the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): Blank and NA are recoded as a missing
+## sex in the Sex column of the pedigree.</code></pre>
 <p><img src="/post/2018-11-09-vispedigree-use-guide_files/figure-html/reduceped3-1.png" width="100%" /></p>
 <p>Let’s try to draw another pedigree with big family size. The graph is saved in <a href="/post/doc/bigfullsibped.pdf">here</a>.</p>
 <pre class="r"><code>cand_2007_G8_labels &lt;- big_family_size_ped[(Year == 2007) &amp; (substr(Ind,1,2) == &quot;G8&quot;),Ind]
 cand_2007_G8_tidy_ped &lt;- tidyped(big_family_size_ped,cand=cand_2007_G8_labels)</code></pre>
-<pre><code>## Warning in checkped(ped, addgen): In the sire or dam column, Blank, Zero,
-## asterisk, or character NA is recognized as a missing parent and is replaced
-## with the missing value NA.</code></pre>
+<pre><code>## Warning in checkped(ped_inter, addgen): In the sire or dam column, Blank, Zero,
+## asterisk, or character NA is recognized as a missing parent and is replaced with
+## the missing value NA.</code></pre>
 <pre class="r"><code># Use suppressMessages to disable output prompts.
 suppressMessages(visped(cand_2007_G8_tidy_ped,compact = TRUE, outline=TRUE, showgraph = TRUE, file=&quot;doc/bigfullsibped.pdf&quot;))</code></pre>
 <p><img src="/post/2018-11-09-vispedigree-use-guide_files/figure-html/bigfullsibped-1.png" width="100%" /></p>
