@@ -24,7 +24,7 @@ tags:
 
 一些背景知识：
 
-* IBD (Identical by discent)，血缘同源。
+* IBD (Identical by descent)，血缘同源。
 * IBS (Identical by state)，状态同源。
 
 通常我们会讲，如果一段DNA在两个或者多个个体中均有一致的核苷酸序列，那么可以定义该DNA片段属性为状态同源，即IBS。

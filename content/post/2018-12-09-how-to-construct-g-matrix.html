@@ -20,7 +20,7 @@ tags:
 <p>计算G矩阵的方法有很多种，目前引用较多的是Vanraden于2008年发表在Journal of Dairy Science上的文章“<a href="#1">Efficient methods to compute genomic predictions</a>”中所建立的方法，目前该论文已经被引用了超过1500次。</p>
 <p>一些背景知识：</p>
 <ul>
-<li>IBD (Identical by discent)，血缘同源。</li>
+<li>IBD (Identical by descent)，血缘同源。</li>
 <li>IBS (Identical by state)，状态同源。</li>
 </ul>
 <p>通常我们会讲，如果一段DNA在两个或者多个个体中均有一致的核苷酸序列，那么可以定义该DNA片段属性为状态同源，即IBS。</p>
@@ -33,7 +33,7 @@ tags:
 <li>通过分子标记，利用处于IBS状态的基因估计个体间共享染色体片段的百分比，估计个体间的相似性</li>
 </ul>
 <p>下边的SNP例子，主要来自Fikret Isik的一个Presentation： “<a href="https://articles.extension.org/pages/68019/genomic-relationships-and-gblup">Genomic Relationships and GBLUP</a>”，但幻灯片中P、Z矩阵的计算结果是错误的。</p>
-<div id="m" class="section level2">
+<div id="构建m矩阵" class="section level2">
 <h2>1. 构建M矩阵</h2>
 <p>M矩阵是一个n×m矩阵，n表示个体数（the number of individuals），m表示位点数（the number of loci）。</p>
 <p>譬如有3个二倍体个体，4个SNP位点。对于每个位点，小写等位基因表示其出现频率最低。</p>
@@ -55,8 +55,8 @@ genotypes &lt;-
   stringsAsFactors = FALSE
   )
 print(xtable(genotypes),type=&quot;html&quot;)</code></pre>
-<!-- html table generated in R 3.5.1 by xtable 1.8-3 package -->
-<!-- Fri Jun 14 15:18:07 2019 -->
+<!-- html table generated in R 3.6.1 by xtable 1.8-4 package -->
+<!-- Sun Apr 12 21:49:50 2020 -->
 <table border="1">
 <tr>
 <th>
@@ -156,7 +156,7 @@ M</code></pre>
 ## Ind2   -1    0    0   -1
 ## Ind3    1   -1   -1   -1</code></pre>
 </div>
-<div id="mm" class="section level2">
+<div id="mm矩阵" class="section level2">
 <h2>2. MM’矩阵</h2>
 <pre class="r"><code>M %*% t(M)</code></pre>
 <pre><code>##      Ind1 Ind2 Ind3
@@ -166,7 +166,7 @@ M</code></pre>
 <p>MM’对角线数字为2、2、4，分别表示三个个体基因型为纯合的位点数。譬如Ind1，四个位点中有两个位点的基因型为纯合类型（AA和GG），而Ind3个体四个位点基因型全部为纯合类型。</p>
 <p>非对角线元素，表示亲缘个体间共享的等位基因数。原英文：off-diagonals measure the number of alleles shared by relatives，不是很理解。</p>
 </div>
-<div id="mm-1" class="section level2">
+<div id="mm矩阵-1" class="section level2">
 <h2>3. M’M矩阵</h2>
 <pre class="r"><code>t(M) %*% M</code></pre>
 <pre><code>##      snp1 snp2 snp3 snp4
@@ -177,7 +177,7 @@ M</code></pre>
 <p>M’M对角线数字为3、1、2、2，分别表示四个位点纯合基因型的个体数。譬如位点snp1，有3个个体基因型全部为纯合；位点snp2，有1个个体基因型为纯合。</p>
 <p>非对角线元素表示什么意思，还不是很清楚。原英文：off-diagonals measure the number of times alleles at different loci were inherited by the same individual.</p>
 </div>
-<div id="p" class="section level2">
+<div id="构建p矩阵" class="section level2">
 <h2>4. 构建P矩阵</h2>
 <p>根据下述公式构建P矩阵的每一列：</p>
 <p><span class="math display">\[P_{i} = 2(p_{i}-0.5)\]</span></p>
@@ -194,7 +194,7 @@ P</code></pre>
 ## [3,] -0.3333333 -0.3333333 -0.6666667 -0.6666667</code></pre>
 <p>每一列，即每个位点的最小等位基因频率都是相同的数字。</p>
 </div>
-<div id="z" class="section level2">
+<div id="构建z矩阵" class="section level2">
 <h2>5. 构建Z矩阵</h2>
 <p>Z矩阵实际上是中心化后的M矩阵。</p>
 <p>原文中M-P的作用：</p>
@@ -211,10 +211,10 @@ Z</code></pre>
 ## Ind2 -0.6666667  0.3333333  0.6666667 -0.3333333
 ## Ind3  1.3333333 -0.6666667 -0.3333333 -0.3333333</code></pre>
 </div>
-<div id="g" class="section level2">
+<div id="构建g矩阵" class="section level2">
 <h2>6. 构建G矩阵</h2>
 <p>构建方法，在文章中提到了3种：</p>
-<div id="section" class="section level3">
+<div id="第一种方法" class="section level3">
 <h3>6.1 第一种方法：</h3>
 <p><span class="math display">\[G = \frac{ZZ&#39;}{2\sum{p_{i}(1-p_{i})}}\]</span></p>
 <p>Z为SNP标记的设计矩阵；公式中，<span class="math inline">\(p_{i}\)</span>为每个位点的最小等位基因频率。
@@ -222,8 +222,8 @@ Z</code></pre>
 <pre class="r"><code>d &lt;- 2*sum(p_lower*(1 - p_lower))
 G &lt;- Z %*% t(Z) / d
 print(xtable(G),type=&quot;html&quot;)</code></pre>
-<!-- html table generated in R 3.5.1 by xtable 1.8-3 package -->
-<!-- Fri Jun 14 15:18:11 2019 -->
+<!-- html table generated in R 3.6.1 by xtable 1.8-4 package -->
+<!-- Sun Apr 12 21:49:51 2020 -->
 <table border="1">
 <tr>
 <th>
@@ -282,15 +282,14 @@ Ind3
 </tr>
 </table>
 <p>邓飞在他的<a href="http://wap.sciencenet.cn/blog-2577109-1122903.html">科学网博客</a>，利用sommer包对上述结果进行了验证。在此，同样利用sommer包的<code>A.mat()</code>函数进行验证。可以看出，计算结果是一致的。sommer 包现在核心函数已经用C++重写，性能可期待。</p>
-<pre class="r"><code>suppressPackageStartupMessages(is_installed &lt;- require(sommer))</code></pre>
-<pre><code>## Warning: package &#39;Matrix&#39; was built under R version 3.5.3</code></pre>
-<pre class="r"><code>if (!is_installed) {
+<pre class="r"><code>suppressPackageStartupMessages(is_installed &lt;- require(sommer))
+if (!is_installed) {
   install.packages(&quot;sommer&quot;)
   library(sommer)
 }
 print(xtable(A.mat(M)),type=&quot;html&quot;)</code></pre>
-<!-- html table generated in R 3.5.1 by xtable 1.8-3 package -->
-<!-- Fri Jun 14 15:18:11 2019 -->
+<!-- html table generated in R 3.6.1 by xtable 1.8-4 package -->
+<!-- Sun Apr 12 21:49:51 2020 -->
 <table border="1">
 <tr>
 <th>
@@ -358,7 +357,7 @@ Ind3
 <p>由于对角线元素一般都在1左右，因此j与k的基因组亲缘关系（Genomic relationship）也就基本约等于G矩阵中相对应的值。</p>
 <p>如果把G阵与传统A阵（Additive genetic relationship matrix 或 numerator relationship matrix）类比，那么j与k的共亲系数（coancestry coefficient）同样是基因组亲缘系数的一半。</p>
 </div>
-<div id="section-1" class="section level3">
+<div id="第二种方法" class="section level3">
 <h3>6.2 第二种方法</h3>
 <p><span class="math display">\[G = ZDZ&#39;\]</span></p>
 <p>D是一个对角矩阵，其中<span class="math inline">\(D_{ii}\)</span>等于
@@ -369,8 +368,8 @@ Ind3
 D &lt;- diag(D_ii,ncol(M))
 G &lt;- Z %*% D %*% t(Z)
 print(xtable(G),type=&quot;html&quot;)</code></pre>
-<!-- html table generated in R 3.5.1 by xtable 1.8-3 package -->
-<!-- Fri Jun 14 15:18:12 2019 -->
+<!-- html table generated in R 3.6.1 by xtable 1.8-4 package -->
+<!-- Sun Apr 12 21:49:52 2020 -->
 <table border="1">
 <tr>
 <th>
