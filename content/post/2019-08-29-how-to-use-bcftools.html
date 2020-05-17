@@ -62,7 +62,7 @@ tags:
 <p><code>plot-vcfstats view.stats -p output</code></p>
 <p>多个结果文件保存在output文件夹下。其中summary.pdf文件，包括了汇总分析的结果。主要包括：</p>
 <ul>
-<li>转换（Transition：A-T；G-C）和颠换（Transversion：A-G；A-C；T-G；T-C）类型分布统计。尽管颠换类型要多于转换，但在基因组上，转换的实际发生频率要高于颠换类型。</li>
+<li>转换（Transition：嘌呤（purine）转换A（腺嘌呤）-G（鸟嘌呤）；嘧啶（pyrimidine）转换C（胞嘧啶）-T（胸腺嘧啶））和颠换（Transversion：A-C；A-T；G-C；G-T）类型分布统计。尽管颠换类型要多于转换，但在基因组上，转换的实际发生频率要高于颠换类型。 一般转换与颠换的发生比例为2:1</li>
 </ul>
 <p>需要注意，plot-vcfstats脚本在bcftools安装目录misc文件夹下，这是一个perl脚本，会调用python3绘图模块Matplotlib。如果没有安装该模块，可以通过pip3命令<code>pip3 install -U matplotlib</code>进行安装。如果没有pip3，通过<code>sudo apt-get install python3-pip</code>命令安装。</p>
 <p>plot-vcfstats生成pdf文件还需要pdf-latex，如果系统没有安装latex，通过<code>sudo apt-get install texlive-full</code>进行安装。</p>
