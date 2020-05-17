@@ -11,6 +11,9 @@ tags:
 
 什么是vcf?全称是variant call format，是用来记录SNP,INDEL和SV变异信息的文本。在GATK软件中得到最好的支持，当然SAMtools得到的结果也是VCF格式，和GATK的VCF格式有点差别。可参考以下链接文件，深入学习。
 
+* [bcftools官方帮助文档](http://www.htslib.org/doc/bcftools.html)
+* [bcftools安装方法](https://samtools.github.io/bcftools/)
+* [bcftools学习笔记](https://www.jianshu.com/p/5ad625969b23)
 * [学生信的那些事儿之十六 - 生信技能树VCF格式文件的shell小练习](https://www.jianshu.com/p/defbee977fa8)
 * [解读vcf格式文件](https://www.jianshu.com/p/aa9f762f5c79)
 * [VCF格式的学习及对VCF文件的统计](https://www.jianshu.com/p/38f734ae47f5)
@@ -35,4 +38,47 @@ bcftools一般要求读入文件为gz格式。而且gz格式的文件，压缩�
 
 -Oz表示输出格式为压缩文件gz格式；-o后边跟压缩文件名字；--threads 8 表示通过8个线程并行压缩shrimp.vcf文件。
 
+## 4.提取等位基因和基因型信息
 
+参考这个链接[Extracting allele, Genotype from VCF file](https://www.biostars.org/p/312304/).  
+
+用到的命令为"query"，说明书中该命令的功能为“transform VCF/BCF into user-defined formats”，即把VCF/BCF文件转换为用户定义格式。
+
+`bcftools  query -f '%CHROM %ID %POS %REF %ALT [ %TGT]\n' query.vcf.gz -o query.extract.txt`
+
+上述命令提取vcf文件中染色体、基因型等信息，输出为空格分隔的文本文件。
+
+其中：
+
+* %CHROM 染色体列
+* %ID 变异位点名称
+* %POS 变异位点位置
+* %REF 参考等位基因
+* %ALT 变异等位基因
+* %TGT 字符格式如A/G的基因型；%GT为0/1格式的基因型
+
+也可以输出为英文逗号分隔的csv文件。若想用tab分隔，符号是\t
+
+`bcftools  query -f '%CHROM,%ID,%POS,%REF,%ALT[,%TGT]\n' query.vcf.gz -o query.extract.csv`
+
+## 5.变异位点的基本统计分析
+
+stats命令用于统计VCF文件的基本信息，比如突变位点的总数，不同类型突变位点的个数等。用法如下：
+
+`bcftools stats view.vcf >  view.stats`
+
+然后会生成一个名为view.stats的文本文件。
+
+然后调用一下命令，进行可视化输出：
+
+`plot-vcfstats view.stats -p output`
+
+多个结果文件保存在output文件夹下。其中summary.pdf文件，包括了汇总分析的结果。主要包括：
+
+* 转换（Transition：A-T；G-C）和颠换（Transversion：A-G；A-C；T-G；T-C）类型分布统计。尽管颠换类型要多于转换，但在基因组上，转换的实际发生频率要高于颠换类型。 
+
+需要注意，plot-vcfstats脚本在bcftools安装目录misc文件夹下，这是一个perl脚本，会调用python3绘图模块Matplotlib。如果没有安装该模块，可以通过pip3命令`pip3 install -U matplotlib`进行安装。如果没有pip3，通过`sudo apt-get install python3-pip`命令安装。
+
+plot-vcfstats生成pdf文件还需要pdf-latex，如果系统没有安装latex，通过`sudo apt-get install texlive-full`进行安装。
+
+上述命令在ubuntu 18.04系统中执行。
