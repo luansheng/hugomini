@@ -1,0 +1,29 @@
+---
+title: 妙用.N筛选数据
+author: Sheng Luan
+date: '2020-06-19'
+slug: a-trick-for-subsetting-individuals
+categories:
+  - 数据清洗
+tags:
+  - Data.table
+---
+
+## 需求
+做配种方案前，需要从每个家系中挑选同等数量的雄虾和雌虾。借助于data.table中的`.N`限定符可以非常方便的实现该任务。
+
+## 解决方案
+ind_dt为包括选择指数的数据集。male_max_num和female_max_num分别定义每个家系需要提取的最大雄性和雌雄个体数。
+```{r subsetting, eval=FALSE}
+#数据集按照家系编号升序，性别编号升序，选择指数降序重新排列
+setorder(ind_dt, FamilyID, SexID, -SelIndex)
+# 每个家系每个性别内，个体指定一个整数编号
+# 譬如 1号家系有20尾雄虾，依据选择指数从高到低编号1, 2, 3, ..., 20
+# 其它家系也是相同编号规则
+ind_dt[,No:=seq(.N), by=.(FamilyID, SexID)]
+
+# 提取指定数量的雌雄虾个体
+male_ind_dt <- ind_dt[SexID %chin% c("Male") & No <= male_max_num ]
+female_ind_dt <- ind_dt[SexID %chin% c("Female") & No <= female_max_num]
+```
+
