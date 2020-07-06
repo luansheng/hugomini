@@ -20,6 +20,8 @@ apt-get install gawk
 sudo update-alternatives --config awk
 ```
 
+awk学习，建议参考<<The AWK Programming Language>>这本书，中译本见[这里](https://github.com/wuzhouhui/awk)。
+
 ## 1. 查看行列数的方法
 
 假设example.csv是由英文逗号,分割的csv文件。
@@ -50,13 +52,13 @@ awk -F "," '{ print NF; exit}' example.csv
 
 ## 2. 查看指定范围行和列的内容
 
-### 2.1 查看指定的行内容
+### 2.1 查看指定范围的行内容
 
 查看1-10行的数据
 ```{bash}
 awk 'NR <=10 { print $0 }' example.csv
 ```
-### 2.2 查看指定的列
+### 2.2 查看指定范围的行和列内容
 
 查看前10行，第1-10列的数据，稍微复杂一些，需要用到循环：
 ```{bash}
