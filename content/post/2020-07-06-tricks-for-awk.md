@@ -20,7 +20,7 @@ apt-get install gawk
 sudo update-alternatives --config awk
 ```
 
-awk学习，建议参考<<The AWK Programming Language>>这本书，中译本见[这里](https://github.com/wuzhouhui/awk)。
+awk学习，建议参考**The AWK Programming Language**这本书，中译本见[这里](https://github.com/wuzhouhui/awk)。
 
 ## 1. 查看行列数的方法
 
