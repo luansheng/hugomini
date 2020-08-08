@@ -9,7 +9,7 @@ tags:
   - 随想
 ---
 
-一直在想，这篇文章“Feed competition reduces heritable variation for body weight in Litopenaeus vannamei”接受了，必须要写些什么，纪念一下。
+一直在想，这篇文章“[Feed competition reduces heritable variation for body weight in Litopenaeus vannamei](https://gsejournal.biomedcentral.com/articles/10.1186/s12711-020-00565-3)”发表了，必须要写些什么，纪念一下。
 
 这是我第二篇发表在Genetics Selection Evolution上的文章，也是课题组的第三篇文章。本文首次在水产动物中，以凡纳滨对虾为研究对象，在不同竞争性环境下（食物充足和受限环境）调查了收获体重性状IGE效应的遗传参数，发现**家系IGE在不同竞争性环境下存在重排序效应，饵料竞争会减少收获体重可利用的遗传变异**；从数量遗传学上证实了Ruzzante （1993）的猜想**“在资源如饵料受限的养殖环境下，利用选择育种方法对生长速度进行遗传改良，会导致育种群体的攻击性和竞争性水平不断提高”**。编辑和审稿人都认为这篇文章“a nice study，a very interesting study”。此外，本文也发现在食物受限环境下，收获体重性状存在隐藏Cryptic的遗传变异。在这篇文章中，包括了我目前为止最为复杂的分析模型，如合并40多个随机效应的间接遗传效应分析模型，基因型与环境互作分析模型，双变量动物模型等。整个分析过程拖得也很久，2015做完实验，文献阅读加上模型分析等持续了2-3年。
 
