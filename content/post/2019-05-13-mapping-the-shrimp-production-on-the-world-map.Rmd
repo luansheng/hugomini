@@ -13,7 +13,7 @@ header:
   image: ''
   preview: yes
 ---
-
+UPdating: 2020-09-05，更新产量数据为2018年最新统计数据！
 UPdating: 2019-10-05，庆祝建国70周年，地图修改为中国红！
 
 最近，Boss交给了一个任务，把各国凡纳滨对虾的产量在世界地图上标注一下。
@@ -44,7 +44,7 @@ knitr::opts_chunk$set(echo = TRUE, out.width = '100%')
 
 从[FAO](http://www.fao.org/fishery/statistics/global-aquaculture-production/zh)下载世界各国所有水产养殖种类的产量数据。选择下载csv格式数据集。
 
-解压缩后，产量数据在TS_FI_AQUACULTURE.csv文件中。凡纳滨对虾的产量数据，可以通过其3位种类代码是"PNV"进行查找。当前可以获得的最新即2017年的产量数据。
+解压缩后，产量数据在TS_FI_AQUACULTURE.csv文件中。凡纳滨对虾的产量数据，可以通过其3位种类代码是"PNV"进行查找。当前可以获得的最新即2018年的产量数据。
 
 ```{r read_shrimp_production}
 world_aquaculture_production_dt <-
@@ -57,8 +57,8 @@ world_aquaculture_production_dt <-
 species_3alpha_code <- "PNV"
 world_PNV_production_dt <-
   world_aquaculture_production_dt[SPECIES %chin% species_3alpha_code]
-world_PNV_production_2017_dt <-
-  world_PNV_production_dt[YEAR == 2017]
+world_PNV_production_2018_dt <-
+  world_PNV_production_dt[YEAR == 2018]
 ```
 
 凡纳滨对虾在海水、淡水和半咸水中都可以养殖，因此在统计世界各个国家产量时，需要累加在不同养殖环境下的产量.
@@ -75,9 +75,9 @@ country_group_dt <-
     encoding = "UTF-8"
   )
 
-world_PNV_production_2017_country_info_dt <-
+world_PNV_production_2018_country_info_dt <-
   merge(
-    world_PNV_production_2017_dt,
+    world_PNV_production_2018_dt,
     country_group_dt[, c("UN_Code",
                          "Identifier",
                          "ISO2_Code",
@@ -87,17 +87,17 @@ world_PNV_production_2017_country_info_dt <-
     by.x = c("COUNTRY"),
     by.y = c("UN_Code")
   )
-world_PNV_production_2017_country_info_dt[1:5]
+world_PNV_production_2018_country_info_dt[1:5]
 # 累加每个国家的总产量，凡纳滨对虾可在不同环境下养殖，如海、淡水、半咸水等
-PNV_production_2017_per_country_dt <-
-  world_PNV_production_2017_country_info_dt[, .(Production = sum(QUANTITY)), keyby =
+PNV_production_2018_per_country_dt <-
+  world_PNV_production_2018_country_info_dt[, .(Production = sum(QUANTITY)), keyby =
                                               c("Name_En")]
 #按照产量降序排列
-setorder(PNV_production_2017_per_country_dt,-Production)
-setnames(PNV_production_2017_per_country_dt,
+setorder(PNV_production_2018_per_country_dt,-Production)
+setnames(PNV_production_2018_per_country_dt,
          c("Name_En"),
          c("Country"))
-PNV_production_2017_per_country_dt
+PNV_production_2018_per_country_dt
 ```
 
 ## 2.绘制地图
@@ -146,41 +146,40 @@ map_world_dt[subregion %chin% c("Alaska"), region:= c("USANoDraw")]
 ```{r modify_country_name}
 #查找名称不一致的国家
 FAO_nomatched_country_name_v <-
-  PNV_production_2017_per_country_dt$Country[!(PNV_production_2017_per_country_dt$Country %in% unique(map_world_dt$region))]
+  PNV_production_2018_per_country_dt$Country[!(PNV_production_2018_per_country_dt$Country %in% unique(map_world_dt$region))]
 FAO_nomatched_country_name_v
 
 #根据maps包中的国家名，重新对相应的国家重新命名
 maps_matched_country_name_v <-
   c(
     "Vietnam",
-    "Venezuela",
     "Iran",
+    "Venezuela",
     "Korea",
     "USA",
-    "Northern Mariana Islands",
-    "Saint Kitts"
+    "Northern Mariana Islands"
   )
-PNV_production_2017_per_country_dt[Country %chin% FAO_nomatched_country_name_v, 
+PNV_production_2018_per_country_dt[Country %chin% FAO_nomatched_country_name_v, 
                                    Country := maps_matched_country_name_v]
 #把凡纳滨对虾产量数据跟地图数据合并
-map_world_PNV_production_2017_dt <-
+map_world_PNV_production_2018_dt <-
   merge(
     map_world_dt,
-    PNV_production_2017_per_country_dt,
+    PNV_production_2018_per_country_dt,
     all.x = TRUE,
     by.x = "region",
     by.y = "Country"
   )
 #将产量为0的国家设置为NA，这样绘制地图时，这些国家不会上色
-map_world_PNV_production_2017_dt[Production == 0, Production:=NA]
+map_world_PNV_production_2018_dt[Production == 0, Production:=NA]
 #计算国家经纬度均值，用于定位国家名称的显示位置
-map_world_PNV_country_position_2017_dt <-
-  map_world_PNV_production_2017_dt[Production > 0, 
+map_world_PNV_country_position_2018_dt <-
+  map_world_PNV_production_2018_dt[Production > 0, 
                                    .(MeanLong = mean(long),
                                      MeanLat = mean(lat),
                                      group = mean(group)),
                                    by = c("region")]
-map_world_PNV_country_position_2017_dt[1:5]
+map_world_PNV_country_position_2018_dt[1:5]
 ```
 
 ### 2.2 绘制凡纳滨对虾世界养殖分布图
@@ -193,14 +192,14 @@ map_world_PNV_country_position_2017_dt[1:5]
 
 在地图中，颜色的深浅，表示产量的高低。产量越高，颜色越深。
 
-国家名，根据map_world_PNV_country_position_2017_dt数据集中的平均经纬度定位显示，并且加了一个蓝色圆点。
+国家名，根据map_world_PNV_country_position_2018_dt数据集中的平均经纬度定位显示，并且加了一个蓝色圆点。
 
 为了正确的画出地图，需要在aes函数中设置**group=group**，这个特别重要。
 
 ```{r draw_aquaculture_map, fig.showtext=TRUE, fig.width = 10, fig.width= 9}
 font_add(family = "heiti", regular = "simhei.ttf")
 showtext_auto()
-ggplot(map_world_PNV_production_2017_dt,
+ggplot(map_world_PNV_production_2018_dt,
        aes(x = long, y = lat, group = group)) +
   geom_polygon(aes(fill = Production),color="grey50") +
   #国家绘制为朱红色
@@ -224,10 +223,10 @@ ggplot(map_world_PNV_production_2017_dt,
   geom_point(aes(x =MeanLong, y= MeanLat),
              color = "green", 
              size = 1.5,
-             data=map_world_PNV_country_position_2017_dt) +
+             data=map_world_PNV_country_position_2018_dt) +
   geom_text_repel(
     aes(x = MeanLong, y = MeanLat, label = region),
-    data = map_world_PNV_country_position_2017_dt,
+    data = map_world_PNV_country_position_2018_dt,
     size = 8
     ) +
   theme(
@@ -247,7 +246,7 @@ ggplot(map_world_PNV_production_2017_dt,
   ) +
   annotate(
     geom = 'text',
-      label = '数据来源：FAO, 2019.  http://www.fao.org/fishery/statistics/global-aquaculture-production/zh',
+      label = '数据来源：FAO, 2020.  http://www.fao.org/fishery/statistics/global-aquaculture-production/zh',
     x = 10, y = -55,
     size = 4,
     family = 'heiti',

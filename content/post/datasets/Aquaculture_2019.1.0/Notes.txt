@@ -19,26 +19,7 @@ for aquatic plants, pearls and mother-of-pearl, data should be filtered using a 
 The species of this group are shown in CL_FI_SPECIES_GROUPS.csv file in the column Yearbook_Group.
 
 
-COPYRIGHT & DISCLAIMER CLAUSES
-Some rights reserved. This work is made available under the Creative Commons Attribution-NonCommercial-ShareAlike 3.0 IGO licence 
-(CC BY-NC-SA 3.0 IGO; https://creativecommons.org/licenses/by-nc-sa/3.0/igo/legalcode).
-
-Under the terms of this licence, this work may be copied, redistributed and adapted for non-commercial purposes, provided 
-that the work is appropriately cited. In any use of this work, there should be no suggestion that FAO endorses any specific 
-organization, products or services. The use of the FAO logo is not permitted. If the work is adapted, then it must be licensed 
-under the same or equivalent Creative Commons license. If a translation of this work is created, it must include the following 
-disclaimer along with the required citation: "This translation was not created by the Food and Agriculture Organization of 
-the United Nations (FAO). FAO is not responsible for the content or accuracy of this translation. The original [Language] 
-edition shall be the authoritative edition."
-
-Disputes arising under the licence that cannot be settled amicably will be resolved by mediation and arbitration as 
-described in Article 8 of the licence except as otherwise provided herein. The applicable mediation rules will be the 
-mediation rules of the World Intellectual Property Organization http://www.wipo.int/amc/en/mediation/rules )and any 
-arbitration will be in accordance with the Arbitration Rules of the United Nations Commission on International Trade Law (UNCITRAL).
-
-Requests for commercial use should be submitted via: www.fao.org/contact-us/licence-request. Queries regarding rights 
-and licensing should be submitted to: copyright@fao.org.
-
+DISCLAIMER CLAUSES:
 The designations employed and the presentation of material in this information product do not imply the expression of 
 any opinion whatsoever on the part of the Food and Agriculture Organization of the United Nations (FAO) concerning the 
 legal or development status of any country, territory, city or area or of its authorities, or concerning the delimitation 
@@ -57,4 +38,7 @@ The designations employed and the presentation of material in the map(s) do not 
 whatsoever on the part of FAO concerning the legal or constitutional status of any country, territory or sea area, 
 or concerning the delimitation of frontiers.
 
-(c)FAO 2019
+TERMS OF USE of the DATA:
+http://www.fao.org/contact-us/terms/db-terms-of-use/en/
+
+(c)FAO 2020

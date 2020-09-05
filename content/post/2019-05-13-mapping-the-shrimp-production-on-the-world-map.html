@@ -16,7 +16,8 @@ header:
 
 
 
-<p>UPdating: 2019-10-05，庆祝建国70周年，地图修改为中国红！</p>
+<p>UPdating: 2020-09-05，更新产量数据为2018年最新统计数据！
+UPdating: 2019-10-05，庆祝建国70周年，地图修改为中国红！</p>
 <p>最近，Boss交给了一个任务，把各国凡纳滨对虾的产量在世界地图上标注一下。</p>
 <p>对于生成地图还是很有兴趣的。没想到竟然很有挑战性！</p>
 <p>之前看过几个blog，印象中有不少包可以完成这个任务。</p>
@@ -27,10 +28,10 @@ header:
 <li>showtext和sysfonts 确保在生成的地图上可以使用中文字体如黑体。</li>
 <li>data.table 数据清洗，生成符合要求的地图数据集，供ggplot2调用。</li>
 </ul>
-<div id="section" class="section level2">
+<div id="获取世界各国凡纳滨对虾产量数据" class="section level2">
 <h2>1. 获取世界各国凡纳滨对虾产量数据</h2>
 <p>从<a href="http://www.fao.org/fishery/statistics/global-aquaculture-production/zh">FAO</a>下载世界各国所有水产养殖种类的产量数据。选择下载csv格式数据集。</p>
-<p>解压缩后，产量数据在TS_FI_AQUACULTURE.csv文件中。凡纳滨对虾的产量数据，可以通过其3位种类代码是“PNV”进行查找。当前可以获得的最新即2017年的产量数据。</p>
+<p>解压缩后，产量数据在TS_FI_AQUACULTURE.csv文件中。凡纳滨对虾的产量数据，可以通过其3位种类代码是“PNV”进行查找。当前可以获得的最新即2018年的产量数据。</p>
 <pre class="r"><code>world_aquaculture_production_dt &lt;-
   fread(
     input = &quot;datasets/Aquaculture_2019.1.0/TS_FI_AQUACULTURE.csv&quot;,
@@ -41,8 +42,8 @@ header:
 species_3alpha_code &lt;- &quot;PNV&quot;
 world_PNV_production_dt &lt;-
   world_aquaculture_production_dt[SPECIES %chin% species_3alpha_code]
-world_PNV_production_2017_dt &lt;-
-  world_PNV_production_dt[YEAR == 2017]</code></pre>
+world_PNV_production_2018_dt &lt;-
+  world_PNV_production_dt[YEAR == 2018]</code></pre>
 <p>凡纳滨对虾在海水、淡水和半咸水中都可以养殖，因此在统计世界各个国家产量时，需要累加在不同养殖环境下的产量.</p>
 <p>由于在TS_FI_AQUACULTURE.csv文件中，国家列（COUNTRY）是用代码表示。因此需要从CL_FI_COUNTRY_GROUPS.csv文件中匹配UN_Code列查询国家名称等信息。其中Name_En和Name_Cn分别表示英文和中文国家名称。</p>
 <pre class="r"><code>#读取国家信息
@@ -54,9 +55,9 @@ country_group_dt &lt;-
     encoding = &quot;UTF-8&quot;
   )
 
-world_PNV_production_2017_country_info_dt &lt;-
+world_PNV_production_2018_country_info_dt &lt;-
   merge(
-    world_PNV_production_2017_dt,
+    world_PNV_production_2018_dt,
     country_group_dt[, c(&quot;UN_Code&quot;,
                          &quot;Identifier&quot;,
                          &quot;ISO2_Code&quot;,
@@ -66,79 +67,76 @@ world_PNV_production_2017_country_info_dt &lt;-
     by.x = c(&quot;COUNTRY&quot;),
     by.y = c(&quot;UN_Code&quot;)
   )
-world_PNV_production_2017_country_info_dt[1:5]</code></pre>
-<pre><code>##    COUNTRY PRODUCTION_AREA ENVIRONMENT SPECIES YEAR QUANTITY_UNIT QUANTITY
-## 1:      44              31           2     PNV 2017             t        0
-## 2:      76              41           3     PNV 2017             t    60000
-## 3:      84              31           2     PNV 2017             t     1100
-## 4:     156               4           1     PNV 2017             t   591496
-## 5:     156              61           2     PNV 2017             t  1080791
-##    QUANTITY_SYMBOL     VALUE VALUE_SYMBOL Identifier ISO2_Code ISO3_Code
-## 1:               -       0.0           NA         12        BS       BHS
-## 2:               F  407972.8           NA         21        BR       BRA
-## 3:               F    4400.0           NA         23        BZ       BLZ
-## 4:                 5354221.8           NA         41        CN       CHN
-## 5:                 7553648.3           NA         41        CN       CHN
-##    Name_En        Name_Cn
-## 1: Bahamas         巴哈马
-## 2:  Brazil          巴 西
-## 3:  Belize         伯利兹
-## 4:   China 中华人民共和国
-## 5:   China 中华人民共和国</code></pre>
+world_PNV_production_2018_country_info_dt[1:5]</code></pre>
+<pre><code>##    COUNTRY PRODUCTION_AREA ENVIRONMENT SPECIES YEAR QUANTITY_UNIT    QUANTITY
+## 1:      76              41           3     PNV 2018             t   62000.000
+## 2:      84              31           2     PNV 2018             t     500.000
+## 3:     156               4           1     PNV 2018             t  642807.000
+## 4:     156              61           2     PNV 2018             t 1117534.000
+## 5:     158               4           1     PNV 2018             t    3721.258
+##    QUANTITY_SYMBOL      VALUE VALUE_SYMBOL Identifier ISO2_Code ISO3_Code
+## 1:               F  407244.42           NA         21        BR       BRA
+## 2:               F    2000.00           NA         23        BZ       BLZ
+## 3:                 5818688.96           NA         41        CN       CHN
+## 4:                 7810445.13           NA         41        CN       CHN
+## 5:                   24906.66           NA        214        TW       TWN
+##                     Name_En        Name_Cn
+## 1:                   Brazil          巴 西
+## 2:                   Belize         伯利兹
+## 3:                    China 中华人民共和国
+## 4:                    China 中华人民共和国
+## 5: Taiwan Province of China</code></pre>
 <pre class="r"><code># 累加每个国家的总产量，凡纳滨对虾可在不同环境下养殖，如海、淡水、半咸水等
-PNV_production_2017_per_country_dt &lt;-
-  world_PNV_production_2017_country_info_dt[, .(Production = sum(QUANTITY)), keyby =
+PNV_production_2018_per_country_dt &lt;-
+  world_PNV_production_2018_country_info_dt[, .(Production = sum(QUANTITY)), keyby =
                                               c(&quot;Name_En&quot;)]
 #按照产量降序排列
-setorder(PNV_production_2017_per_country_dt,-Production)
-setnames(PNV_production_2017_per_country_dt,
+setorder(PNV_production_2018_per_country_dt,-Production)
+setnames(PNV_production_2018_per_country_dt,
          c(&quot;Name_En&quot;),
          c(&quot;Country&quot;))
-PNV_production_2017_per_country_dt</code></pre>
+PNV_production_2018_per_country_dt</code></pre>
 <pre><code>##                      Country  Production
-##  1:                    China 1672287.000
-##  2:                    India  583400.000
-##  3:                Indonesia  503800.000
-##  4:                 Viet Nam  439022.700
-##  5:                  Ecuador  435000.000
-##  6:                 Thailand  329636.000
-##  7:                   Mexico  150029.845
-##  8:                   Brazil   60000.000
-##  9:             Saudi Arabia   39200.000
-## 10:                 Malaysia   35648.040
-## 11:   Iran (Islamic Rep. of)   32332.000
+##  1:                    China 1760341.000
+##  2:                Indonesia  708680.000
+##  3:                    India  622000.000
+##  4:                  Ecuador  510000.000
+##  5:                 Viet Nam  475000.000
+##  6:                 Thailand  347258.000
+##  7:                   Mexico  157934.361
+##  8:                   Brazil   62000.000
+##  9:             Saudi Arabia   56100.000
+## 10:   Iran (Islamic Rep. of)   47859.000
+## 11:                 Malaysia   36007.250
 ## 12:                 Honduras   31500.000
-## 13:                     Peru   27491.660
-## 14:                Nicaragua   24888.000
+## 13:                     Peru   29716.930
+## 14:                Nicaragua   29458.400
 ## 15:  Venezuela, Boliv Rep of   24500.000
-## 16:                Guatemala   16455.000
-## 17:              Philippines   13965.400
-## 18: Taiwan Province of China    9228.217
-## 19:                   Panama    7522.000
-## 20:                     Cuba    5631.000
-## 21:       Korea, Republic of    5144.000
-## 22:               Costa Rica    3000.000
-## 23:                 Colombia    2400.000
-## 24: United States of America    1633.000
+## 16:                Guatemala   17273.000
+## 17:              Philippines   12527.000
+## 18: Taiwan Province of China    7978.804
+## 19:                     Cuba    6474.000
+## 20:                   Panama    6409.000
+## 21:                 Colombia    5397.000
+## 22:       Korea, Republic of    4480.000
+## 23:               Costa Rica    3000.000
+## 24: United States of America    2035.000
 ## 25:              El Salvador    1150.000
-## 26:                   Belize    1100.000
+## 26:                   Belize     500.000
 ## 27:       Dominican Republic     400.000
-## 28:                    Egypt     135.000
+## 28:                    Egypt     155.000
 ## 29:                 Suriname      30.000
 ## 30:     Northern Mariana Is.      23.000
-## 31:                Singapore      11.500
-## 32:                     Guam      10.000
-## 33:                  Lebanon      10.000
-## 34:                  Vanuatu      10.000
-## 35:                    Spain       8.000
-## 36:                  Tunisia       2.000
-## 37:                  Bahamas       0.000
-## 38:    Saint Kitts and Nevis       0.000
+## 31:                  Lebanon      15.000
+## 32:                    Spain      15.000
+## 33:                Singapore      12.600
+## 34:                     Guam      10.000
+## 35:                  Tunisia       1.200
 ##                      Country  Production</code></pre>
 </div>
-<div id="section-1" class="section level2">
+<div id="绘制地图" class="section level2">
 <h2>2.绘制地图</h2>
-<div id="section-2" class="section level3">
+<div id="获取地图数据" class="section level3">
 <h3>2.1 获取地图数据</h3>
 <p>利用map_data()函数从maps包中获取地图数据。其中long和lat分别表示经、纬度。</p>
 <p>地图数据中region列与国家对应。group这一列很重要，在绘图时需要指定。</p>
@@ -193,51 +191,49 @@ map_world_dt &lt;- map_world_dt[!region %chin% c(&quot;Antarctica&quot;)]
 #这样绘制美国地图时，不包括该地区
 map_world_dt[subregion %chin% c(&quot;Alaska&quot;), region:= c(&quot;USANoDraw&quot;)]</code></pre>
 </div>
-<div id="faomaps" class="section level3">
+<div id="统一fao数据与maps包中的国家名称" class="section level3">
 <h3>2.2 统一FAO数据与maps包中的国家名称</h3>
 <p>从FAO下载的数据，部分国家名跟maps包中的国家名不一致。需要找出这些国家，并把FAO数据中国家名称修改为maps包国家名称。</p>
 <p>把凡纳滨对虾产量数据合并到地图数据集中。</p>
 <p>计算每个国家的经纬度均值，生成一个新的数据集，用于在地图中定位国家名字的显示位置。</p>
 <pre class="r"><code>#查找名称不一致的国家
 FAO_nomatched_country_name_v &lt;-
-  PNV_production_2017_per_country_dt$Country[!(PNV_production_2017_per_country_dt$Country %in% unique(map_world_dt$region))]
+  PNV_production_2018_per_country_dt$Country[!(PNV_production_2018_per_country_dt$Country %in% unique(map_world_dt$region))]
 FAO_nomatched_country_name_v</code></pre>
 <pre><code>## [1] &quot;Viet Nam&quot;                 &quot;Iran (Islamic Rep. of)&quot;  
 ## [3] &quot;Venezuela, Boliv Rep of&quot;  &quot;Korea, Republic of&quot;      
-## [5] &quot;United States of America&quot; &quot;Northern Mariana Is.&quot;    
-## [7] &quot;Saint Kitts and Nevis&quot;</code></pre>
+## [5] &quot;United States of America&quot; &quot;Northern Mariana Is.&quot;</code></pre>
 <pre class="r"><code>#根据maps包中的国家名，重新对相应的国家重新命名
 maps_matched_country_name_v &lt;-
   c(
     &quot;Vietnam&quot;,
-    &quot;Venezuela&quot;,
     &quot;Iran&quot;,
+    &quot;Venezuela&quot;,
     &quot;Korea&quot;,
     &quot;USA&quot;,
-    &quot;Northern Mariana Islands&quot;,
-    &quot;Saint Kitts&quot;
+    &quot;Northern Mariana Islands&quot;
   )
-PNV_production_2017_per_country_dt[Country %chin% FAO_nomatched_country_name_v, 
+PNV_production_2018_per_country_dt[Country %chin% FAO_nomatched_country_name_v, 
                                    Country := maps_matched_country_name_v]
 #把凡纳滨对虾产量数据跟地图数据合并
-map_world_PNV_production_2017_dt &lt;-
+map_world_PNV_production_2018_dt &lt;-
   merge(
     map_world_dt,
-    PNV_production_2017_per_country_dt,
+    PNV_production_2018_per_country_dt,
     all.x = TRUE,
     by.x = &quot;region&quot;,
     by.y = &quot;Country&quot;
   )
 #将产量为0的国家设置为NA，这样绘制地图时，这些国家不会上色
-map_world_PNV_production_2017_dt[Production == 0, Production:=NA]
+map_world_PNV_production_2018_dt[Production == 0, Production:=NA]
 #计算国家经纬度均值，用于定位国家名称的显示位置
-map_world_PNV_country_position_2017_dt &lt;-
-  map_world_PNV_production_2017_dt[Production &gt; 0, 
+map_world_PNV_country_position_2018_dt &lt;-
+  map_world_PNV_production_2018_dt[Production &gt; 0, 
                                    .(MeanLong = mean(long),
                                      MeanLat = mean(lat),
                                      group = mean(group)),
                                    by = c(&quot;region&quot;)]
-map_world_PNV_country_position_2017_dt[1:5]</code></pre>
+map_world_PNV_country_position_2018_dt[1:5]</code></pre>
 <pre><code>##        region  MeanLong   MeanLat    group
 ## 1:     Belize -88.46050 17.421947 218.5692
 ## 2:     Brazil -55.28057 -9.802375 237.0159
@@ -245,17 +241,17 @@ map_world_PNV_country_position_2017_dt[1:5]</code></pre>
 ## 4:   Colombia -72.76287  3.471105 437.9872
 ## 5: Costa Rica -84.03994  9.756017 450.0000</code></pre>
 </div>
-<div id="section-3" class="section level3">
+<div id="绘制凡纳滨对虾世界养殖分布图" class="section level3">
 <h3>2.2 绘制凡纳滨对虾世界养殖分布图</h3>
 <p>地图中的文字使用黑体。因此需要利用showtext包加载黑体文件。</p>
 <p>调用ggplot函数和geom_polygon函数来绘制地图。</p>
 <p>为了消除可能存在的国家名重叠的问题，调用ggrepel包中geom_text_repel()函数优化国家名在地图中的布局。</p>
 <p>在地图中，颜色的深浅，表示产量的高低。产量越高，颜色越深。</p>
-<p>国家名，根据map_world_PNV_country_position_2017_dt数据集中的平均经纬度定位显示，并且加了一个蓝色圆点。</p>
+<p>国家名，根据map_world_PNV_country_position_2018_dt数据集中的平均经纬度定位显示，并且加了一个蓝色圆点。</p>
 <p>为了正确的画出地图，需要在aes函数中设置<strong>group=group</strong>，这个特别重要。</p>
 <pre class="r"><code>font_add(family = &quot;heiti&quot;, regular = &quot;simhei.ttf&quot;)
 showtext_auto()
-ggplot(map_world_PNV_production_2017_dt,
+ggplot(map_world_PNV_production_2018_dt,
        aes(x = long, y = lat, group = group)) +
   geom_polygon(aes(fill = Production),color=&quot;grey50&quot;) +
   #国家绘制为朱红色
@@ -279,10 +275,10 @@ ggplot(map_world_PNV_production_2017_dt,
   geom_point(aes(x =MeanLong, y= MeanLat),
              color = &quot;green&quot;, 
              size = 1.5,
-             data=map_world_PNV_country_position_2017_dt) +
+             data=map_world_PNV_country_position_2018_dt) +
   geom_text_repel(
     aes(x = MeanLong, y = MeanLat, label = region),
-    data = map_world_PNV_country_position_2017_dt,
+    data = map_world_PNV_country_position_2018_dt,
     size = 8
     ) +
   theme(
@@ -302,7 +298,7 @@ ggplot(map_world_PNV_production_2017_dt,
   ) +
   annotate(
     geom = &#39;text&#39;,
-      label = &#39;数据来源：FAO, 2019.  http://www.fao.org/fishery/statistics/global-aquaculture-production/zh&#39;,
+      label = &#39;数据来源：FAO, 2020.  http://www.fao.org/fishery/statistics/global-aquaculture-production/zh&#39;,
     x = 10, y = -55,
     size = 4,
     family = &#39;heiti&#39;,
