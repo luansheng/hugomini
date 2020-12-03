@@ -1,7 +1,7 @@
 ---
 title: 如何构建G矩阵-基因组亲缘关系矩阵（Genomic relationships matrix）
 author: Sheng Luan
-date: '2018-12-09'
+date: '2020-12-03'
 slug: how-to-construct-g-matrix
 categories:
   - 数量遗传学
@@ -12,6 +12,32 @@ tags:
 
 
 
+<div id="补充理解2020-12-03" class="section level1">
+<h1>补充理解（2020-12-03）</h1>
+<p>补充一些理论知识，即为什么要采取本文所述的方式构建G矩阵。主要来源于这篇<a href="https://doi.org/10.3390/genes11070790">ssGBLUP综述文章</a>，写的非常好。</p>
+<p>如何理解，Z矩阵是对M矩阵进行了中心化。中心化即减掉均值，导致总体均值为0。</p>
+<p>先回顾一下，中心化的方法：
+<span class="math display">\[Z = M-P\]</span>
+M矩阵包括了每个样本，每个位点最小等位基因的含量。
+<span class="math display">\[P = 2(p_{i}-0.5)\]</span>
+P矩阵包括了每个位点最小等位基因的频率。这里减掉0.5，是为了确保每一个SNP位点所有样品中心化后等位基因频率和为0。</p>
+<p><strong>为什么这样做，就对M矩阵进行了中心化？</strong></p>
+<p>利用正文中的SNP位点1来做说明。三个样本三种基因型：AA、AA、TT。以T作为MAF等位基因，那么转换为M矩阵，则是0,0,2。</p>
+<ul>
+<li>假定T等位基因的效应是a，发生频率是p，那么TT的频率是<span class="math inline">\(p^{2}\)</span>，带有该基因型的个体的育种值u=2a；</li>
+<li>与之相反，AA基因型的频率为<span class="math inline">\(q^{2}\)</span>，q=1-p；</li>
+<li>AT基因型的频率为2pq。</li>
+<li>该位点可解释的方差为<span class="math inline">\(Var(u)=E(u^{2})-E(u)^{2}\)</span>。</li>
+<li>群体育种值u的平均值为<span class="math inline">\(2ap^{2}+0q^{2}+a2pq=2ap^{2}+2apq=2ap^{2}+2ap(1-p)=2pa\)</span>。</li>
+<li>再来推导方差<span class="math inline">\(Var(u)=(2ap)^{2}+2pq(a)^{2}-(2pa)^{2}=2pqa^{2}\)</span>。还没理解怎么推出来的。</li>
+<li>两个体i，j的育种值可以表述为<span class="math inline">\(m_{i}a，m_{j}a\)</span>,m表示M居中MAF基因的含量。如果对其进行中心化，那么需要减掉群体均值<span class="math inline">\(2pa\)</span>：<span class="math inline">\(u_{i}=m_{i}a-2pa=(m_{i}-2p)a=z_{i}a; \\ u_{j}=m_{j}a-2pa=(m_{j}-2p)a=z_{j}a\)</span>。这样基本就推导出了Z为什么是M-P这个公式。</li>
+<li>两个体育种值之间的协方差：<span class="math inline">\(cov(u_{i},u_{j})=(z_{i}a-2pa)(z_{j}a-2pa)=(z_{i}-2p)(z_{j}-2p)\sigma^{2}\)</span></li>
+<li>前述假定等位基因含量为0,1,2形式，进一步减掉1，则-1，0, 1，p=0,因此：<span class="math inline">\(cov(u_{i},u_{j})=z_{i}z_{j}\sigma^{2}\)</span></li>
+<li>根据<a href="http://nce.ads.uga.edu/wiki/lib/exe/fetch.php?media=gsip.pdf">Leggara的文章</a>，遗传方差表述为<span class="math inline">\(2\sum_{}p_{i}q_{j}\sigma^{2}\)</span>，因此ui和uj之间的相关性表述为<span class="math inline">\(r(u_{i},u_{j})=\frac{cov(u_{i},u_{j})}{2\sum_{}p_{i}q_{j}\sigma^{2}}=\frac{z_{i}z_{j}\sigma^{2}}{2\sum_{}p_{i}q_{j}\sigma^{2}}=\frac{z_{i}z_{j}}{2\sum_{}p_{i}q_{j}}\)</span>。<strong>实际上G矩阵表示的是个体间育种值的相关系数。</strong></li>
+</ul>
+</div>
+<div id="原文2018-12-09" class="section level1">
+<h1>原文（2018-12-09）</h1>
 <p>自己的选择育种知识，又到了大规模系统学习和更新的时候了。</p>
 <p>自从2005年开始学习水产动物选择育种知识以来，采取囫囵吞枣模式，虽然对于REML算法和BLUP算法的细节知识仍然一知半解，好歹相关的软件如ASReml、R等可以以较为熟练的使用，对于选择育种体系的理解也逐渐深入，常规的遗传评估工作算是可以胜任。</p>
 <p>全基因组选择方法建立以来，尽管迅速在奶牛、猪等大动物上展现了优越的性能，然而对于虾等个体小、世代周期短的动物，如何应用，仍然是一个难题，也是我正在努力研究的方向。</p>
@@ -40,7 +66,7 @@ tags:
 <pre class="r"><code>rm(list=ls())
 # 加载synbreed包
 is_installed &lt;- require(xtable)</code></pre>
-<pre><code>## Loading required package: xtable</code></pre>
+<pre><code>## 载入需要的程辑包：xtable</code></pre>
 <pre class="r"><code>if (!is_installed) {
   install.packages(&quot;xtable&quot;)
   library(xtable)
@@ -55,8 +81,8 @@ genotypes &lt;-
   stringsAsFactors = FALSE
   )
 print(xtable(genotypes),type=&quot;html&quot;)</code></pre>
-<!-- html table generated in R 3.6.1 by xtable 1.8-4 package -->
-<!-- Sun Apr 12 21:49:50 2020 -->
+<!-- html table generated in R 3.6.1 by xtable 1.8-3 package -->
+<!-- Thu Dec 03 11:09:39 2020 -->
 <table border="1">
 <tr>
 <th>
@@ -130,7 +156,7 @@ AA
 <p>转换用到了synbreed包中的codeGeno函数。</p>
 <pre class="r"><code># 加载synbreed包
 is_installed &lt;- require(synbreed)</code></pre>
-<pre><code>## Loading required package: synbreed</code></pre>
+<pre><code>## 载入需要的程辑包：synbreed</code></pre>
 <pre class="r"><code>if (!is_installed) {
   install.packages(&quot;synbreed&quot;)
   library(synbreed)
@@ -222,8 +248,8 @@ Z</code></pre>
 <pre class="r"><code>d &lt;- 2*sum(p_lower*(1 - p_lower))
 G &lt;- Z %*% t(Z) / d
 print(xtable(G),type=&quot;html&quot;)</code></pre>
-<!-- html table generated in R 3.6.1 by xtable 1.8-4 package -->
-<!-- Sun Apr 12 21:49:51 2020 -->
+<!-- html table generated in R 3.6.1 by xtable 1.8-3 package -->
+<!-- Thu Dec 03 11:09:41 2020 -->
 <table border="1">
 <tr>
 <th>
@@ -288,8 +314,8 @@ if (!is_installed) {
   library(sommer)
 }
 print(xtable(A.mat(M)),type=&quot;html&quot;)</code></pre>
-<!-- html table generated in R 3.6.1 by xtable 1.8-4 package -->
-<!-- Sun Apr 12 21:49:51 2020 -->
+<!-- html table generated in R 3.6.1 by xtable 1.8-3 package -->
+<!-- Thu Dec 03 11:09:41 2020 -->
 <table border="1">
 <tr>
 <th>
@@ -368,8 +394,8 @@ Ind3
 D &lt;- diag(D_ii,ncol(M))
 G &lt;- Z %*% D %*% t(Z)
 print(xtable(G),type=&quot;html&quot;)</code></pre>
-<!-- html table generated in R 3.6.1 by xtable 1.8-4 package -->
-<!-- Sun Apr 12 21:49:52 2020 -->
+<!-- html table generated in R 3.6.1 by xtable 1.8-3 package -->
+<!-- Thu Dec 03 11:09:41 2020 -->
 <table border="1">
 <tr>
 <th>
@@ -430,5 +456,6 @@ Ind3
 <p>参考文献：</p>
 <p><a id="1">Vanraden P M. Efficient methods to compute genomic predictions.[J]. Journal of Dairy Science, 2008, 91(11):4414-4423.</a></p>
 <p><a id="2">Wright, S. 1922. Coefficients of inbreeding and relationship. Am.Nat. 56:330–338.</a></p>
+</div>
 </div>
 </div>
