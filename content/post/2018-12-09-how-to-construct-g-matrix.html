@@ -32,9 +32,18 @@ P矩阵包括了每个位点最小等位基因的频率。这里减掉0.5，是�
 <li><span class="math inline">\(E(u)^{2}\)</span>可以这样推导，上述三种基因型TT、TA、AA三种基因型育种值的平方和为<span class="math inline">\(p^{2}(2a)^{2}+2pq(1a)^{2}+q^{2}(0a)^{2}=4p^{2}a^{2}+2pqa^{2}\)</span>：</li>
 <li>再来推导方差<span class="math inline">\(Var(u)=4p^{2}a^{2}-(4p^{2}a^{2}+2pqa^{2})=2pqa^{2}\)</span>。参考<a href="http://nce.ads.uga.edu/wiki/lib/exe/fetch.php?media=gsip.pdf">Leggara的文章</a>Table 4。表中第三个基因型应为aa，PDF中错写为Aa。</li>
 <li>两个体i，j的育种值可以表述为<span class="math inline">\(m_{i}a，m_{j}a\)</span>，m表示MAF基因的含量。如果对其进行中心化，那么需要减掉群体均值<span class="math inline">\(2pa\)</span>：<span class="math inline">\(u_{i}=m_{i}a-2pa=(m_{i}-2p)a=z_{i}a; \\ u_{j}=m_{j}a-2pa=(m_{j}-2p)a=z_{j}a\)</span>。这样基本就推导出了Z为什么是M-P这个公式。</li>
-<li>两个体育种值之间的协方差：<span class="math inline">\(Cov(u_{i},u_{j})=(z_{i}a-2pa)(z_{j}a-2pa)=(z_{i}-2p)(z_{j}-2p)\sigma^{2}\)</span></li>
-<li>前述假定等位基因含量为0,1,2形式，进一步减掉1，则-1，0, 1，p=0,因此：<span class="math inline">\(Cov(u_{i},u_{j})=z_{i}z_{j}\sigma^{2}\)</span></li>
-<li>因此<span class="math inline">\(u_{i}\)</span>和<span class="math inline">\(u_{j}\)</span>之间的相关性表述为<span class="math inline">\(r(u_{i},u_{j})=\frac{Cov(u_{i},u_{j})}{2p_{i}q_{j}\sigma^{2}}=\frac{z_{i}z_{j}\sigma^{2}}{2p_{i}q_{j}\sigma^{2}}=\frac{z_{i}z_{j}}{2p_{i}q_{j}}\)</span>。<strong>实际上G矩阵表示的是个体间育种值的相关系数。</strong></li>
+<li>两个体育种值之间的协方差：<span class="math inline">\(Cov(u_{i},u_{j})=(z_{i}a-2pa)(z_{j}a-2pa)=(z_{i}-2p)(z_{j}-2p)\sigma_{a}^{2}\)</span></li>
+<li>前述假定等位基因含量为0,1,2形式，进一步减掉1，则-1，0, 1，p=0,因此：<span class="math inline">\(Cov(u_{i},u_{j})=z_{i}z_{j}\sigma_{a}^{2}\)</span></li>
+<li>因此<span class="math inline">\(u_{i}\)</span>和<span class="math inline">\(u_{j}\)</span>之间的相关性表述为<span class="math inline">\(r(u_{i},u_{j})=\frac{Cov(u_{i},u_{j})}{2p_{i}q_{j}\sigma_{a}^{2}}=\frac{z_{i}z_{j}\sigma_{a}^{2}}{2p_{i}q_{j}\sigma_{a}^{2}}=\frac{z_{i}z_{j}}{2p_{i}q_{j}}\)</span>。</li>
+</ul>
+<p><strong>从上边两个公式来看，G矩阵中元素表示的是个体间育种值的相关系数。</strong></p>
+<p><strong>接下来推导G矩阵的计算公式</strong></p>
+<p>从1个SNP位点推广到多个SNP位点，假设所有位点的效应值都是一样的。那么<span class="math inline">\(u=Za\)</span>，其中Z为中心化后M矩阵，a为等位基因的效应值。</p>
+<ul>
+<li>育种值u方差为<span class="math inline">\(Var(u)=Var(Za)=ZVar(a)Z&#39;=ZZ&#39;\sigma_{a}^{2}\)</span>。</li>
+<li>根据方差公式，如果位点x和y间是相互独立的，那么Var(x+y)=Var(x)+Var(y)。由于假设位点间是互不连锁的，因此n个SNP位点的方差为<span class="math inline">\(Var(u)=\sigma_{u}^{2}\sum_{i=1}^{n}2pq\sigma_{a}^{2}\)</span>。因此<span class="math inline">\(\sigma_{a}^{2}=\frac{\sigma_{u}^{2}}{\sum_{i=1}^{n}2pq}\)</span>。</li>
+<li><span class="math inline">\(Var(u)=ZZ&#39;\sigma_{a}^{2}=ZZ&#39;\frac{\sigma_{u}^{2}}{\sum_{i=1}^{n}2pq}=\frac{ZZ&#39;}{\sum_{i=1}^{n}2pq}\sigma_{u}^{2}\)</span></li>
+<li>定义<span class="math inline">\(G=\frac{ZZ&#39;}{\sum_{i=1}^{n}2pq}\)</span>，那么<span class="math inline">\(Var(u)=G\sigma_{u}^{2}\)</span>。</li>
 </ul>
 </div>
 <div id="原文2018-12-09" class="section level1">
@@ -67,7 +76,7 @@ P矩阵包括了每个位点最小等位基因的频率。这里减掉0.5，是�
 <pre class="r"><code>rm(list=ls())
 # 加载synbreed包
 is_installed &lt;- require(xtable)</code></pre>
-<pre><code>## 载入需要的程辑包：xtable</code></pre>
+<pre><code>## Loading required package: xtable</code></pre>
 <pre class="r"><code>if (!is_installed) {
   install.packages(&quot;xtable&quot;)
   library(xtable)
@@ -82,8 +91,8 @@ genotypes &lt;-
   stringsAsFactors = FALSE
   )
 print(xtable(genotypes),type=&quot;html&quot;)</code></pre>
-<!-- html table generated in R 3.6.1 by xtable 1.8-3 package -->
-<!-- Thu Dec 03 12:04:22 2020 -->
+<!-- html table generated in R 3.6.1 by xtable 1.8-4 package -->
+<!-- Thu Dec 03 19:16:02 2020 -->
 <table border="1">
 <tr>
 <th>
@@ -157,7 +166,7 @@ AA
 <p>转换用到了synbreed包中的codeGeno函数。</p>
 <pre class="r"><code># 加载synbreed包
 is_installed &lt;- require(synbreed)</code></pre>
-<pre><code>## 载入需要的程辑包：synbreed</code></pre>
+<pre><code>## Loading required package: synbreed</code></pre>
 <pre class="r"><code>if (!is_installed) {
   install.packages(&quot;synbreed&quot;)
   library(synbreed)
@@ -249,8 +258,8 @@ Z</code></pre>
 <pre class="r"><code>d &lt;- 2*sum(p_lower*(1 - p_lower))
 G &lt;- Z %*% t(Z) / d
 print(xtable(G),type=&quot;html&quot;)</code></pre>
-<!-- html table generated in R 3.6.1 by xtable 1.8-3 package -->
-<!-- Thu Dec 03 12:04:24 2020 -->
+<!-- html table generated in R 3.6.1 by xtable 1.8-4 package -->
+<!-- Thu Dec 03 19:16:05 2020 -->
 <table border="1">
 <tr>
 <th>
@@ -315,8 +324,8 @@ if (!is_installed) {
   library(sommer)
 }
 print(xtable(A.mat(M)),type=&quot;html&quot;)</code></pre>
-<!-- html table generated in R 3.6.1 by xtable 1.8-3 package -->
-<!-- Thu Dec 03 12:04:24 2020 -->
+<!-- html table generated in R 3.6.1 by xtable 1.8-4 package -->
+<!-- Thu Dec 03 19:16:05 2020 -->
 <table border="1">
 <tr>
 <th>
@@ -395,8 +404,8 @@ Ind3
 D &lt;- diag(D_ii,ncol(M))
 G &lt;- Z %*% D %*% t(Z)
 print(xtable(G),type=&quot;html&quot;)</code></pre>
-<!-- html table generated in R 3.6.1 by xtable 1.8-3 package -->
-<!-- Thu Dec 03 12:04:25 2020 -->
+<!-- html table generated in R 3.6.1 by xtable 1.8-4 package -->
+<!-- Thu Dec 03 19:16:05 2020 -->
 <table border="1">
 <tr>
 <th>
