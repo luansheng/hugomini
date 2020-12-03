@@ -15,34 +15,40 @@ tags:
 <div id="补充理解2020-12-03" class="section level1">
 <h1>补充理解（2020-12-03）</h1>
 <p>补充一些理论知识，即为什么要采取本文所述的方式构建G矩阵。主要来源于这篇<a href="https://doi.org/10.3390/genes11070790">ssGBLUP综述文章</a>，写的非常好。</p>
-<p>如何理解，Z矩阵是对M矩阵进行了中心化。中心化即减掉均值，导致总体均值为0。</p>
-<p>先回顾一下，中心化的方法：
+<p>如何理解，Z矩阵是对M矩阵进行了中心化。中心化即减掉均值，使总体均值为0。</p>
+<p>先回顾一下，对M矩阵中心化的方法：
 <span class="math display">\[Z = M-P\]</span>
-M矩阵包括了每个样本，每个位点最小等位基因的含量。
+M矩阵包括了每个样本、每个位点最小等位基因的含量。
 <span class="math display">\[P = 2(p_{i}-0.5)\]</span>
-P矩阵包括了每个位点最小等位基因的频率。这里减掉0.5，是为了确保每一个SNP位点所有样品中心化后等位基因频率和为0。</p>
+P矩阵包括了每个位点最小等位基因的频率。这里减掉0.5，是为了确保每一个SNP位点所有样品中心化后等位基因频率之和为0。</p>
 <p><strong>为什么这样做，就对M矩阵进行了中心化？</strong></p>
-<p>利用正文中的SNP位点1来做说明。三个样本三种基因型：AA、AA、TT。以T作为MAF等位基因，那么转换为M矩阵，则是0,0,2。</p>
+<p>利用正文中的SNP位点1来做说明。3个样本包括2种基因型：AA、AA、TT。以T作为MAF等位基因，那么转换为M矩阵，则是0、0、2。</p>
 <ul>
 <li>假定T等位基因的效应是a，发生频率是p，那么TT的频率是<span class="math inline">\(p^{2}\)</span>，带有该基因型的个体的育种值u=2a；</li>
-<li>与之相反，AA基因型的频率为<span class="math inline">\(q^{2}\)</span>，q=1-p，带有该基因型的个体的育种值uu=0a=0；</li>
-<li>TA基因型的频率为2pq，带有该基因型的个体的育种值u=1a。</li>
-<li>该位点可解释的方差为<span class="math inline">\(Var(u)=E(u^{2})-E(u)^{2}\)</span>。</li>
-<li>在群体水平上，基于TT、TA和TT三种基因型的频率计算育种值u的平均值<span class="math inline">\(E(u)=2ap^{2}+0q^{2}+a2pq\\=2ap^{2}+2apq\\=2ap^{2}+2ap(1-p)=2pa\)</span>，因此<span class="math inline">\(E(u^{2})=(2pa)^{2}=4p^{2}a^{2}\)</span>。</li>
-<li><span class="math inline">\(E(u)^{2}\)</span>可以这样推导，上述三种基因型TT、TA、AA三种基因型育种值的平方和为<span class="math inline">\(p^{2}(2a)^{2}+2pq(1a)^{2}+q^{2}(0a)^{2}=4p^{2}a^{2}+2pqa^{2}\)</span>：</li>
-<li>再来推导方差<span class="math inline">\(Var(u)=4p^{2}a^{2}-(4p^{2}a^{2}+2pqa^{2})=2pqa^{2}\)</span>。参考<a href="http://nce.ads.uga.edu/wiki/lib/exe/fetch.php?media=gsip.pdf">Leggara的文章</a>Table 4。表中第三个基因型应为aa，PDF中错写为Aa。</li>
-<li>两个体i，j的育种值可以表述为<span class="math inline">\(m_{i}a，m_{j}a\)</span>，m表示MAF基因的含量。如果对其进行中心化，那么需要减掉群体均值<span class="math inline">\(2pa\)</span>：<span class="math inline">\(u_{i}=m_{i}a-2pa=(m_{i}-2p)a=z_{i}a; \\ u_{j}=m_{j}a-2pa=(m_{j}-2p)a=z_{j}a\)</span>。这样基本就推导出了Z为什么是M-P这个公式。</li>
-<li>两个体育种值之间的协方差：<span class="math inline">\(Cov(u_{i},u_{j})=(z_{i}a-2pa)(z_{j}a-2pa)=(z_{i}-2p)(z_{j}-2p)\sigma_{a}^{2}\)</span></li>
-<li>前述假定等位基因含量为0,1,2形式，进一步减掉1，则-1，0, 1，p=0,因此：<span class="math inline">\(Cov(u_{i},u_{j})=z_{i}z_{j}\sigma_{a}^{2}\)</span></li>
-<li>因此<span class="math inline">\(u_{i}\)</span>和<span class="math inline">\(u_{j}\)</span>之间的相关性表述为<span class="math inline">\(r(u_{i},u_{j})=\frac{Cov(u_{i},u_{j})}{2p_{i}q_{j}\sigma_{a}^{2}}=\frac{z_{i}z_{j}\sigma_{a}^{2}}{2p_{i}q_{j}\sigma_{a}^{2}}=\frac{z_{i}z_{j}}{2p_{i}q_{j}}\)</span>。</li>
+<li>AA基因型的频率为<span class="math inline">\(q^{2}\)</span>，q=1-p，带有该基因型的个体的育种值u=0a=0；</li>
+<li>TA基因型的频率为2pq，带有该基因型的个体的育种值u=1a；</li>
+<li>该位点可解释的方差为<span class="math inline">\(Var(u)=E(u^{2})-E(u)^{2}\)</span>；</li>
+<li>在群体水平上，根据TT、TA和AA三种基因型的频率计算育种值u的平均值：<span class="math inline">\(E(u)=2ap^{2}+0q^{2}+a2pq\\=2ap^{2}+2apq\\=2ap^{2}+2ap(1-p)=2pa\)</span>；</li>
+<li>因此，<span class="math inline">\(E(u)^{2}=(2pa)^{2}=4p^{2}a^{2}\)</span>；</li>
+<li>根据基因型TT、TA、AA的频率，<span class="math inline">\(E(u^{2})=p^{2}(2a)^{2}+2pq(1a)^{2}+q^{2}(0a)^{2}=4p^{2}a^{2}+2pqa^{2}\)</span>；</li>
+<li>代入<span class="math inline">\(E(u^{2})\)</span>和<span class="math inline">\(E(u)^{2}\)</span>推导结果，方差<span class="math inline">\(Var(u)=(4p^{2}a^{2}+2pqa^{2})-4p^{2}a^{2}=2pqa^{2}\)</span>。上述两个该公式，参考<a href="http://nce.ads.uga.edu/wiki/lib/exe/fetch.php?media=gsip.pdf">Leggara的文章</a>中的Table 4。请注意，表中第3个基因型应为aa，PDF文件中错写为Aa。</li>
+<li>两个体i、j的育种值可以表述为<span class="math inline">\(m_{i}a、m_{j}a\)</span>，其中m表示MAF基因的含量；</li>
+<li>减掉群体均值<span class="math inline">\(2pa\)</span>，对其进行中心化：<span class="math inline">\(u_{i}=m_{i}a-2pa=(m_{i}-2p)a=z_{i}a \\ u_{j}=m_{j}a-2pa=(m_{j}-2p)a=z_{j}a\)</span>；</li>
+<li>这样基本就推导出了Z为什么是M-P这个公式；</li>
+<li>两个体育种值之间的协方差：<span class="math inline">\(Cov(u_{i},u_{j})=(z_{i}a-2pa)(z_{j}a-2pa)=(z_{i}-2p)(z_{j}-2p)\sigma_{a}^{2}\)</span>；</li>
+<li>前述假定等位基因含量为0、1、2形式，进一步减掉1，则变为-1、0、 1，p=0；</li>
+<li>因此，<span class="math inline">\(Cov(u_{i},u_{j})=z_{i}z_{j}\sigma_{a}^{2}\)</span>；</li>
+<li>因此，<span class="math inline">\(u_{i}\)</span>和<span class="math inline">\(u_{j}\)</span>之间的相关性表述为<span class="math inline">\(r(u_{i},u_{j})=\frac{Cov(u_{i},u_{j})}{2p_{i}q_{j}\sigma_{a}^{2}}=\frac{z_{i}z_{j}\sigma_{a}^{2}}{2p_{i}q_{j}\sigma_{a}^{2}}=\frac{z_{i}z_{j}}{2p_{i}q_{j}}\)</span>。</li>
 </ul>
 <p><strong>从上边两个公式来看，G矩阵中元素表示的是个体间育种值的相关系数。</strong></p>
 <p><strong>接下来推导G矩阵的计算公式</strong></p>
 <p>从1个SNP位点推广到多个SNP位点，假设所有位点的效应值都是一样的。那么<span class="math inline">\(u=Za\)</span>，其中Z为中心化后M矩阵，a为等位基因的效应值。</p>
 <ul>
-<li>育种值u方差为<span class="math inline">\(Var(u)=Var(Za)=ZVar(a)Z&#39;=ZZ&#39;\sigma_{a}^{2}\)</span>。</li>
-<li>根据方差公式，如果位点x和y间是相互独立的，那么Var(x+y)=Var(x)+Var(y)。由于假设位点间是互不连锁的，因此n个SNP位点的方差为<span class="math inline">\(Var(u)=\sigma_{u}^{2}\sum_{i=1}^{n}2pq\sigma_{a}^{2}\)</span>。因此<span class="math inline">\(\sigma_{a}^{2}=\frac{\sigma_{u}^{2}}{\sum_{i=1}^{n}2pq}\)</span>。</li>
-<li><span class="math inline">\(Var(u)=ZZ&#39;\sigma_{a}^{2}=ZZ&#39;\frac{\sigma_{u}^{2}}{\sum_{i=1}^{n}2pq}=\frac{ZZ&#39;}{\sum_{i=1}^{n}2pq}\sigma_{u}^{2}\)</span></li>
+<li>育种值u方差为<span class="math inline">\(Var(u)=Var(Za)=ZVar(a)Z&#39;=ZZ&#39;\sigma_{a}^{2}\)</span>；</li>
+<li>根据方差公式，如果位点x和y间是相互独立的，那么Var(x+y)=Var(x)+Var(y)；</li>
+<li>由于假设位点间是互不连锁的，因此n个独立SNP位点的方差为<span class="math inline">\(Var(u)=\sigma_{u}^{2}=\sum_{i=1}^{n}2pq\sigma_{a}^{2}\)</span>；</li>
+<li>因此<span class="math inline">\(\sigma_{a}^{2}=\frac{\sigma_{u}^{2}}{\sum_{i=1}^{n}2pq}\)</span>；</li>
+<li><span class="math inline">\(Var(u)=ZZ&#39;\sigma_{a}^{2}=ZZ&#39;\frac{\sigma_{u}^{2}}{\sum_{i=1}^{n}2pq}=\frac{ZZ&#39;}{\sum_{i=1}^{n}2pq}\sigma_{u}^{2}\)</span>；</li>
 <li>定义<span class="math inline">\(G=\frac{ZZ&#39;}{\sum_{i=1}^{n}2pq}\)</span>，那么<span class="math inline">\(Var(u)=G\sigma_{u}^{2}\)</span>。</li>
 </ul>
 </div>
@@ -92,7 +98,7 @@ genotypes &lt;-
   )
 print(xtable(genotypes),type=&quot;html&quot;)</code></pre>
 <!-- html table generated in R 3.6.1 by xtable 1.8-4 package -->
-<!-- Thu Dec 03 19:16:02 2020 -->
+<!-- Thu Dec 03 20:50:25 2020 -->
 <table border="1">
 <tr>
 <th>
@@ -259,7 +265,7 @@ Z</code></pre>
 G &lt;- Z %*% t(Z) / d
 print(xtable(G),type=&quot;html&quot;)</code></pre>
 <!-- html table generated in R 3.6.1 by xtable 1.8-4 package -->
-<!-- Thu Dec 03 19:16:05 2020 -->
+<!-- Thu Dec 03 20:50:28 2020 -->
 <table border="1">
 <tr>
 <th>
@@ -325,7 +331,7 @@ if (!is_installed) {
 }
 print(xtable(A.mat(M)),type=&quot;html&quot;)</code></pre>
 <!-- html table generated in R 3.6.1 by xtable 1.8-4 package -->
-<!-- Thu Dec 03 19:16:05 2020 -->
+<!-- Thu Dec 03 20:50:28 2020 -->
 <table border="1">
 <tr>
 <th>
@@ -405,7 +411,7 @@ D &lt;- diag(D_ii,ncol(M))
 G &lt;- Z %*% D %*% t(Z)
 print(xtable(G),type=&quot;html&quot;)</code></pre>
 <!-- html table generated in R 3.6.1 by xtable 1.8-4 package -->
-<!-- Thu Dec 03 19:16:05 2020 -->
+<!-- Thu Dec 03 20:50:28 2020 -->
 <table border="1">
 <tr>
 <th>
