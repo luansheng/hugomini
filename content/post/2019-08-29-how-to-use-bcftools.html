@@ -73,7 +73,7 @@ tags:
 <p>需要用到<strong>annotate</strong>命令中的<em>–rename-chrs</em>参数。</p>
 <p>命令形式：</p>
 <p><code>bcftools annotate --rename-chrs NewChrName.txt old.xxx.vcf.gz -Oz -o new.xxx.gz --threads n</code></p>
-<p>其中NewChrName.txt文件中包括了旧和新染色体名称的对应关系。’–threads`可以设置多线程加快新vcf文件的生成速度。</p>
+<p>其中NewChrName.txt文件中包括了旧和新染色体名称的对应关系。<code>--threads</code>可以设置多线程加快新vcf文件的生成速度。</p>
 <p>可以通过bioawk命令来提取旧染色体名字。</p>
-<p><code>bioawk -c vcf ' { print $chrom } ' old.vcf.gz | sort | uniq &gt; ChrName.txt</code></p>
+<p><code>bioawk -c vcf ' { print $chrom } ' old.vcf.gz | sort -n | uniq &gt; ChrName.txt</code></p>
 </div>
