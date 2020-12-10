@@ -83,7 +83,7 @@ plot-vcfstats生成pdf文件还需要pdf-latex，如果系统没有安装latex�
 
 上述命令在ubuntu 18.04系统中执行。
 
-## 5. 替换染色体名称
+## 6. 替换染色体名称
 
 需要用到**annotate**命令中的*--rename-chrs*参数。
 
