@@ -1,7 +1,7 @@
 ---
 title: bcftools使用笔记
 author: Sheng Luan
-date: '2019-08-29'
+date: '2020-12-10'
 slug: how-to-use-bcftools
 categories:
   - 生物信息学
@@ -67,4 +67,13 @@ tags:
 <p>需要注意，plot-vcfstats脚本在bcftools安装目录misc文件夹下，这是一个perl脚本，会调用python3绘图模块Matplotlib。如果没有安装该模块，可以通过pip3命令<code>pip3 install -U matplotlib</code>进行安装。如果没有pip3，通过<code>sudo apt-get install python3-pip</code>命令安装。</p>
 <p>plot-vcfstats生成pdf文件还需要pdf-latex，如果系统没有安装latex，通过<code>sudo apt-get install texlive-full</code>进行安装。</p>
 <p>上述命令在ubuntu 18.04系统中执行。</p>
+</div>
+<div id="替换染色体名称" class="section level2">
+<h2>5. 替换染色体名称</h2>
+<p>需要用到<strong>annotate</strong>命令中的<em>–rename-chrs</em>参数。</p>
+<p>命令形式：</p>
+<p><code>bcftools annotate --rename-chrs NewChrName.txt old.xxx.vcf.gz -Oz -o new.xxx.gz --threads n</code></p>
+<p>其中NewChrName.txt文件中包括了旧和新染色体名称的对应关系。’–threads`可以设置多线程加快新vcf文件的生成速度。</p>
+<p>可以通过bioawk命令来提取旧染色体名字。</p>
+<p><code>bioawk -c vcf ' { print $chrom } ' old.vcf.gz | sort | uniq &gt; ChrName.txt</code></p>
 </div>

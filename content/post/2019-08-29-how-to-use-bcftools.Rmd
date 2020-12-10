@@ -1,7 +1,7 @@
 ---
 title: bcftools使用笔记
 author: Sheng Luan
-date: '2019-08-29'
+date: '2020-12-10'
 slug: how-to-use-bcftools
 categories:
   - 生物信息学
@@ -82,3 +82,17 @@ stats命令用于统计VCF文件的基本信息，比如突变位点的总数，
 plot-vcfstats生成pdf文件还需要pdf-latex，如果系统没有安装latex，通过`sudo apt-get install texlive-full`进行安装。
 
 上述命令在ubuntu 18.04系统中执行。
+
+## 5. 替换染色体名称
+
+需要用到**annotate**命令中的*--rename-chrs*参数。
+
+命令形式：
+
+`bcftools annotate --rename-chrs NewChrName.txt old.xxx.vcf.gz -Oz -o new.xxx.gz --threads n`
+
+其中NewChrName.txt文件中包括了旧和新染色体名称的对应关系。'--threads`可以设置多线程加快新vcf文件的生成速度。
+
+可以通过bioawk命令来提取旧染色体名字。
+
+`bioawk -c vcf ' { print $chrom } ' old.vcf.gz | sort | uniq > ChrName.txt`
