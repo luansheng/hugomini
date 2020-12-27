@@ -34,7 +34,8 @@ git config --global --list
 
 ## 在Rstudio中设置Git
 依次点击菜单Tools-->Global Options-->Git/SVN，如下图设置：
+
 <div align="center">
-<img src="/post/images/RstudioGit.jpg"  alt="Rstudio Git" height= "500" width="100%" >
+<img src="/post/images/RstudioGit.jpg" alt="Rstudio Git" height= "500" width="100%">
 </div>
 
