@@ -73,7 +73,7 @@ ssh-keygen -t rsa -C "zhangsan@163.com"
 
 具体可参考廖雪峰的[学习教程](https://www.liaoxuefeng.com/wiki/896043488029600/896954117292416)
 
-## 生成PTA
+## 生成PAT
 如果计划通过https协议提交代码，可以考虑生成PAT（personal access token）。具体可参考[《Chapter 10 Cache credentials for HTTPS》](https://happygitwithr.com/credential-caching.html)
 
 首先通过R包usethis来生成PAT：
