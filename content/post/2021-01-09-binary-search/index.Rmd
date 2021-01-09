@@ -56,10 +56,6 @@ linear_search = function(list_v,item_s) {
   return(NA)
 }
 
-```
-
-测试一下函数的性能。从结果中可以看到，二分法查找40亿位数字，比线性查找第104万位数字还要快近20倍。
-```{r}
 binary_search(1:100, -1)
 binary_search(1:100, 1)
 binary_search(1:100, 55)
@@ -73,7 +69,10 @@ linear_search(1:100, 55)
 linear_search(1:100, 55.5)
 linear_search(1:100, 100)
 linear_search(1:100, 101)
+```
 
+测试一下函数的性能。从结果中可以看到，二分法查找40亿位数字，比线性查找第104万位数字还要快几万倍。二者所花费的时间，一个是微秒级，一个是毫秒级。注：1秒=1000毫秒；1毫秒=1000微秒。
+```{r}
 x1 <- 1:2^33
 x2 <- 1:2^20
 library(microbenchmark)

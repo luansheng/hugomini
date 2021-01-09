@@ -54,9 +54,9 @@ linear_search = function(list_v,item_s) {
     low_s = low_s + 1
   }
   return(NA)
-}</code></pre>
-<p>测试一下函数的性能。从结果中可以看到，二分法查找40亿位数字，比线性查找第104万位数字还要快近20倍。</p>
-<pre class="r"><code>binary_search(1:100, -1)</code></pre>
+}
+
+binary_search(1:100, -1)</code></pre>
 <pre><code>## [1] NA</code></pre>
 <pre class="r"><code>binary_search(1:100, 1)</code></pre>
 <pre><code>## [1] 1</code></pre>
@@ -80,16 +80,17 @@ linear_search = function(list_v,item_s) {
 <pre><code>## [1] 100</code></pre>
 <pre class="r"><code>linear_search(1:100, 101)</code></pre>
 <pre><code>## [1] NA</code></pre>
+<p>测试一下函数的性能。从结果中可以看到，二分法查找40亿位数字，比线性查找第104万位数字还要快几万倍。二者所花费的时间，一个是微秒级，一个是毫秒级。注：1秒=1000毫秒；1毫秒=1000微秒。</p>
 <pre class="r"><code>x1 &lt;- 1:2^33
 x2 &lt;- 1:2^20
 library(microbenchmark)
 microbenchmark(linear_search(x2,1040000))</code></pre>
 <pre><code>## Unit: milliseconds
-##                        expr     min       lq    mean   median       uq      max
-##  linear_search(x2, 1040000) 69.3231 74.66165 82.1908 80.05305 85.48235 125.6361
+##                        expr     min       lq     mean  median       uq     max
+##  linear_search(x2, 1040000) 69.1728 71.79345 78.41373 75.0785 83.05335 115.119
 ##  neval
 ##    100</code></pre>
 <pre class="r"><code>microbenchmark(binary_search(x1,4000000000))</code></pre>
 <pre><code>## Unit: microseconds
-##                      expr min  lq  mean median  uq  max neval
-##  binary_search(x1, 4e+09) 4.1 4.2 4.441   4.25 4.3 14.8   100</code></pre>
+##                      expr min  lq  mean median  uq max neval
+##  binary_search(x1, 4e+09) 3.6 3.7 3.953    3.8 3.8  13   100</code></pre>
