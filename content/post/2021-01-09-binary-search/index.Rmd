@@ -1,0 +1,46 @@
+---
+title: 二分查找
+author: Sheng Luan
+date: '2021-01-09'
+slug: binary-search
+categories:
+  - 编程
+tags:
+  - Algorithm
+---
+
+一个简单的二分算法，竟然搞不定，惭愧。binary_search()函数返回待查找数的位置，找不到返回NA。需要首先对数据排好序，然后再用二分法进行查找，适应于检索等场景。
+
+```{r}
+binary_search = function(list_v, item_s) {
+  low_s = 1
+  high_s = length(list_v)
+  # 待查找数值，大于最大值、小于最小值、或者查找不到，
+  # 都会产生low_s > high_s，导致循环退出。
+  # 也可以理解为，即便是只有1个元素，也要进行检查。
+  while (low_s <= high_s) {
+    med_s = floor((low_s + high_s) / 2)
+    guess_s = list_v[med_s]
+    if (guess_s == item_s) {
+      return(med_s)
+    }
+    # 如果中值大于item_s
+    if (guess_s > item_s) {
+      # 关键：如果中间数值大于给出的待查找值，最大位置等于中间数值位置-1
+      high_s = med_s - 1
+    }
+    if (guess_s < item_s) {
+      # 关键：如果中间数值小于给出的待查找值，最小位置等于中间数值位置+1
+      low_s = med_s + 1
+    }
+  }
+  return(NA)
+}
+binary_search(1:100, -1)
+binary_search(1:100, 1)
+binary_search(1:100, 55)
+binary_search(1:100, 55.5)
+binary_search(1:100, 100)
+binary_search(1:100, 101)
+```
+
