@@ -38,7 +38,25 @@ tags:
   }
   return(NA)
 }
-binary_search(1:100, -1)</code></pre>
+
+# 最简单的线性查找函数
+linear_search = function(list_v,item_s) {
+  low_s = 1
+  high_s = length(list_v)
+  # 待查找数值，大于最大值、小于最小值、或者查找不到，
+  # 都会产生low_s &gt; high_s，导致循环退出。
+  # 也可以理解为，即便是只有1个元素，也要进行检查。
+  while (low_s &lt;= high_s) {
+    guess_s = list_v[low_s]
+    if (guess_s == item_s) {
+      return(low_s)
+    }
+    low_s = low_s + 1
+  }
+  return(NA)
+}</code></pre>
+<p>测试一下函数的性能。从结果中可以看到，二分法查找40亿位数字，比线性查找第104万位数字还要快近20倍。</p>
+<pre class="r"><code>binary_search(1:100, -1)</code></pre>
 <pre><code>## [1] NA</code></pre>
 <pre class="r"><code>binary_search(1:100, 1)</code></pre>
 <pre><code>## [1] 1</code></pre>
@@ -50,3 +68,28 @@ binary_search(1:100, -1)</code></pre>
 <pre><code>## [1] 100</code></pre>
 <pre class="r"><code>binary_search(1:100, 101)</code></pre>
 <pre><code>## [1] NA</code></pre>
+<pre class="r"><code>linear_search(1:100, -1)</code></pre>
+<pre><code>## [1] NA</code></pre>
+<pre class="r"><code>linear_search(1:100, 1)</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code>linear_search(1:100, 55)</code></pre>
+<pre><code>## [1] 55</code></pre>
+<pre class="r"><code>linear_search(1:100, 55.5)</code></pre>
+<pre><code>## [1] NA</code></pre>
+<pre class="r"><code>linear_search(1:100, 100)</code></pre>
+<pre><code>## [1] 100</code></pre>
+<pre class="r"><code>linear_search(1:100, 101)</code></pre>
+<pre><code>## [1] NA</code></pre>
+<pre class="r"><code>x1 &lt;- 1:2^33
+x2 &lt;- 1:2^20
+library(microbenchmark)
+microbenchmark(linear_search(x2,1040000))</code></pre>
+<pre><code>## Unit: milliseconds
+##                        expr     min       lq    mean   median       uq      max
+##  linear_search(x2, 1040000) 69.3231 74.66165 82.1908 80.05305 85.48235 125.6361
+##  neval
+##    100</code></pre>
+<pre class="r"><code>microbenchmark(binary_search(x1,4000000000))</code></pre>
+<pre><code>## Unit: microseconds
+##                      expr min  lq  mean median  uq  max neval
+##  binary_search(x1, 4e+09) 4.1 4.2 4.441   4.25 4.3 14.8   100</code></pre>

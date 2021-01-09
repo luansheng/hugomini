@@ -38,11 +38,47 @@ binary_search = function(list_v, item_s) {
   }
   return(NA)
 }
+
+# 最简单的线性查找函数
+linear_search = function(list_v,item_s) {
+  low_s = 1
+  high_s = length(list_v)
+  # 待查找数值，大于最大值、小于最小值、或者查找不到，
+  # 都会产生low_s > high_s，导致循环退出。
+  # 也可以理解为，即便是只有1个元素，也要进行检查。
+  while (low_s <= high_s) {
+    guess_s = list_v[low_s]
+    if (guess_s == item_s) {
+      return(low_s)
+    }
+    low_s = low_s + 1
+  }
+  return(NA)
+}
+
+```
+
+测试一下函数的性能。从结果中可以看到，二分法查找40亿位数字，比线性查找第104万位数字还要快近20倍。
+```{r}
 binary_search(1:100, -1)
 binary_search(1:100, 1)
 binary_search(1:100, 55)
 binary_search(1:100, 55.5)
 binary_search(1:100, 100)
 binary_search(1:100, 101)
+
+linear_search(1:100, -1)
+linear_search(1:100, 1)
+linear_search(1:100, 55)
+linear_search(1:100, 55.5)
+linear_search(1:100, 100)
+linear_search(1:100, 101)
+
+x1 <- 1:2^33
+x2 <- 1:2^20
+library(microbenchmark)
+microbenchmark(linear_search(x2,1040000))
+microbenchmark(binary_search(x1,4000000000))
 ```
+
 
