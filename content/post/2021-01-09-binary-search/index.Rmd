@@ -1,5 +1,5 @@
 ---
-title: 二分查找
+title: 算法图解笔记-二分查找
 author: Sheng Luan
 date: '2021-01-09'
 slug: binary-search

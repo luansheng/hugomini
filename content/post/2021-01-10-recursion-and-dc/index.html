@@ -1,0 +1,65 @@
+---
+title: 算法图解笔记-递归和分治
+author: Sheng Luan
+date: '2021-01-10'
+slug: recursion-and-dc
+categories:
+  - 编程
+tags:
+  - Algorithm
+---
+
+<script src="index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>递归（recursion）思想的最好例子是斐波那契数和阶乘，在这里就不详述了。分而治之（divide and conquer, D&amp;C）是一种经典的递归式问题解决方案。</p>
+<p>写递归程序的两个要素：<strong>基线条件</strong>和<strong>递归条件</strong>。如果不设置基线条件，递归会陷入死循环。如果归纳不出递归条件，就无法执行递归。</p>
+<div id="利用递归来求和" class="section level2">
+<h2>1.利用递归来求和</h2>
+<pre class="r"><code>recur_sum = function(list_v) {
+  n &lt;- length(list_v)
+  if (n &lt; 2)
+    return(list_v[n]) #基线条件
+  return(list_v[1] + recur_sum(list_v[2:n]))  # 递归条件
+}</code></pre>
+<p>现在测试一下：</p>
+<pre class="r"><code>recur_sum(1:10)</code></pre>
+<pre><code>## [1] 55</code></pre>
+<pre class="r"><code>recur_sum(1)</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code>recur_sum(10)</code></pre>
+<pre><code>## [1] 10</code></pre>
+<pre class="r"><code>recur_sum(1:2000)</code></pre>
+<pre><code>## [1] 2001000</code></pre>
+<p>递归理解起来，很好理解。但是执行起来，确实比较低效的。因为每次都要调用函数体，复制向量，占用内存开销非常大。递归会记录过程，通常保存在栈（stack）中，是一种经典的后进先出的策略。</p>
+</div>
+<div id="快速排序" class="section level2">
+<h2>2. 快速排序</h2>
+<p>快速排序的思想非常朴素，譬如对<code>5,2,3,8,9,6,1</code>数列进行排序，步骤如下：</p>
+<ul>
+<li>1)随机选择1个数值作为基准值，譬如5；</li>
+<li>2)将&lt;5的数放在左边，<code>2,3,1</code>；</li>
+<li>3)将&gt;5的数放在右边，<code>8,9,6</code>；</li>
+<li>4)利用递归，对左手边和右手边的数列分别实行步骤1)，2)，3)；</li>
+<li>5)基线条件为，如果数列只有1个元素，返回该值。</li>
+</ul>
+<p>这实际上也是一种分而治之的思想，把对大数列的排序，划分为对多个小数列的排序。</p>
+<p>试着写出程序如下：</p>
+<pre class="r"><code>quick_sort = function(list_v) {
+  n &lt;- length(list_v)
+  if (n &lt; 2)
+    return(list_v[n])
+  pivot &lt;- list_v[1]  #设置基准值
+  less &lt;- list_v[2:n][list_v[2:n] &lt;= pivot] #小于基准值的数列
+  greater &lt;- list_v[2:n][list_v[2:n] &gt; pivot] #大于基准值的数列
+  return(c(quick_sort(less), pivot, quick_sort(greater)))
+}</code></pre>
+<p>测试一下，成功。</p>
+<pre class="r"><code>quick_sort(c(5,2,3,8,3,9,6,1,1,6))</code></pre>
+<pre><code>##  [1] 1 1 2 3 3 5 6 6 8 9</code></pre>
+<pre class="r"><code>quick_sort(sample(1:100,30))</code></pre>
+<pre><code>##  [1]   8   9  14  17  19  28  32  35  36  38  42  43  47  51  56  57  59  67  73
+## [20]  74  75  76  82  84  85  87  90  92  98 100</code></pre>
+<p>快速排序的运行时间为<span class="math inline">\(O(n\log_{2}^{n})\)</span>。如果你每次都选到中间值作为基准值，那么栈的高度是<span class="math inline">\(\log_{2}^{n}\)</span>，每一个栈层，进行的比较次数都是n次，因此最好情况是<span class="math inline">\(n\log_{2}^{n}\)</span>。</p>
+<p>如果基准值选择的不好，每次都选到最小值或者最大值，那么就会导致栈的高度为n层，每一个栈层，进行的比较次数仍然为n次，那么最差情况为<span class="math inline">\(O(n^{2})\)</span>。</p>
+</div>
