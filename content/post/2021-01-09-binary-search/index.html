@@ -1,5 +1,5 @@
 ---
-title: 二分查找
+title: 算法图解笔记-二分查找
 author: Sheng Luan
 date: '2021-01-09'
 slug: binary-search
@@ -86,11 +86,11 @@ x2 &lt;- 1:2^20
 library(microbenchmark)
 microbenchmark(linear_search(x2,1040000))</code></pre>
 <pre><code>## Unit: milliseconds
-##                        expr     min       lq     mean  median       uq     max
-##  linear_search(x2, 1040000) 69.1728 71.79345 78.41373 75.0785 83.05335 115.119
+##                        expr     min      lq     mean   median       uq      max
+##  linear_search(x2, 1040000) 83.9305 98.6428 110.2421 110.1595 119.9042 188.2421
 ##  neval
 ##    100</code></pre>
 <pre class="r"><code>microbenchmark(binary_search(x1,4000000000))</code></pre>
 <pre><code>## Unit: microseconds
-##                      expr min  lq  mean median  uq max neval
-##  binary_search(x1, 4e+09) 3.6 3.7 3.953    3.8 3.8  13   100</code></pre>
+##                      expr min  lq  mean median  uq  max neval
+##  binary_search(x1, 4e+09) 4.4 4.6 5.088   4.65 4.7 24.8   100</code></pre>
