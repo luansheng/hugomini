@@ -19,7 +19,7 @@ tags:
 <li>在早期，SNP标记的数量要远大于样本量，这意味着要求解的标记效应值数量远大于观察值，会存在不唯一的解。这对这个问题，提出了<a href="https://doi.org/10.3835/plantgenome2011.08.0024">RRBLUP</a>的方案。</li>
 <li>但是现在问题反过来了，像奶牛分型的样本量已经达到了百万头，已经比一般的芯片，如50K要多了。现在问题是如何求解对如此庞大的样本，求解其逆矩阵。<a href="https://doi.org/10.3168/jds.2013-7752">Misztal</a>等人提出了APY算法策略，即把分型个体分为核心和非核心两类，利用少量核心个体的基因组亲缘关系逆矩阵，以及非核心与核心个体间的基因组亲缘关系矩阵，直接计算得到所有分型个体的基因组亲缘关系逆矩阵，避免了直接求逆。具体可参考ssGBLUP方法的最新综述文章：<a href="https://doi.org/10.3390/genes11070790">Single-Step Genomic Evaluations from Theory to Practice: Using SNP Chips and Sequence Data in BLUPF90</a>。</li>
 </ul>
-<p>本文主要是想了解两个问题：</p>
+<p>本文主要想了解两个问题：</p>
 <ul>
 <li>为什么讲RRBLUP等价于GBLUP</li>
 <li>RRBLUP是如何解决p&gt;n问题的</li>
