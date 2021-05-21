@@ -12,7 +12,8 @@ tags:
 <script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
 
 
-<p>1 前言</p>
+<div id="前言" class="section level2">
+<h2>1 前言</h2>
 <p>之前一直接触的是BLUP、ssGBLUP等方法，对于岭回归、贝叶斯等方法了解甚少。最近在做抗病性状的遗传评估，需要了解和评估相关算法，先从岭回归学起。</p>
 <p>基因组选择需要解决的问题：</p>
 <ul>
@@ -30,8 +31,10 @@ tags:
 <li><p>RRBLUP是一种改良的最小二乘法，是间接法的代表算法。它能估计出<strong>所有SNP的效应值</strong>。该方法将标记效应假定为<strong>随机效应</strong>且服从<strong>正态分布</strong>，利用<strong>线性混合效应模型</strong>估算每个标记的效应值，然后将每个标记效应相加即得到个体的估计育种值。</p></li>
 <li><p>GBLUP是直接法的代表，它把<strong>个体</strong>作为随机效应，根据参考群体和预测群体SNP基因型信息构建的亲缘关系矩阵作为方差协方差矩阵，通过迭代法估计方差组分，进而求解线性混合效应模型获得待预测个体的估计育种值。</p></li>
 </ul>
-<p>2 模型</p>
-<p>考虑到Endelman等RRBLUP的文章中，公式中对G的定义跟后来的基因组亲缘关系G矩阵冲突，这里采用Hayes等文章中的定义方法。</p>
+</div>
+<div id="为什么两个模型是等价的" class="section level2">
+<h2>2 为什么两个模型是等价的？</h2>
+<p>考虑到Endelman等RRBLUP的文章中，公式中对G的定义跟后来的基因组亲缘关系G矩阵冲突，这里综合了<a href="https://doi.org/10.1017/S0016672308009981">Hayes等文章</a>中的定义方法。</p>
 <p>2.1 RRBLUP模型（以标记为基础的BLUP）:</p>
 <p><span class="math display">\[y=ZWu+e\]</span>
 其中，<span class="math inline">\(u \sim N(0,I\sigma^{2}_{u})\)</span>，u为标记等位基因的替代效应向量；W是基因型矩阵（-1,0,1等形式）；Z为观察值的关联矩阵。</p>
@@ -70,3 +73,37 @@ K&#39;y
 <p>因此，G矩阵也可以根据W矩阵计算得到：</p>
 <p><span class="math inline">\(G = WW&#39;\sigma^{2}_{g}/\sigma^{2}_{u}\)</span>。此时，G为基因组亲缘关系矩阵。</p>
 <p>因此，<span class="math inline">\(G\)</span>的另外一个特性：基于该矩阵计算得到的GEBV<strong>等同于</strong>利用RRBLUP模型计算得到的结果。</p>
+</div>
+<div id="岭回归分析的原理" class="section level2">
+<h2>3 岭回归分析的原理</h2>
+<p>现在来看第二个问题：为什么岭回归可以解决p&gt;n的问题。</p>
+<p>岭回归类似于Bayesian A，假定每个SNP的效应值的相等的，符合正态分布。</p>
+<p>当标记数量远超过观测值时，譬如有500个体的体重观测值，需要估计5万个SNP标记的效应，如果没有惩罚措施，用最小二乘估计方法，会导致<strong>预测值标准误较大</strong>，且<strong>最小二乘回归估计值<span class="math inline">\(\beta\)</span>不唯一</strong>。</p>
+<p>回归系数的计算公式为：
+<span class="math display">\[
+\beta=(K&#39;K)^{-1}K&#39;y
+\]</span>
+其中K为设计矩阵(为了跟第一部分呼应)。可以看出，<span class="math inline">\(\beta\)</span>估计值依赖K。如果K为病态矩阵，那么K’K非常有可能是是奇异的或者接近奇异，直接会导致没有逆矩阵，因此会无解。</p>
+<p>奇异（singular）的定义：该矩阵的行列式值为0。奇异表示矩阵中列存在依赖关系，并不独立。奇异只能是对应<strong>方阵</strong>而言的。为什么当一个矩阵的行列式（determinant）为0时，称矩阵为奇异，这里有一个比较容易理解的<a href="http://blog.sciencenet.cn/blog-315774-889594.html">解释</a>，大意是这样：</p>
+<blockquote>
+<p>…为何只说行列式为零的矩阵才奇异呢？这很可能是由线性方程组的解的个数引出的名词。对于系数行列式非零的情况，方程组的解是唯一的；否则，就有无穷多解。换句话说，系数行列式可能取各种值，但不管是什么值，只要不为零，相应的方程组的解一定是唯一的。但是，如果系数行列式恰巧为零，方程组的解就可以有无穷多。这样，行列式为零的矩阵就显得很“突出”、很“不一样”、很“另类”、很“奇怪”，等等。而“奇异”包含了奇怪和异端两种意思，正好用于描述这种矩阵。奇异矩阵对应的英文单词是“singular matrix”，其中“singular”有如下几种意思（参见《朗文英语辞典》）：1. a singular noun, verb, form etc is used when writing or speaking about one person or thing; 2. very great or very noticeable; 3. very unusual or strange. 显然，“singular matrix”中的“singular”对应上面的第3个意思，也带有第2个意思。</p>
+</blockquote>
+<p>普通最小二乘估计的的核心思想是，让残差平方和（sum of squared residuals, RSS）最小：</p>
+<p><span class="math display">\[
+RSS =\sum^{n}_{i=1}(y_{i}-\hat{y_{i}})^{2}
+\]</span>
+其中<span class="math inline">\(y_{i}\)</span>和<span class="math inline">\(\hat{y_{i}}\)</span>分别为观测值和模型预测值，n为观测值个数。</p>
+<p>岭回归的方法，如前所述，加入一个惩罚项<span class="math inline">\(\lambda\)</span>，让修改后的<span class="math inline">\(RSS_{ridge}\)</span>最小
+<span class="math display">\[
+RSS_{ridge} =\sum^{n}_{i=1}(y_{i}-\hat{y_{i}})^{2}+\lambda \sum^{p}_{j=1}\beta_{j}^{2}
+\]</span>
+<span class="math inline">\(\lambda\)</span>的选择是非常重要的，太小，不起作用，等同于普通最小二乘估计值；太大，回归系数估计值趋向于0，对模型的解释能力变弱。</p>
+<p>因此在使用岭回归的过程中，需要保持方差和偏差之间的一个平衡。</p>
+<p><span class="math display">\[MSE = Variance + Bias^{2} + Irreducible error\]</span>
+公式的解释，见<a href="https://www.statology.org/bias-variance-tradeoff/">这里</a>。</p>
+<p>选择一个<span class="math inline">\(\lambda\)</span>值，方差MSE持续降低，偏差增加很少，Test MSE最小，如下图所示。</p>
+<div class="figure">
+<img src="https://www.statology.org/wp-content/uploads/2020/11/ridge2-768x550.png" alt="" />
+<p class="caption">方差与偏差的平衡</p>
+</div>
+</div>
