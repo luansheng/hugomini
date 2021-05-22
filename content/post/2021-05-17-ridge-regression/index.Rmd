@@ -120,11 +120,90 @@ $\lambda$的选择是非常重要的，太小，不起作用，等同于普通�
 因此在使用岭回归的过程中，需要保持方差和偏差之间的一个平衡。
 
 $$MSE = Variance + Bias^{2} + Irreducible error$$
-公式的解释，见[这里](https://www.statology.org/bias-variance-tradeoff/)。
+公式的解释，见[这里](https://www.statology.org/bias-variance-tradeoff/)。MSE，指的是mean squared error，即平均平方误差。
 
 选择一个$\lambda$值，方差MSE持续降低，偏差增加很少，Test MSE最小，如下图所示。
 
 ![方差与偏差的平衡](https://www.statology.org/wp-content/uploads/2020/11/ridge2-768x550.png)
 
+## 4 基于R的实例解析
 
+参考这个[链接](https://www.statology.org/ridge-regression-in-r/)。
+
+### 4.1 使用数据集
+
+使用的数据集为集成在R中datasets包中的mtcars。它是Motor Trend US 杂志收集的1973到1974年期间总共32辆汽车的11个指标: 油耗及10个与设计及性能方面的指标。
+
+```{r}
+print(mtcars)
+```
+
+选择hp变量（总功率）作为因变量，mpg（油耗）、wt（重量）、drat（后轴比）、qsec（提速能力1/4英里需要的时间）作为自变量。
+
+利用glmnet包来进行岭回归分析。
+
+> Glmnet is a package that fits generalized linear and similar models via penalized maximum likelihood. The regularization path is computed for the lasso or elastic net penalty at a grid of values (on the log scale) for the regularization parameter lambda. The algorithm is extremely fast, and can exploit sparsity in the input matrix x.
+
+该包要求因变量为向量，自变量为datamatrix格式。
+
+```{r}
+library(glmnet)
+y = mtcars$hp
+
+x <- data.matrix(mtcars[,c("mpg","wt","drat","qsec")])
+```
+
+### 4.2 拟合岭回归模型
+
+使用glmnet()函数拟合岭回归模型。需要注意，alpha值设置为0。
+
+不同alpha值对应的处理方法：
+
+* 0 岭回归 Ridge regression
+* 1 拉索回归 Lasso regression
+* 0-1 弹性网络 Elastic net
+
+此外，岭回归需要对数据进行归一化处理，即平均值为0，方差为1。glmnet包会自动进行标准化处理。
+
+```{r}
+ridge_reg_model <- glmnet(x, y, alpha = 0)
+summary(ridge_reg_model)
+```
+
+### 4.3 选择优化的$\lambda$值
+
+通过K折交叉验证方法，计算test MSE。计算不同$\lambda$值对应的test MSE，选择最小test MSE对应的$\lambda$值。
+
+cv.glmnet()函数可以执行多折交叉验证，如5折。
+
+```{r}
+cv_model <- cv.glmnet(x, y, alpha = 0, nfolds = 5)
+best_lambda_s <- cv_model$lambda.min
+
+```
+
+画出$\lambda$值对应的test MSE，对应图中x轴的log(best_lambda_s)=$log(best_lambda_s)$位置。
+```{r SelectLambda, fig.cap="lambda值与test MSE的对应关系图"}
+plot(cv_model)
+```
+
+### 4.4 拟合最优模型
+
+根据确定的$\lambda$值，重新拟合模型。
+
+成功建立了预测模型:
+$$
+hp = 472.44 - 3.29*mpg + 18.82*wt - 2.04*drat - 17.53*qsec
+$$
+这样就可以根据这四个指标预测不同类型摩托的总功率了。
+
+```{r}
+best_model <- glmnet(x, y, alpha = 0, lambda = best_lambda_s)
+coef(best_model)
+```
+
+画一个回归系数随着$\lambda$值变化的轨迹图，可以看到，随着$\lambda$值的不断变大，最终所有的回归系数归零。**这就是为什么叫岭（脊）回归的原因？！**
+```{r}
+plot(ridge_reg_model, xvar = "lambda")
+```
 

@@ -100,10 +100,126 @@ RSS_{ridge} =\sum^{n}_{i=1}(y_{i}-\hat{y_{i}})^{2}+\lambda \sum^{p}_{j=1}\beta_{
 <span class="math inline">\(\lambda\)</span>的选择是非常重要的，太小，不起作用，等同于普通最小二乘估计值；太大，回归系数估计值趋向于0，对模型的解释能力变弱。</p>
 <p>因此在使用岭回归的过程中，需要保持方差和偏差之间的一个平衡。</p>
 <p><span class="math display">\[MSE = Variance + Bias^{2} + Irreducible error\]</span>
-公式的解释，见<a href="https://www.statology.org/bias-variance-tradeoff/">这里</a>。</p>
+公式的解释，见<a href="https://www.statology.org/bias-variance-tradeoff/">这里</a>。MSE，指的是mean squared error，即平均平方误差。</p>
 <p>选择一个<span class="math inline">\(\lambda\)</span>值，方差MSE持续降低，偏差增加很少，Test MSE最小，如下图所示。</p>
 <div class="figure">
 <img src="https://www.statology.org/wp-content/uploads/2020/11/ridge2-768x550.png" alt="" />
 <p class="caption">方差与偏差的平衡</p>
+</div>
+</div>
+<div id="基于r的实例解析" class="section level2">
+<h2>4 基于R的实例解析</h2>
+<p>参考这个<a href="https://www.statology.org/ridge-regression-in-r/">链接</a>。</p>
+<div id="使用数据集" class="section level3">
+<h3>4.1 使用数据集</h3>
+<p>使用的数据集为集成在R中datasets包中的mtcars。它是Motor Trend US 杂志收集的1973到1974年期间总共32辆汽车的11个指标: 油耗及10个与设计及性能方面的指标。</p>
+<pre class="r"><code>print(mtcars)</code></pre>
+<pre><code>##                      mpg cyl  disp  hp drat    wt  qsec vs am gear carb
+## Mazda RX4           21.0   6 160.0 110 3.90 2.620 16.46  0  1    4    4
+## Mazda RX4 Wag       21.0   6 160.0 110 3.90 2.875 17.02  0  1    4    4
+## Datsun 710          22.8   4 108.0  93 3.85 2.320 18.61  1  1    4    1
+## Hornet 4 Drive      21.4   6 258.0 110 3.08 3.215 19.44  1  0    3    1
+## Hornet Sportabout   18.7   8 360.0 175 3.15 3.440 17.02  0  0    3    2
+## Valiant             18.1   6 225.0 105 2.76 3.460 20.22  1  0    3    1
+## Duster 360          14.3   8 360.0 245 3.21 3.570 15.84  0  0    3    4
+## Merc 240D           24.4   4 146.7  62 3.69 3.190 20.00  1  0    4    2
+## Merc 230            22.8   4 140.8  95 3.92 3.150 22.90  1  0    4    2
+## Merc 280            19.2   6 167.6 123 3.92 3.440 18.30  1  0    4    4
+## Merc 280C           17.8   6 167.6 123 3.92 3.440 18.90  1  0    4    4
+## Merc 450SE          16.4   8 275.8 180 3.07 4.070 17.40  0  0    3    3
+## Merc 450SL          17.3   8 275.8 180 3.07 3.730 17.60  0  0    3    3
+## Merc 450SLC         15.2   8 275.8 180 3.07 3.780 18.00  0  0    3    3
+## Cadillac Fleetwood  10.4   8 472.0 205 2.93 5.250 17.98  0  0    3    4
+## Lincoln Continental 10.4   8 460.0 215 3.00 5.424 17.82  0  0    3    4
+## Chrysler Imperial   14.7   8 440.0 230 3.23 5.345 17.42  0  0    3    4
+## Fiat 128            32.4   4  78.7  66 4.08 2.200 19.47  1  1    4    1
+## Honda Civic         30.4   4  75.7  52 4.93 1.615 18.52  1  1    4    2
+## Toyota Corolla      33.9   4  71.1  65 4.22 1.835 19.90  1  1    4    1
+## Toyota Corona       21.5   4 120.1  97 3.70 2.465 20.01  1  0    3    1
+## Dodge Challenger    15.5   8 318.0 150 2.76 3.520 16.87  0  0    3    2
+## AMC Javelin         15.2   8 304.0 150 3.15 3.435 17.30  0  0    3    2
+## Camaro Z28          13.3   8 350.0 245 3.73 3.840 15.41  0  0    3    4
+## Pontiac Firebird    19.2   8 400.0 175 3.08 3.845 17.05  0  0    3    2
+## Fiat X1-9           27.3   4  79.0  66 4.08 1.935 18.90  1  1    4    1
+## Porsche 914-2       26.0   4 120.3  91 4.43 2.140 16.70  0  1    5    2
+## Lotus Europa        30.4   4  95.1 113 3.77 1.513 16.90  1  1    5    2
+## Ford Pantera L      15.8   8 351.0 264 4.22 3.170 14.50  0  1    5    4
+## Ferrari Dino        19.7   6 145.0 175 3.62 2.770 15.50  0  1    5    6
+## Maserati Bora       15.0   8 301.0 335 3.54 3.570 14.60  0  1    5    8
+## Volvo 142E          21.4   4 121.0 109 4.11 2.780 18.60  1  1    4    2</code></pre>
+<p>选择hp变量（总功率）作为因变量，mpg（油耗）、wt（重量）、drat（后轴比）、qsec（提速能力1/4英里需要的时间）作为自变量。</p>
+<p>利用glmnet包来进行岭回归分析。</p>
+<blockquote>
+<p>Glmnet is a package that fits generalized linear and similar models via penalized maximum likelihood. The regularization path is computed for the lasso or elastic net penalty at a grid of values (on the log scale) for the regularization parameter lambda. The algorithm is extremely fast, and can exploit sparsity in the input matrix x.</p>
+</blockquote>
+<p>该包要求因变量为向量，自变量为datamatrix格式。</p>
+<pre class="r"><code>library(glmnet)</code></pre>
+<pre><code>## 载入需要的程辑包：Matrix</code></pre>
+<pre><code>## Loaded glmnet 4.1-1</code></pre>
+<pre class="r"><code>y = mtcars$hp
+
+x &lt;- data.matrix(mtcars[,c(&quot;mpg&quot;,&quot;wt&quot;,&quot;drat&quot;,&quot;qsec&quot;)])</code></pre>
+</div>
+<div id="拟合岭回归模型" class="section level3">
+<h3>4.2 拟合岭回归模型</h3>
+<p>使用glmnet()函数拟合岭回归模型。需要注意，alpha值设置为0。</p>
+<p>不同alpha值对应的处理方法：</p>
+<ul>
+<li>0 岭回归 Ridge regression</li>
+<li>1 拉索回归 Lasso regression</li>
+<li>0-1 弹性网络 Elastic net</li>
+</ul>
+<p>此外，岭回归需要对数据进行归一化处理，即平均值为0，方差为1。glmnet包会自动进行标准化处理。</p>
+<pre class="r"><code>ridge_reg_model &lt;- glmnet(x, y, alpha = 0)
+summary(ridge_reg_model)</code></pre>
+<pre><code>##           Length Class     Mode   
+## a0        100    -none-    numeric
+## beta      400    dgCMatrix S4     
+## df        100    -none-    numeric
+## dim         2    -none-    numeric
+## lambda    100    -none-    numeric
+## dev.ratio 100    -none-    numeric
+## nulldev     1    -none-    numeric
+## npasses     1    -none-    numeric
+## jerr        1    -none-    numeric
+## offset      1    -none-    logical
+## call        4    -none-    call   
+## nobs        1    -none-    numeric</code></pre>
+</div>
+<div id="选择优化的lambda值" class="section level3">
+<h3>4.3 选择优化的<span class="math inline">\(\lambda\)</span>值</h3>
+<p>通过K折交叉验证方法，计算test MSE。计算不同<span class="math inline">\(\lambda\)</span>值对应的test MSE，选择最小test MSE对应的<span class="math inline">\(\lambda\)</span>值。</p>
+<p>cv.glmnet()函数可以执行多折交叉验证，如5折。</p>
+<pre class="r"><code>cv_model &lt;- cv.glmnet(x, y, alpha = 0, nfolds = 5)
+best_lambda_s &lt;- cv_model$lambda.min</code></pre>
+<p>画出<span class="math inline">\(\lambda\)</span>值对应的test MSE，对应图中x轴的log(best_lambda_s)=<span class="math inline">\(log(best_lambda_s)\)</span>位置。</p>
+<pre class="r"><code>plot(cv_model)</code></pre>
+<div class="figure"><span id="fig:SelectLambda"></span>
+<img src="{{< blogdown/postref >}}index_files/figure-html/SelectLambda-1.png" alt="lambda值与test MSE的对应关系图" width="672" />
+<p class="caption">
+Figure 1: lambda值与test MSE的对应关系图
+</p>
+</div>
+</div>
+<div id="拟合最优模型" class="section level3">
+<h3>4.4 拟合最优模型</h3>
+<p>根据确定的<span class="math inline">\(\lambda\)</span>值，重新拟合模型。</p>
+<p>成功建立了预测模型:
+<span class="math display">\[
+hp = 472.44 - 3.29*mpg + 18.82*wt - 2.04*drat - 17.53*qsec
+\]</span>
+这样就可以根据这四个指标预测不同类型摩托的总功率了。</p>
+<pre class="r"><code>best_model &lt;- glmnet(x, y, alpha = 0, lambda = best_lambda_s)
+coef(best_model)</code></pre>
+<pre><code>## 5 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                     s0
+## (Intercept) 475.242646
+## mpg          -3.299732
+## wt           19.431238
+## drat         -1.222429
+## qsec        -17.949721</code></pre>
+<p>画一个回归系数随着<span class="math inline">\(\lambda\)</span>值变化的轨迹图，可以看到，随着<span class="math inline">\(\lambda\)</span>值的不断变大，最终所有的回归系数归零。<strong>这就是为什么叫岭（脊）回归的原因？！</strong></p>
+<pre class="r"><code>plot(ridge_reg_model, xvar = &quot;lambda&quot;)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 </div>
 </div>
