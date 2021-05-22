@@ -213,11 +213,11 @@ hp = 472.44 - 3.29*mpg + 18.82*wt - 2.04*drat - 17.53*qsec
 coef(best_model)</code></pre>
 <pre><code>## 5 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
 ##                     s0
-## (Intercept) 475.242646
-## mpg          -3.299732
-## wt           19.431238
-## drat         -1.222429
-## qsec        -17.949721</code></pre>
+## (Intercept) 468.672670
+## mpg          -3.268611
+## wt           18.193330
+## drat         -2.903106
+## qsec        -17.054865</code></pre>
 <p>画一个回归系数随着<span class="math inline">\(\lambda\)</span>值变化的轨迹图，可以看到，随着<span class="math inline">\(\lambda\)</span>值的不断变大，最终所有的回归系数归零。<strong>这就是为什么叫岭（脊）回归的原因？！</strong></p>
 <pre class="r"><code>plot(ridge_reg_model, xvar = &quot;lambda&quot;)</code></pre>
 <p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
