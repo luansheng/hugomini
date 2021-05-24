@@ -192,7 +192,7 @@ summary(ridge_reg_model)</code></pre>
 <p>cv.glmnet()函数可以执行多折交叉验证，如5折或者10折等。本文执行10折交叉验证</p>
 <pre class="r"><code>cv_model &lt;- cv.glmnet(x, y, alpha = 0, nfolds = 10)
 best_lambda_s &lt;- cv_model$lambda.min</code></pre>
-<p>画出<span class="math inline">\(\lambda\)</span>值对应的test MSE，如下图所示。最优<span class="math inline">\(\lambda\)</span>值对应图中x轴的log(best_lambda_s)=1.6559059位置。</p>
+<p>画出<span class="math inline">\(\lambda\)</span>值对应的test MSE，如下图所示。最优<span class="math inline">\(\lambda\)</span>值对应图中x轴的log(best_lambda_s)=2.4932095位置。</p>
 <pre class="r"><code>plot(cv_model)</code></pre>
 <div class="figure" style="text-align: center"><span id="fig:SelectLambda"></span>
 <img src="{{< blogdown/postref >}}index_files/figure-html/SelectLambda-1.png" alt="lambda值与test MSE的对应关系图" width="672" />
@@ -208,13 +208,13 @@ Figure 1: lambda值与test MSE的对应关系图
 coef(best_model)</code></pre>
 <pre><code>## 5 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
 ##                     s0
-## (Intercept) 479.381278
-## mpg          -3.261227
-## wt           21.440464
-## drat          1.169642
-## qsec        -19.069106</code></pre>
+## (Intercept) 472.444103
+## mpg          -3.290491
+## wt           18.817693
+## drat         -2.038402
+## qsec        -17.528318</code></pre>
 <p>根据计算出来的回归系数，建立对总功率hp的预测模型:</p>
-<p>hp = 479.3812781 + -3.2612271mpg + 21.4404636wt + 1.1696418drat + -19.0691062qsec</p>
+<p>hp = 472.4441033 + -3.2904912mpg + 18.8176927wt + -2.038402drat + -17.5283176qsec</p>
 <p>这样就可以根据这四个指标预测不同类型摩托的总功率了。</p>
 <p>画一个回归系数随着<span class="math inline">\(\lambda\)</span>值变化的轨迹图，可以看到，随着<span class="math inline">\(\lambda\)</span>值的不断变大，最终所有的回归系数归零。<strong>这就是为什么叫岭（脊）回归的原因？！</strong></p>
 <pre class="r"><code>library(latex2exp)
@@ -225,6 +225,7 @@ plot(ridge_reg_model, xvar = &quot;lambda&quot;, xlab=TeX(&#39;$Log(\\lambda)&#3
 Figure 2: <span class="math inline">\(\lambda\)</span>值与回归系数的对应关系
 </p>
 </div>
-<p>还剩下一个问题，为什么在RR-BLUP算法中，直接设定<span class="math inline">\(\lambda = \sigma^{2}_{e}/\sigma^{2}_{u}\)</span>，即残差方差与标记效应方差的比值?</p>
+<p>还剩下一个问题，为什么在RR-BLUP算法中，直接设定<span class="math inline">\(\lambda = \sigma^{2}_{e}/\sigma^{2}_{u}\)</span>，即残差方差与标记效应方差的比值? 这个问题，一直没有找到答案，感觉由于是跟BLUP模型等同，所以才推导出这样的结果。</p>
+<p>其实可以这样了解？：REML方法，通过迭代估计残差方差和加性遗传方差，也就是在不断寻找最优<span class="math inline">\(\lambda\)</span>的过程？这需要看一下REML算法的过程了。</p>
 </div>
 </div>

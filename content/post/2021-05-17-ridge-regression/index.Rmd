@@ -208,4 +208,6 @@ library(latex2exp)
 plot(ridge_reg_model, xvar = "lambda", xlab=TeX('$Log(\\lambda)'))
 ```
 
-还剩下一个问题，为什么在RR-BLUP算法中，直接设定$\lambda = \sigma^{2}_{e}/\sigma^{2}_{u}$，即残差方差与标记效应方差的比值?
+还剩下一个问题，为什么在RR-BLUP算法中，直接设定$\lambda = \sigma^{2}_{e}/\sigma^{2}_{u}$，即残差方差与标记效应方差的比值? 这个问题，一直没有找到答案，感觉由于是跟BLUP模型等同，所以才推导出这样的结果。
+
+其实可以这样了解？：REML方法，通过迭代估计残差方差和加性遗传方差，也就是在不断寻找最优$\lambda$的过程？这需要看一下REML算法的过程了。
