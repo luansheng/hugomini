@@ -1,0 +1,304 @@
+---
+title: Introduction to VCF file
+author: Sheng Luan
+date: '2021-10-20'
+slug: introduction-to-vcf-file
+categories:
+  - 生物信息学
+tags:
+  - vcfR
+  - VCF
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>当前，育种芯片数据主要是通过VCF格式的文件提供，而且PLINK等质控软件，对于VCF文件的支持非常方便，因此了解VCF文件的格式和其中的各项参数，是非常必要的。</p>
+<p>本文主要参考vcfR包的vignette：<a href="https://cran.r-project.org/web/packages/vcfR/vignettes/vcf_data.html">VCF data</a>。</p>
+<div id="什么是vcf" class="section level2">
+<h2>1. 什么是VCF？</h2>
+<p>VCF (Variant Call Format)是储存变异信息的常用文件格式，通常为文本文件。VCF目前包括4.1-4.3三个正式版本，4.4为草稿版本。四个版本的具体格式，查看<a href="http://samtools.github.io/hts-specs/">这里</a>。</p>
+</div>
+<div id="vcf文件结构" class="section level2">
+<h2>2. VCF文件结构</h2>
+<p>vcfR包的作者把一个VCF文件分为三个区，分别命名为meta、fix和gt。参见<a href="https://cran.r-project.org/web/packages/vcfR/vignettes/vcf_data.html">这里</a>的示意图。</p>
+</div>
+<div id="meta-region" class="section level1">
+<h1>2.1 meta region</h1>
+<p>位于文件顶端，主要是定义文件中用到的<strong>缩写</strong>信息。也存档了产生VCF文件的软件及其调用的参数信息。</p>
+<p>看一下vcfR包中自带的vcf例子文件。可以看到，例子文件包括18个样本，一条染色体，共计有2533个SNP位点。</p>
+<pre class="r"><code>library(vcfR)</code></pre>
+<pre><code>## Warning: 程辑包&#39;vcfR&#39;是用R版本4.1.1 来建造的</code></pre>
+<pre><code>## 
+##    *****       ***   vcfR   ***       *****
+##    This is vcfR 1.12.0 
+##      browseVignettes(&#39;vcfR&#39;) # Documentation
+##      citation(&#39;vcfR&#39;) # Citation
+##    *****       *****      *****       *****</code></pre>
+<pre class="r"><code>data(vcfR_example)
+vcf</code></pre>
+<pre><code>## ***** Object of Class vcfR *****
+## 18 samples
+## 1 CHROMs
+## 2,533 variants
+## Object size: 3.2 Mb
+## 8.497 percent missing data
+## *****        *****         *****</code></pre>
+<p>接下来，查看一下meta区的前7行。strwrap()是自动换行函数。从输出行中，可以看出：</p>
+<ul>
+<li>meta区中的每一行从两个##开始。</li>
+<li>第一行包括VCF文件格式版本。例子文件是4.1版本格式。该行<strong>是VCF文件必须要有的行</strong>。</li>
+<li>第二行给出产生本VCF文件的软件，例子文件使用GATK产生。该行<strong>不是VCF文件必须要包括的行</strong>。</li>
+<li>VCF文件可能会针对每条染色体或supercontig或contig产生一行信息。</li>
+<li>剩余行定了在fix区中<strong>INFO</strong>列和在gt区中<strong>FORMAT</strong>列使用的各种缩写名称。</li>
+</ul>
+<pre class="r"><code>strwrap(vcf@meta[1:6])</code></pre>
+<pre><code>## [1] &quot;##fileformat=VCFv4.1&quot;                                                   
+## [2] &quot;##source=\&quot;GATK haplotype Caller, phased with beagle4\&quot;&quot;                
+## [3] &quot;##FILTER=&lt;ID=LowQual,Description=\&quot;Low quality\&quot;&gt;&quot;                      
+## [4] &quot;##FORMAT=&lt;ID=AD,Number=.,Type=Integer,Description=\&quot;Allelic depths for&quot; 
+## [5] &quot;the ref and alt alleles in the order listed\&quot;&gt;&quot;                         
+## [6] &quot;##FORMAT=&lt;ID=DP,Number=1,Type=Integer,Description=\&quot;Approximate read&quot;   
+## [7] &quot;depth (reads with MQ=255 or with bad mates are filtered)\&quot;&gt;&quot;            
+## [8] &quot;##FORMAT=&lt;ID=GQ,Number=1,Type=Integer,Description=\&quot;Genotype Quality\&quot;&gt;&quot;</code></pre>
+<p>meta区中的部分行可能会很长，不容易阅读。可以用vcfR包中的queryMETA()函数汇总meta部分的信息。但是并不是所有的信息，都在汇总结果中。譬如，“contig”信息就没有包括在其中。</p>
+<pre class="r"><code>queryMETA(vcf)</code></pre>
+<pre><code>##  [1] &quot;FILTER=ID=LowQual&quot;                   
+##  [2] &quot;FORMAT=ID=AD&quot;                        
+##  [3] &quot;FORMAT=ID=DP&quot;                        
+##  [4] &quot;FORMAT=ID=GQ&quot;                        
+##  [5] &quot;FORMAT=ID=GT&quot;                        
+##  [6] &quot;FORMAT=ID=PL&quot;                        
+##  [7] &quot;GATKCommandLine=ID=HaplotypeCaller&quot;  
+##  [8] &quot;INFO=ID=AC&quot;                          
+##  [9] &quot;INFO=ID=AF&quot;                          
+## [10] &quot;INFO=ID=AN&quot;                          
+## [11] &quot;INFO=ID=BaseQRankSum&quot;                
+## [12] &quot;INFO=ID=ClippingRankSum&quot;             
+## [13] &quot;INFO=ID=DP&quot;                          
+## [14] &quot;INFO=ID=DS&quot;                          
+## [15] &quot;INFO=ID=FS&quot;                          
+## [16] &quot;INFO=ID=HaplotypeScore&quot;              
+## [17] &quot;INFO=ID=InbreedingCoeff&quot;             
+## [18] &quot;INFO=ID=MLEAC&quot;                       
+## [19] &quot;INFO=ID=MLEAF&quot;                       
+## [20] &quot;INFO=ID=MQ&quot;                          
+## [21] &quot;INFO=ID=MQ0&quot;                         
+## [22] &quot;INFO=ID=MQRankSum&quot;                   
+## [23] &quot;INFO=ID=QD&quot;                          
+## [24] &quot;INFO=ID=ReadPosRankSum&quot;              
+## [25] &quot;INFO=ID=SOR&quot;                         
+## [26] &quot;1 contig=&lt;IDs omitted from queryMETA&quot;</code></pre>
+<p>我们也可以通过设定参数<strong>element</strong>只查询某一个元素。譬如，我们查询DP (reads depth)-reads覆盖度。我们会在FORMAT和INFO中都查到DP的信息。</p>
+<pre class="r"><code>queryMETA(vcf, element = &quot;DP&quot;)</code></pre>
+<pre><code>## [[1]]
+## [1] &quot;FORMAT=ID=DP&quot;                                                                         
+## [2] &quot;Number=1&quot;                                                                             
+## [3] &quot;Type=Integer&quot;                                                                         
+## [4] &quot;Description=Approximate read depth (reads with MQ=255 or with bad mates are filtered)&quot;
+## 
+## [[2]]
+## [1] &quot;INFO=ID=DP&quot;                                                           
+## [2] &quot;Number=1&quot;                                                             
+## [3] &quot;Type=Integer&quot;                                                         
+## [4] &quot;Description=Approximate read depth; some reads may have been filtered&quot;</code></pre>
+<p>如果我们只想在FORMAT部分查询DP，可以进一步限定element参数的值为”FORMAT=&lt;ID=DP”。</p>
+<pre class="r"><code>queryMETA(vcf, element = &quot;FORMAT=&lt;ID=DP&quot;)</code></pre>
+<pre><code>## [[1]]
+## [1] &quot;FORMAT=ID=DP&quot;                                                                         
+## [2] &quot;Number=1&quot;                                                                             
+## [3] &quot;Type=Integer&quot;                                                                         
+## [4] &quot;Description=Approximate read depth (reads with MQ=255 or with bad mates are filtered)&quot;</code></pre>
+<p>queryMETA()中参数nice默认设置为true，返回整理后易于阅读的数据。譬如，将原始VCF文件中的尖括号删除，且分为四行。 如果想直接看VCF文件中的原始信息，可以将nice设置为FALSE。</p>
+<pre class="r"><code>queryMETA(vcf, element = &quot;FORMAT=&lt;ID=DP&quot;, nice = FALSE)</code></pre>
+<pre><code>## [1] &quot;##FORMAT=&lt;ID=DP,Number=1,Type=Integer,Description=\&quot;Approximate read depth (reads with MQ=255 or with bad mates are filtered)\&quot;&gt;&quot;</code></pre>
+<div id="fix-region" class="section level2">
+<h2>2.2 fix region</h2>
+<ul>
+<li>fix区包含了每个SNP位点的信息，有时会对所有样本进行汇总。</li>
+<li>fix区的前八列，标题为CHROM, POS, ID, REF, ALT, QUAL, FILTER和INFO。这是每个变异位点的信息，是“固定的”，或者说对于所有的样本都是相同的。</li>
+</ul>
+<p>通过getFIX()函数，查看实例数据vcf中fix区的信息，函数默认输出前7列，INFO列默认不输出，原因在下边讲。head()函数控制只输出前几行：</p>
+<pre class="r"><code>head(getFIX(vcf))</code></pre>
+<pre><code>##      CHROM              POS   ID REF ALT QUAL     FILTER
+## [1,] &quot;Supercontig_1.50&quot; &quot;2&quot;   NA &quot;T&quot; &quot;A&quot; &quot;44.44&quot;  NA    
+## [2,] &quot;Supercontig_1.50&quot; &quot;246&quot; NA &quot;C&quot; &quot;G&quot; &quot;144.21&quot; NA    
+## [3,] &quot;Supercontig_1.50&quot; &quot;549&quot; NA &quot;A&quot; &quot;C&quot; &quot;68.49&quot;  NA    
+## [4,] &quot;Supercontig_1.50&quot; &quot;668&quot; NA &quot;G&quot; &quot;C&quot; &quot;108.07&quot; NA    
+## [5,] &quot;Supercontig_1.50&quot; &quot;765&quot; NA &quot;A&quot; &quot;C&quot; &quot;92.78&quot;  NA    
+## [6,] &quot;Supercontig_1.50&quot; &quot;780&quot; NA &quot;G&quot; &quot;T&quot; &quot;58.38&quot;  NA</code></pre>
+<ul>
+<li>CHROM：染色体名称；</li>
+<li>POS：变异位点在染色体内的位置；</li>
+<li>ID：变异位点名称，在例子中，该列信息缺失，用NA表示；</li>
+<li>REF：参考基因组中对应的等位基因；</li>
+<li>ALT：样本基因组中发生变异的等位基因，如果有多个变异等位基因，相互之间用英文逗号隔开；</li>
+<li>QUAL：CALL出来的变异位点的质量。Phred格式(Phred_scaled)的质量值，表示在该位点存在变异的可能性；该值越高，则变异的可能性越大；计算方法：Phred值 = -10 * log10(1-p)。 1-p为call变异位点的错误概率; QUAl=10，表示错误概率为0.1，即正确率p=0.9；QUAL=20，表示错误概率为0.01（百分之一），即正确率p=0.99；QUAL=30，表示错误概率为0.001（千分之一），即正确率p=0.999，以此类推。</li>
+<li>FILTER：该列信息缺失。但可以包含有关该位点是否通过某种形式的质量评估的信息。</li>
+</ul>
+<p>第8列INFO包括由分号分割的信息。信息可能会相当长，且非常冗杂。INFO列中的信息所用到的缩写在meta区进行了定义。</p>
+<p>我们看一下第一行中的INFO列的内容，包括的缩写参数非常多。</p>
+<pre class="r"><code>head(getFIX(vcf, getINFO=TRUE))[1,8]</code></pre>
+<pre><code>##                                                                                                                                                                                              INFO 
+## &quot;AC=1;AF=0.042;AN=24;BaseQRankSum=1.332;ClippingRankSum=-0.097;DP=197;FS=2.536;InbreedingCoeff=-0.0879;MLEAC=1;MLEAF=0.042;MQ=21.70;MQ0=0;MQRankSum=0.148;QD=2.34;ReadPosRankSum=0.832;SOR=1.414&quot;</code></pre>
+<p>如果我们对一些缩写，譬如AC、AF、AN含义不清楚，我们可以像前边写的那样，利用queryMETA()函数进行查询。其中，AC表示每一个变异等位基因在基因型中的数量，AF表示对应的频率，AN表示在call出来的基因型中的总数量。</p>
+<pre class="r"><code>queryMETA(vcf, element = &quot;INFO=&lt;ID=AC&quot;)</code></pre>
+<pre><code>## [[1]]
+## [1] &quot;INFO=ID=AC&quot;                           
+## [2] &quot;Number=A&quot;                             
+## [3] &quot;Type=Integer&quot;                         
+## [4] &quot;Description=Allele count in genotypes&quot;
+## [5] &quot; for each ALT allele&quot;                 
+## [6] &quot; in the same order as listed&quot;</code></pre>
+<pre class="r"><code>queryMETA(vcf, element = &quot;INFO=&lt;ID=AF&quot;)</code></pre>
+<pre><code>## [[1]]
+## [1] &quot;INFO=ID=AF&quot;                   &quot;Number=A&quot;                    
+## [3] &quot;Type=Float&quot;                   &quot;Description=Allele Frequency&quot;
+## [5] &quot; for each ALT allele&quot;         &quot; in the same order as listed&quot;</code></pre>
+<pre class="r"><code>queryMETA(vcf, element = &quot;INFO=&lt;ID=AN&quot;)</code></pre>
+<pre><code>## [[1]]
+## [1] &quot;INFO=ID=AN&quot;                                             
+## [2] &quot;Number=1&quot;                                               
+## [3] &quot;Type=Integer&quot;                                           
+## [4] &quot;Description=Total number of alleles in called genotypes&quot;</code></pre>
+</div>
+<div id="gt-region" class="section level2">
+<h2>2.3 gt region</h2>
+<ul>
+<li>gt (genotype)区包括了每个样本每个变异位点的信息。每个变异位点和每个样本的值都用<strong>冒号</strong>分隔。每个基因型的多种类型的数据可以以这种方式存储。</li>
+<li>数据的格式由FORMAT列(即第9列)指定。这里我们看到了GT、AD、DP、GQ和PL的信息。如前所述，可以通过查询meta区来了解这些首字母缩略词的含义。</li>
+<li>每个变异位点不一定有相同的信息(例如，SNPs和indels可能有不同的处理方法)，所以最好独立处理每一行。在gt区不同的变异位点可能包含不同的信息。</li>
+</ul>
+<p>查看前6个变异位点，三个样本的分型信息。</p>
+<pre class="r"><code>vcf@gt[1:6,1:4]</code></pre>
+<pre><code>##      FORMAT           BL2009P4_us23               DDR7602                  
+## [1,] &quot;GT:AD:DP:GQ:PL&quot; &quot;0|0:62,0:62:99:0,190,2835&quot; &quot;0|0:12,0:12:39:0,39,585&quot;
+## [2,] &quot;GT:AD:DP:GQ:PL&quot; &quot;1|0:5,5:10:99:111,0,114&quot;   NA                       
+## [3,] &quot;GT:AD:DP:GQ:PL&quot; NA                          NA                       
+## [4,] &quot;GT:AD:DP:GQ:PL&quot; &quot;0|0:1,0:1:3:0,3,44&quot;        NA                       
+## [5,] &quot;GT:AD:DP:GQ:PL&quot; &quot;0|0:2,0:2:6:0,6,49&quot;        &quot;0|0:1,0:1:3:0,3,34&quot;     
+## [6,] &quot;GT:AD:DP:GQ:PL&quot; &quot;0|0:2,0:2:6:0,6,49&quot;        &quot;0|0:1,0:1:3:0,3,34&quot;     
+##      IN2009T1_us22              
+## [1,] &quot;0|0:37,0:37:99:0,114,1709&quot;
+## [2,] &quot;0|1:2,1:3:16:16,0,48&quot;     
+## [3,] &quot;0|0:2,0:2:6:0,6,51&quot;       
+## [4,] &quot;1|1:0,1:1:3:25,3,0&quot;       
+## [5,] &quot;0|0:1,0:1:3:0,3,31&quot;       
+## [6,] &quot;0|0:3,0:3:9:0,9,85&quot;</code></pre>
+<p>如果对GT、AD、DP、GQ和PL的含义不清楚，可以通过queryMETA()函数查询。</p>
+<pre class="r"><code>queryMETA(vcf,element = &quot;FORMAT=&lt;ID=GT&quot;)</code></pre>
+<pre><code>## [[1]]
+## [1] &quot;FORMAT=ID=GT&quot;         &quot;Number=1&quot;             &quot;Type=String&quot;         
+## [4] &quot;Description=Genotype&quot;</code></pre>
+<pre class="r"><code>queryMETA(vcf,element = &quot;FORMAT=&lt;ID=AD&quot;)</code></pre>
+<pre><code>## [[1]]
+## [1] &quot;FORMAT=ID=AD&quot;                                                              
+## [2] &quot;Number=.&quot;                                                                  
+## [3] &quot;Type=Integer&quot;                                                              
+## [4] &quot;Description=Allelic depths for the ref and alt alleles in the order listed&quot;</code></pre>
+<pre class="r"><code>queryMETA(vcf,element = &quot;FORMAT=&lt;ID=DP&quot;)</code></pre>
+<pre><code>## [[1]]
+## [1] &quot;FORMAT=ID=DP&quot;                                                                         
+## [2] &quot;Number=1&quot;                                                                             
+## [3] &quot;Type=Integer&quot;                                                                         
+## [4] &quot;Description=Approximate read depth (reads with MQ=255 or with bad mates are filtered)&quot;</code></pre>
+<pre class="r"><code>queryMETA(vcf,element = &quot;FORMAT=&lt;ID=GQ&quot;)</code></pre>
+<pre><code>## [[1]]
+## [1] &quot;FORMAT=ID=GQ&quot;                 &quot;Number=1&quot;                    
+## [3] &quot;Type=Integer&quot;                 &quot;Description=Genotype Quality&quot;</code></pre>
+<pre class="r"><code>queryMETA(vcf,element = &quot;FORMAT=&lt;ID=PL&quot;)</code></pre>
+<pre><code>## [[1]]
+## [1] &quot;FORMAT=ID=PL&quot;                                                               
+## [2] &quot;Number=G&quot;                                                                   
+## [3] &quot;Type=Integer&quot;                                                               
+## [4] &quot;Description=Normalized&quot;                                                     
+## [5] &quot; Phred-scaled likelihoods for genotypes as defined in the VCF specification&quot;</code></pre>
+<p>试着解释一下BL2009P4_us23样品的第一个变异位点信息”0|0:62,0:62:99:0,190,2835”：</p>
+<ul>
+<li>0|0 对应GT，即基因型为纯合的ref即参考等位基因。两个数字中间用’/’或者’|’分开，后者表示基因型已经phased，已经明确等位基因属于父本还是母本。这两个数字表示双倍体样本的基因型。0表示参考等位基因； 1表示第一个变异等位基因； 2表示有第二个变异等位基因。因此： 0/0 表示该样本该位点基因型为纯合，均为参考等位基因； 0/1 表示基因型为杂合，有参考等位基因和第1个变异等位基因； 1/1 表示基因型为纯合，均为第1个变异等位基因。</li>
+<li>62,0 对应AD，即参考等位基因和变异等位基因的覆盖度。</li>
+<li>62 对应DP，即近似的测序覆盖度。</li>
+<li>99 对应GQ，即基因型的质量，类似于QUAL的计算公式，表示该基因型的错误率<span class="math inline">\(&lt;10^{-9}\)</span>。</li>
+<li>0,190,2835 对应PL，即在VCF中定义的基因型的Phred尺度的似然率。具体而言，表示指定的三种基因型(0/0,0/1,1/1)的质量值。值越大，表明为该种基因型的<strong>可能性越小</strong>。Phred值= -10 * log (p)，p为基因型存在的概率。</li>
+</ul>
+</div>
+<div id="利用vcfr包函数操作vcf文件" class="section level2">
+<h2>3. 利用vcfR包函数操作VCF文件</h2>
+<div id="简单汇总" class="section level3">
+<h3>3.1 简单汇总</h3>
+<p>通过head()函数查看三个区的信息。</p>
+<pre class="r"><code>head(vcf)</code></pre>
+<pre><code>## [1] &quot;***** Object of class &#39;vcfR&#39; *****&quot;
+## [1] &quot;***** Meta section *****&quot;
+## [1] &quot;##fileformat=VCFv4.1&quot;
+## [1] &quot;##source=\&quot;GATK haplotype Caller, phased with beagle4\&quot;&quot;
+## [1] &quot;##FILTER=&lt;ID=LowQual,Description=\&quot;Low quality\&quot;&gt;&quot;
+## [1] &quot;##FORMAT=&lt;ID=AD,Number=.,Type=Integer,Description=\&quot;Allelic depths fo [Truncated]&quot;
+## [1] &quot;##FORMAT=&lt;ID=DP,Number=1,Type=Integer,Description=\&quot;Approximate read  [Truncated]&quot;
+## [1] &quot;##FORMAT=&lt;ID=GQ,Number=1,Type=Integer,Description=\&quot;Genotype Quality\&quot;&gt;&quot;
+## [1] &quot;First 6 rows.&quot;
+## [1] 
+## [1] &quot;***** Fixed section *****&quot;
+##      CHROM              POS   ID REF ALT QUAL     FILTER
+## [1,] &quot;Supercontig_1.50&quot; &quot;2&quot;   NA &quot;T&quot; &quot;A&quot; &quot;44.44&quot;  NA    
+## [2,] &quot;Supercontig_1.50&quot; &quot;246&quot; NA &quot;C&quot; &quot;G&quot; &quot;144.21&quot; NA    
+## [3,] &quot;Supercontig_1.50&quot; &quot;549&quot; NA &quot;A&quot; &quot;C&quot; &quot;68.49&quot;  NA    
+## [4,] &quot;Supercontig_1.50&quot; &quot;668&quot; NA &quot;G&quot; &quot;C&quot; &quot;108.07&quot; NA    
+## [5,] &quot;Supercontig_1.50&quot; &quot;765&quot; NA &quot;A&quot; &quot;C&quot; &quot;92.78&quot;  NA    
+## [6,] &quot;Supercontig_1.50&quot; &quot;780&quot; NA &quot;G&quot; &quot;T&quot; &quot;58.38&quot;  NA    
+## [1] 
+## [1] &quot;***** Genotype section *****&quot;
+##      FORMAT           BL2009P4_us23               DDR7602                  
+## [1,] &quot;GT:AD:DP:GQ:PL&quot; &quot;0|0:62,0:62:99:0,190,2835&quot; &quot;0|0:12,0:12:39:0,39,585&quot;
+## [2,] &quot;GT:AD:DP:GQ:PL&quot; &quot;1|0:5,5:10:99:111,0,114&quot;   NA                       
+## [3,] &quot;GT:AD:DP:GQ:PL&quot; NA                          NA                       
+## [4,] &quot;GT:AD:DP:GQ:PL&quot; &quot;0|0:1,0:1:3:0,3,44&quot;        NA                       
+## [5,] &quot;GT:AD:DP:GQ:PL&quot; &quot;0|0:2,0:2:6:0,6,49&quot;        &quot;0|0:1,0:1:3:0,3,34&quot;     
+## [6,] &quot;GT:AD:DP:GQ:PL&quot; &quot;0|0:2,0:2:6:0,6,49&quot;        &quot;0|0:1,0:1:3:0,3,34&quot;     
+##      IN2009T1_us22               LBUS5                     NL07434             
+## [1,] &quot;0|0:37,0:37:99:0,114,1709&quot; &quot;0|0:12,0:12:39:0,39,585&quot; NA                  
+## [2,] &quot;0|1:2,1:3:16:16,0,48&quot;      NA                        NA                  
+## [3,] &quot;0|0:2,0:2:6:0,6,51&quot;        NA                        NA                  
+## [4,] &quot;1|1:0,1:1:3:25,3,0&quot;        NA                        &quot;0|0:1,0:1:3:0,3,28&quot;
+## [5,] &quot;0|0:1,0:1:3:0,3,31&quot;        &quot;0|0:1,0:1:3:0,3,34&quot;      &quot;0|0:1,0:1:3:0,3,26&quot;
+## [6,] &quot;0|0:3,0:3:9:0,9,85&quot;        &quot;0|0:1,0:1:3:0,3,34&quot;      NA                  
+## [1] &quot;First 6 columns only.&quot;
+## [1] 
+## [1] &quot;Unique GT formats:&quot;
+## [1] &quot;GT:AD:DP:GQ:PL&quot;
+## [1]</code></pre>
+</div>
+<div id="快速全览vcf文件" class="section level3">
+<h3>3.2 快速全览VCF文件</h3>
+<p>查看示例文件中包括的染色体名称。可以看到，仅有一条染色体，名字为Supercontig_1.50。</p>
+<pre class="r"><code>unique(vcf@fix[,1])</code></pre>
+<pre><code>## [1] &quot;Supercontig_1.50&quot;</code></pre>
+<p>创建chrom对象。</p>
+<pre class="r"><code>chrom &lt;- create.chromR(name=&#39;Supercontig_1.50&#39;, vcf=vcf)</code></pre>
+<pre><code>## Names in vcf:</code></pre>
+<pre><code>##   Supercontig_1.50</code></pre>
+<pre><code>## Initializing var.info slot.</code></pre>
+<pre><code>## var.info slot initialized.</code></pre>
+<p>快速的看一下VCF文件中的信息。</p>
+<pre class="r"><code>plot(chrom)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<ul>
+<li>reads覆盖度(DP)的分布非常突出。据推测，每个基因组的大部分区域都是在某个基础倍性水平进行测序的。在这里我们看到了一个峰值，这可能代表了那个基出倍性区域，但我们也看到了<strong>一个长尾，这可能代表了拷贝数变异</strong>。基因型通常期望一个恒定的倍性水平，因此在拷贝数变异区域中call 变异位点可信度不高。</li>
+<li>比对质量(MQ)都在60左右达到峰值。因此，如果我们想对这个参数进行过滤，控制在60左右较好。关于MQ的计算和解释，参见<strong><a href="https://www.jianshu.com/p/29231afd9bee">这里</a></strong>，讲的不错。</li>
+<li>对变异位点质量的解释(QUAL)似乎不那么直接，直方图显示，大量的位点堆积在0附近。因此，这可能不是一个理想的质控筛选参数。</li>
+</ul>
+</div>
+<div id="筛选变异位点" class="section level3">
+<h3>3.3 筛选变异位点</h3>
+<ul>
+<li>使用masker()函数来过滤掉我们不太相信的数据。该函数的作用是:使用QUAL质量、DP深度和MQ比对质量等参数来选择高质量的变异位点。</li>
+<li>使用masker()函数时，被认为是低质量的变异位点<strong>并不会从数据集中删除</strong>。相反，将创建一个逻辑向量来指示哪些变异位点已被过滤或未被过滤。这是为了在整个分析过程中维护数据矩阵的结构，并允许用户可以轻松地撤消任何更改。</li>
+</ul>
+<p>代码中的参数，删除了位于拷贝数变异区域的位点，将比对质量控制在60左右。</p>
+<pre class="r"><code>chrom &lt;- masker(chrom, min_QUAL = 1, min_DP = 300, max_DP = 700, min_MQ = 59.9,  max_MQ = 60.1)
+plot(chrom)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p>待续…</p>
+</div>
+</div>
+</div>

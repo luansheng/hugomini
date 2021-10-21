@@ -1,0 +1,156 @@
+---
+title: Introduction to VCF file
+author: Sheng Luan
+date: '2021-10-20'
+slug: introduction-to-vcf-file
+categories:
+  - 生物信息学
+tags:
+  - vcfR
+  - VCF
+---
+
+当前，育种芯片数据主要是通过VCF格式的文件提供，而且PLINK等质控软件，对于VCF文件的支持非常方便，因此了解VCF文件的格式和其中的各项参数，是非常必要的。
+
+本文主要参考vcfR包的vignette：[VCF data](https://cran.r-project.org/web/packages/vcfR/vignettes/vcf_data.html)。
+
+## 1. 什么是VCF？
+VCF (Variant Call Format)是储存变异信息的常用文件格式，通常为文本文件。VCF目前包括4.1-4.3三个正式版本，4.4为草稿版本。四个版本的具体格式，查看[这里](http://samtools.github.io/hts-specs/)。
+
+## 2. VCF文件结构
+vcfR包的作者把一个VCF文件分为三个区，分别命名为meta、fix和gt。参见[这里](https://cran.r-project.org/web/packages/vcfR/vignettes/vcf_data.html)的示意图。
+
+# 2.1 meta region
+位于文件顶端，主要是定义文件中用到的**缩写**信息。也存档了产生VCF文件的软件及其调用的参数信息。
+
+看一下vcfR包中自带的vcf例子文件。可以看到，例子文件包括18个样本，一条染色体，共计有2533个SNP位点。
+
+```{r}
+library(vcfR)
+data(vcfR_example)
+vcf
+```
+接下来，查看一下meta区的前7行。strwrap()是自动换行函数。从输出行中，可以看出：
+
+* meta区中的每一行从两个##开始。
+* 第一行包括VCF文件格式版本。例子文件是4.1版本格式。该行**是VCF文件必须要有的行**。
+* 第二行给出产生本VCF文件的软件，例子文件使用GATK产生。该行**不是VCF文件必须要包括的行**。
+* VCF文件可能会针对每条染色体或supercontig或contig产生一行信息。
+* 剩余行定了在fix区中**INFO**列和在gt区中**FORMAT**列使用的各种缩写名称。
+
+```{r}
+strwrap(vcf@meta[1:6])
+```
+
+meta区中的部分行可能会很长，不容易阅读。可以用vcfR包中的queryMETA()函数汇总meta部分的信息。但是并不是所有的信息，都在汇总结果中。譬如，“contig”信息就没有包括在其中。
+```{r}
+queryMETA(vcf)
+```
+我们也可以通过设定参数**element**只查询某一个元素。譬如，我们查询DP (reads depth)-reads覆盖度。我们会在FORMAT和INFO中都查到DP的信息。
+```{r}
+queryMETA(vcf, element = "DP")
+```
+如果我们只想在FORMAT部分查询DP，可以进一步限定element参数的值为"FORMAT=<ID=DP"。
+```{r}
+queryMETA(vcf, element = "FORMAT=<ID=DP")
+```
+queryMETA()中参数nice默认设置为true，返回整理后易于阅读的数据。譬如，将原始VCF文件中的尖括号删除，且分为四行。     如果想直接看VCF文件中的原始信息，可以将nice设置为FALSE。
+```{r}
+queryMETA(vcf, element = "FORMAT=<ID=DP", nice = FALSE)
+```
+## 2.2 fix region
+
+* fix区包含了每个SNP位点的信息，有时会对所有样本进行汇总。
+* fix区的前八列，标题为CHROM, POS, ID, REF, ALT, QUAL, FILTER和INFO。这是每个变异位点的信息，是“固定的”，或者说对于所有的样本都是相同的。
+
+通过getFIX()函数，查看实例数据vcf中fix区的信息，函数默认输出前7列，INFO列默认不输出，原因在下边讲。head()函数控制只输出前几行：
+```{r}
+head(getFIX(vcf))
+```
+
+* CHROM：染色体名称；
+* POS：变异位点在染色体内的位置；
+* ID：变异位点名称，在例子中，该列信息缺失，用NA表示；
+* REF：参考基因组中对应的等位基因；
+* ALT：样本基因组中发生变异的等位基因，如果有多个变异等位基因，相互之间用英文逗号隔开；
+* QUAL：CALL出来的变异位点的质量。Phred格式(Phred_scaled)的质量值，表示在该位点存在变异的可能性；该值越高，则变异的可能性越大；计算方法：Phred值 = -10 * log10(1-p)。 1-p为call变异位点的错误概率; QUAl=10，表示错误概率为0.1，即正确率p=0.9；QUAL=20，表示错误概率为0.01（百分之一），即正确率p=0.99；QUAL=30，表示错误概率为0.001（千分之一），即正确率p=0.999，以此类推。
+* FILTER：该列信息缺失。但可以包含有关该位点是否通过某种形式的质量评估的信息。
+
+第8列INFO包括由分号分割的信息。信息可能会相当长，且非常冗杂。INFO列中的信息所用到的缩写在meta区进行了定义。
+
+我们看一下第一行中的INFO列的内容，包括的缩写参数非常多。
+
+```{r}
+head(getFIX(vcf, getINFO=TRUE))[1,8]
+```
+如果我们对一些缩写，譬如AC、AF、AN含义不清楚，我们可以像前边写的那样，利用queryMETA()函数进行查询。其中，AC表示每一个变异等位基因在基因型中的数量，AF表示对应的频率，AN表示在call出来的基因型中的总数量。
+```{r}
+queryMETA(vcf, element = "INFO=<ID=AC")
+queryMETA(vcf, element = "INFO=<ID=AF")
+queryMETA(vcf, element = "INFO=<ID=AN")
+```
+
+## 2.3 gt region
+* gt (genotype)区包括了每个样本每个变异位点的信息。每个变异位点和每个样本的值都用**冒号**分隔。每个基因型的多种类型的数据可以以这种方式存储。
+* 数据的格式由FORMAT列(即第9列)指定。这里我们看到了GT、AD、DP、GQ和PL的信息。如前所述，可以通过查询meta区来了解这些首字母缩略词的含义。
+* 每个变异位点不一定有相同的信息(例如，SNPs和indels可能有不同的处理方法)，所以最好独立处理每一行。在gt区不同的变异位点可能包含不同的信息。
+
+查看前6个变异位点，三个样本的分型信息。
+```{r}
+vcf@gt[1:6,1:4]
+```
+如果对GT、AD、DP、GQ和PL的含义不清楚，可以通过queryMETA()函数查询。
+```{r}
+queryMETA(vcf,element = "FORMAT=<ID=GT")
+queryMETA(vcf,element = "FORMAT=<ID=AD")
+queryMETA(vcf,element = "FORMAT=<ID=DP")
+queryMETA(vcf,element = "FORMAT=<ID=GQ")
+queryMETA(vcf,element = "FORMAT=<ID=PL")
+
+```
+
+试着解释一下BL2009P4_us23样品的第一个变异位点信息"0|0:62,0:62:99:0,190,2835"：
+
+* 0|0 对应GT，即基因型为纯合的ref即参考等位基因。两个数字中间用’/’或者'|'分开，后者表示基因型已经phased，已经明确等位基因属于父本还是母本。这两个数字表示双倍体样本的基因型。0表示参考等位基因； 1表示第一个变异等位基因； 2表示有第二个变异等位基因。因此： 0/0 表示该样本该位点基因型为纯合，均为参考等位基因； 0/1 表示基因型为杂合，有参考等位基因和第1个变异等位基因； 1/1 表示基因型为纯合，均为第1个变异等位基因。
+* 62,0 对应AD，即参考等位基因和变异等位基因的覆盖度。
+* 62 对应DP，即近似的测序覆盖度。
+* 99 对应GQ，即基因型的质量，类似于QUAL的计算公式，表示该基因型的错误率$<10^{-9}$。
+* 0,190,2835 对应PL，即在VCF中定义的基因型的Phred尺度的似然率。具体而言，表示指定的三种基因型(0/0,0/1,1/1)的质量值。值越大，表明为该种基因型的**可能性越小**。Phred值= -10 * log (p)，p为基因型存在的概率。
+
+## 3. 利用vcfR包函数操作VCF文件
+### 3.1 简单汇总
+
+通过head()函数查看三个区的信息。
+```{r}
+head(vcf)
+```
+### 3.2 快速全览VCF文件
+查看示例文件中包括的染色体名称。可以看到，仅有一条染色体，名字为Supercontig_1.50。
+
+```{r}
+unique(vcf@fix[,1])
+```
+创建chrom对象。
+```{r}
+chrom <- create.chromR(name='Supercontig_1.50', vcf=vcf)
+```
+快速的看一下VCF文件中的信息。
+```{r}
+plot(chrom)
+```
+
+* reads覆盖度(DP)的分布非常突出。据推测，每个基因组的大部分区域都是在某个基础倍性水平进行测序的。在这里我们看到了一个峰值，这可能代表了那个基出倍性区域，但我们也看到了**一个长尾，这可能代表了拷贝数变异**。基因型通常期望一个恒定的倍性水平，因此在拷贝数变异区域中call 变异位点可信度不高。
+* 比对质量(MQ)都在60左右达到峰值。因此，如果我们想对这个参数进行过滤，控制在60左右较好。关于MQ的计算和解释，参见**[这里](https://www.jianshu.com/p/29231afd9bee)**，讲的不错。
+* 对变异位点质量的解释(QUAL)似乎不那么直接，直方图显示，大量的位点堆积在0附近。因此，这可能不是一个理想的质控筛选参数。
+
+### 3.3 筛选变异位点
+* 使用masker()函数来过滤掉我们不太相信的数据。该函数的作用是:使用QUAL质量、DP深度和MQ比对质量等参数来选择高质量的变异位点。
+* 使用masker()函数时，被认为是低质量的变异位点**并不会从数据集中删除**。相反，将创建一个逻辑向量来指示哪些变异位点已被过滤或未被过滤。这是为了在整个分析过程中维护数据矩阵的结构，并允许用户可以轻松地撤消任何更改。
+
+代码中的参数，删除了位于拷贝数变异区域的位点，将比对质量控制在60左右。
+```{r}
+chrom <- masker(chrom, min_QUAL = 1, min_DP = 300, max_DP = 700, min_MQ = 59.9,  max_MQ = 60.1)
+plot(chrom)
+```
+
+待续...
