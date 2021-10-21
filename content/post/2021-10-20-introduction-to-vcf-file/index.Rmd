@@ -153,4 +153,17 @@ chrom <- masker(chrom, min_QUAL = 1, min_DP = 300, max_DP = 700, min_MQ = 59.9, 
 plot(chrom)
 ```
 
-待续...
+### 3.4 处理染色体对象
+使用proc.chromR()来处理chromR对象。这个函数调用几个辅助函数来处理变异位点、序列和注释数据以实现可视化。
+
+注意右下角第四个图，表示每一个窗口的变异位点数量。
+```{r}
+chrom <- proc.chromR(chrom, verbose=TRUE)
+plot(chrom)
+```
+
+### 3.5 可视化数据
+chromoqc()使用R函数layout()来制作数据的复合图。这些图包括有染色体坐标的散点图和barplot。
+```{r}
+chromoqc(chrom,dp.alpha = 20)
+```

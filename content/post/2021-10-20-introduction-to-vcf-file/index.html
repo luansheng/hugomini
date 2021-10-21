@@ -102,7 +102,7 @@ vcf</code></pre>
 ## [2] &quot;Number=1&quot;                                                             
 ## [3] &quot;Type=Integer&quot;                                                         
 ## [4] &quot;Description=Approximate read depth; some reads may have been filtered&quot;</code></pre>
-<p>如果我们只想在FORMAT部分查询DP，可以进一步限定element参数的值为”FORMAT=&lt;ID=DP”。</p>
+<p>如果我们只想在FORMAT部分查询DP，可以进一步限定element参数的值为“FORMAT=&lt;ID=DP”。</p>
 <pre class="r"><code>queryMETA(vcf, element = &quot;FORMAT=&lt;ID=DP&quot;)</code></pre>
 <pre><code>## [[1]]
 ## [1] &quot;FORMAT=ID=DP&quot;                                                                         
@@ -213,7 +213,7 @@ vcf</code></pre>
 ## [3] &quot;Type=Integer&quot;                                                               
 ## [4] &quot;Description=Normalized&quot;                                                     
 ## [5] &quot; Phred-scaled likelihoods for genotypes as defined in the VCF specification&quot;</code></pre>
-<p>试着解释一下BL2009P4_us23样品的第一个变异位点信息”0|0:62,0:62:99:0,190,2835”：</p>
+<p>试着解释一下BL2009P4_us23样品的第一个变异位点信息“0|0:62,0:62:99:0,190,2835”：</p>
 <ul>
 <li>0|0 对应GT，即基因型为纯合的ref即参考等位基因。两个数字中间用’/’或者’|’分开，后者表示基因型已经phased，已经明确等位基因属于父本还是母本。这两个数字表示双倍体样本的基因型。0表示参考等位基因； 1表示第一个变异等位基因； 2表示有第二个变异等位基因。因此： 0/0 表示该样本该位点基因型为纯合，均为参考等位基因； 0/1 表示基因型为杂合，有参考等位基因和第1个变异等位基因； 1/1 表示基因型为纯合，均为第1个变异等位基因。</li>
 <li>62,0 对应AD，即参考等位基因和变异等位基因的覆盖度。</li>
@@ -298,7 +298,35 @@ vcf</code></pre>
 <pre class="r"><code>chrom &lt;- masker(chrom, min_QUAL = 1, min_DP = 300, max_DP = 700, min_MQ = 59.9,  max_MQ = 60.1)
 plot(chrom)</code></pre>
 <p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
-<p>待续…</p>
+</div>
+<div id="处理染色体对象" class="section level3">
+<h3>3.4 处理染色体对象</h3>
+<p>使用proc.chromR()来处理chromR对象。这个函数调用几个辅助函数来处理变异位点、序列和注释数据以实现可视化。</p>
+<p>注意右下角第四个图，表示每一个窗口的变异位点数量。</p>
+<pre class="r"><code>chrom &lt;- proc.chromR(chrom, verbose=TRUE)</code></pre>
+<pre><code>## Warning in proc.chromR(chrom, verbose = TRUE): seq slot is NULL.</code></pre>
+<pre><code>## Warning in proc.chromR(chrom, verbose = TRUE): annotation slot has no rows.</code></pre>
+<pre><code>## Warning in proc.chromR(chrom, verbose = TRUE): seq slot is NULL, chromosome
+## representation not made (seq2rects).</code></pre>
+<pre><code>## Warning in proc.chromR(chrom, verbose = TRUE): seq slot is NULL, chromosome
+## representation not made (seq2rects, chars=n).</code></pre>
+<pre><code>## Population summary complete.</code></pre>
+<pre><code>##   elapsed time:  0.03</code></pre>
+<pre><code>## window_init complete.</code></pre>
+<pre><code>##   elapsed time:  0.02</code></pre>
+<pre><code>## Warning in proc.chromR(chrom, verbose = TRUE): seq slot is NULL, windowize_fasta
+## not run.</code></pre>
+<pre><code>## Warning in proc.chromR(chrom, verbose = TRUE): ann slot has zero rows.</code></pre>
+<pre><code>## windowize_variants complete.</code></pre>
+<pre><code>##   elapsed time:  0</code></pre>
+<pre class="r"><code>plot(chrom)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+</div>
+<div id="可视化数据" class="section level3">
+<h3>3.5 可视化数据</h3>
+<p>chromoqc()使用R函数layout()来制作数据的复合图。这些图包括有染色体坐标的散点图和barplot。</p>
+<pre class="r"><code>chromoqc(chrom,dp.alpha = 20)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
 </div>
 </div>
 </div>
