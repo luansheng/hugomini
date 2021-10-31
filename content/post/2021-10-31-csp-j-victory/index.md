@@ -9,4 +9,4 @@ tags:
   - 随想
 ---
 
-<div align=center><img src="images/2021cspj.png", width=300></div>
+<div align=center><img src="images/2021cspj.png" width=300></div>
