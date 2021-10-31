@@ -9,4 +9,6 @@ tags:
   - 随想
 ---
 
-<div align=center><img src="/post/images/2021cspj.png" width=300></div>
+<div align="center">
+<img src="/post/images/2021cspj.png" alt="cspj2021" height= "80%" width="100%">
+</div>
