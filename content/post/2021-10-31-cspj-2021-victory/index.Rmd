@@ -1,8 +1,8 @@
 ---
-title: 2021 CSP-J第二轮结果新鲜出炉
+title: CSP-J 2021 victory
 author: Sheng Luan
 date: '2021-10-31'
-slug: []
+slug: cspj-2021-victory
 categories:
   - 其他
 tags:
