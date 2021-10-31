@@ -9,4 +9,4 @@ tags:
   - 随想
 ---
 
-![alt text](images/2021cspj.png "2021cspj")
+<div align=center><img src="images/2021cspj.png", width=300></div>
