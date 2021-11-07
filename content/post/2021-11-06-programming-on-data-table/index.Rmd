@@ -1,0 +1,404 @@
+---
+title: Programming on data.table 1.14.3 -中文版
+author: Sheng Luan
+date: '2021-11-06'
+slug: programming-on-data-table
+categories:
+  - 编程
+tags:
+  - Data.table
+---
+
+data.table实在是太强大，看它cran的介绍“Fast aggregation of large data (e.g. 100GB in RAM), fast ordered joins, fast add/modify/delete of columns by group using no copies at all, list columns, friendly and fast character-separated-value read/write. Offers a natural and flexible syntax, for faster development.”，可以操作100GB的数据。
+
+在数据处理脚本中，data.table是主角。但是如何更为简单、方便和高效的传递参数给data.table，的确缺乏指导。前段时间看到其官方主页的这篇[vignette](https://rdatatable.gitlab.io/data.table/articles/datatable-programming.html)，的确有种见猎心喜的感觉。
+
+## 1 简介
+data.table，从它的第一个版本开始，就通过定义[.data.table方法启用了subset和with(或within)函数。subset和with是基本的R函数，它们有助于减少代码中的重复，增强可读性，并减少用户必须输入的字符总数。这个功能在R中是可能的，因为它有一个非常独特的特性，叫做惰性求值或延迟求值（Lazy evaluation）。
+
+该特性允许一个函数在参数被计算之前捕获参数，并在不同于调用参数的范围内计算参数。让我们回顾一下subset函数的用法。
+```{r init, include = FALSE}
+require(data.table)
+knitr::opts_chunk$set(
+  comment = "#",
+    error = FALSE,
+     tidy = FALSE,
+    cache = FALSE,
+ collapse = TRUE
+)
+#最大输出两行
+options(max.print = 10L)
+```
+
+```{r subset}
+subset(iris, Species == "setosa")
+```
+在这里，subset接受第二个参数**Species == "setosa"**，并在iris数据框（data.frame）的作用域内作为它的第一个参数进行计算。这消除了对变量重复的需求，使其更不容易出错，并使代码更具可读性。
+
+## 2 问题描述
+这种接口的问题在于，我们**不能轻易地参数化使用它的代码**。这是因为传递给这些函数的**表达式在求值之前被替换了**。
+
+例如：
+```{r subset_error, error=TRUE}
+my_subset = function(data, col, val) {
+  subset(data, col == val)
+}
+my_subset(iris, Species, "setosa")
+```
+
+## 3 解决方式
+### 3.1 避免延迟求值
+最简单的解决方法是一开始就避免延迟计算，并退回到不太直观、更容易出错的方法，如df[[“variable”]]等。
+```{r subset_nolazy}
+my_subset = function(data, col, val) {
+  data[data[[col]] == val, ]
+}
+my_subset(iris, col = "Species", val = "setosa")
+```
+在这里，我们计算一个长度为nrow(iris)的逻辑向量，然后将这个向量提供给[.data.frame的i参数来执行普通逻辑向量提取子集。对于这个简单的示例，它工作得很好，但它缺乏灵活性，引入了**变量重复repetition**，并要求用户**更改函数接口**，以**字符**而不是**未加引号的符号**传递列名。我们需要参数化的表达式越复杂，这种方法就越不实用。
+
+### 3.2 使用parse / eval
+R新手通常更喜欢这种方法，因为它在概念上可能是最直接的。
+
+这种方式需要使用字符串连接生成所需的表达式，解析它，然后求值。
+
+```{r subset_parse}
+my_subset = function(data, col, val) {
+  data = deparse(substitute(data))
+  col = deparse(substitute(col))
+  val = paste0("'",val, "'")
+  text = paste0("subset(", data, ", ", col, " == ", val, ")")
+  eval(parse(text = text)[[1L]])
+}
+my_subset(iris, Species, "setosa")
+```
+substitute()是把对象转换为表达式;deparse()把表达式转换为字符；。
+
+看下边简单的例子：
+```{r substitute_example}
+a = 3
+deparse(a)
+substitute(a)
+deparse(substitute(a))
+```
+
+我们最好使用**deparse(substitute(…))**这种形式来捕获**对象**的实际名称，以传递给函数，这样我们就可以使用那些**初始名称**构造subset函数调用。
+
+然而上述形式，作者并不推荐。Although ths provides unlimited flexibility with relatively low complexity, use of eval(parse(...)) should be avoided. 
+
+不推荐的主要理由包括：
+
+* 缺乏语法验证
+* 代码注入漏洞
+* 存在更好的选择
+
+对这三条理由，理解并不是很深刻。姑且相信大神们的判断吧。只是觉得，通过eval(parse(text=...))形式，出了问题，不好调试，不容易知道哪参数出现了错误。
+
+R项目核心开发者Martin Machler曾经说过:
+
+>抱歉，但我不明白为什么很多人甚至认为字符串是可以计算的。你必须改变你的心态，真的。忘记一端的字符串与另一端的表达式、调用和求值之间的所有连接。(可能)唯一的连接是通过parse(text = ....)，所有优秀的R程序员都应该知道，这很少是构造表达式(或调用)的有效或安全的方法。而是了解更多关于substitute()、quote()以及使用do.call(substitute, ......)的威力。
+
+下边是更简单和更好的方法。
+
+### 3.3 语言计算 Computing on the language
+上述函数，以及其他一些函数(包括as. call, as.name/as.symbol, bquote和eval)，可以被归类为在语言上进行计算的函数，因为它们对语言对象(例如call, name/symbol)进行操作。
+
+```{r subset_substitute}
+my_subset = function(data, col, value) {
+  eval(substitute(subset(data, col == value)))
+}
+my_subset(iris, Species, "setosa")
+```
+这里，我们使用base R的substitute函数将subset(data, col == val)调用转换为subset(iris, Species == "setosa")，方法是将data、col和val替换为它们来自父环境的原始名称(或值)。与前面的方法相比，这种方法的好处应该是显而易见的。请注意，因为我们在语言对象级别上操作，而不必求助于字符串操作，所以我们将其称为语言上的计算。
+
+在R语言手册中有专门的一章是关于在[语言水平上计算](https://cloud.r-project.org/doc/manuals/r-release/R-lang.html)的。尽管这对于掌握programming on data. table不是必须的，作者鼓励读者阅读本章，以便更好地理解这一强大而独特的功能。
+
+### 3.4 其他包
+pryr, lazyeval and rlang。其中pryr已经被废弃了。
+
+## 4 基于data.table编程
+现在我们已经建立了正确的方法来参数化代码进行延迟评估。那么我们转换到这个vignette的主题,针对data.table进行编程。
+
+从1.14.2开始, data.table提供了一个健壮的机制,参数化表达式，提供给[.data.table 的i、j和by(或keyby)参数。它是建立在base R substitute函数上的,并模仿其接口。接下来,我们介绍substitute2作为一个更健壮和更友好的版本，替代base R substitute。
+
+关于base::substitute and data.table::substitute2的差异，参见[substitute2手册](https://rdatatable.gitlab.io/data.table/library/data.table/html/substitute2.html)。
+
+### 4.1 替换变量variables和名字names
+假设我们想要一个通用的函数，该函数用于对两个参数求和，每个参数来自于另外一个函数的输出结果。
+
+作为一个具体的例子，下面我们有一个计算直角三角形斜边长度的函数，已知它的边长。
+$$
+c=\sqrt{a^{2}+b^{2}}
+$$
+```{r hypotenuse}
+square = function(x) x^2
+quote(
+  sqrt(square(a) + square(b))
+)
+```
+关于substitute和quote的区别，参见这个[链接](https://stackoverflow.com/questions/46834655/whats-the-difference-between-substitute-and-quote-in-r)，中文解释见[这里](https://www.jianshu.com/p/61cdf2744194)。
+
+```{r quote_substitute}
+f <- function(argX) {
+   list(quote(argX), substitute(argX), argX)
+}
+suppliedArgX <- 100
+f(argX = suppliedArgX)
+```
+这时候可以看出两者处理函数的参数是不一样的，quote一直就是返回它括起的变量名称argx，而substitute如果参数名字有赋值，那就是赋值后的变量名称suppliedArgX。
+
+更具体说是这样的：substitute解析每个元素进行替换，如果它不是env中的绑定符号，则保持不变。
+
+继续返回到本文。
+
+目标是使上述调用*sqrt(square(a) + square(b))*中的每个名称都能作为参数传递。
+```{r hypotenuse_substitute2}
+substitute2(
+  outer(inner(var1) + inner(var2)),
+  env = list(
+    outer = "sqrt",
+    inner = "square",
+    var1 = "a",
+    var2 = "b"
+  )
+)
+```
+我们可以在输出中看到，函数名以及传递给这些函数的变量名都被替换了。
+在这个简单的例子中，也可以使用base  R的替换，尽管它需要使用lapply(env, as.name)。
+
+现在，在[.data.table内部进行替换，我们不需要调用substitute2函数。由于它现在已在内部使用，我们所要做的就是提供env参数，就像我们在上面的例子中为substitute2函数提供的一样。替换可以应用于[.data.table方法的i、j和by(或keyby)参数。注意，将verbose参数设置为TRUE可用于在应用替换后打印表达式。这对调试非常有用。
+
+让我们使用鸢尾花数据集进行演示。作为一个例子，让我们假设我们想要计算萼片的直角斜边，想象把萼片的宽度和长度作为直角三角形的另外两个边。
+
+直接输出直角斜边。
+
+```{r opt_max_print_8, include = FALSE}
+options(max.print = 8L) # 2 rows
+```
+
+```{r hypotenuse_vector}
+DT = as.data.table(iris)
+DT[, outer(inner(var1) + inner(var2)), env = list(
+  outer = "sqrt",
+  inner = "square",
+  var1 = "Sepal.Length",
+  var2 = "Sepal.Width"
+)]
+```
+
+作为一个data.table来输出.
+```{r hypotenuse_datatable}
+DT[, .(Species, var1, var2, out = outer(inner(var1) + inner(var2))),
+   env = list(
+     outer = "sqrt",
+     inner = "square",
+     var1 = "Sepal.Length",
+     var2 = "Sepal.Width",
+     out = "Sepal.Hypotenuse"
+  )]
+```
+在最后一次调用中，我们添加了另一个参数，out = "Sepal.Hypotenuse”，表示输出列的名称。与以base R的substitute不同，substitute2也将处理**调用参数名称**的替换。
+
+在这里还是没看出在脚本调用中的方便性来，因为data.table可以很方便的实现上述结果。
+```{r hypotenuse_classical}
+DT[, .(Species,
+       Sepal.Length,
+       Sepal.Width,
+       Sepal.Hypotenuse = sqrt(square(Sepal.Length) + square(Sepal.Width)))]
+```
+
+替换也适用于i和by(或keyby)。
+```{r hypotenuse_datatable_i_j_by}
+DT[filter_col %in% filter_val,
+   .(var1, var2, out = outer(inner(var1) + inner(var2))),
+   by = by_col,
+   env = list(
+     outer = "sqrt",
+     inner = "square",
+     var1 =  "Sepal.Length",
+     var2 = "Sepal.Width",
+     out = "Sepal.Hypotenuse",
+     filter_col = "Species",
+     filter_val = I(c("versicolor", "virginica")),
+     by_col = "Species"
+   )]
+```
+
+### 4.2 替换变量和字符值
+
+在上面的例子中,我们看到了一个substitute2的一个方便的功能:**从字符串到名称/符号**的自动转换。
+
+一个明显的问题出现了:如果我们实际上想**用一个字符值来替换一个参数**,就像base R的substitute的行为。
+
+我们提供了一种机制,通过将元素包装成基R I()调用来逃避自动转换。I函数标记对象为AsIs,防止其参数被替换。(读一下?AsIs文档，查阅更多的细节）。如果整个env参数都需要base R行为,那么最好在I()中wrap全部参数。或者,每个列表元素可以单独包装在I()中。让我们来探讨以下几种情况。
+
+```{r rank}
+# base R 行为
+substitute(rank(input, ties.method = ties),
+           env = list(input = as.name("Sepal.Width"), ties = "first"))
+
+# substitute2行为，无法传递字符"first"作为参数
+substitute2(rank(input, ties.method = ties),
+           env = list(input = as.name("Sepal.Width"), ties = "first"))
+
+# 利用I()函数模仿base R的substitute行为
+substitute2(rank(input, ties.method = ties),
+           env = I(list(input = as.name("Sepal.Width"), ties = "first")))
+
+# substitute2行为 不加as.name，会都被转换为字符
+substitute2(rank(input, ties.method = ties),
+           env = I(list(input = "Sepal.Width", ties = "first")))
+
+# substitute2行为，不加as.name，单独对ties使用I()函数，仅会使ties的值变为字符
+substitute2(rank(input, ties.method = ties),
+           env = list(input = "Sepal.Width", ties = I("first")))
+```
+
+小结一下：
+
+base R substitute和data.table的substitute2的区别，**前者会自动转为字符，后者不会自动转为字符**。
+
+因此在substitute中使用as.name()函数可以确保其参数不转为字符，而在substitute2中使用I()可以确保其参数转为字符。
+
+注意,在每个列表元素上递归地进行转换,当然包括escape机制。
+
+```{r substitute2_recursive}
+substitute2(   # all are symbols
+  fx(v1, v2),
+  list(v1 = "a", v2 = list("b", list("c", "d")))
+)
+# f(a, list(b, list(c, d)))
+substitute2(   # 'a' and 'd' should stay as character
+  fx(v1, v2),
+  list(v1 = I("a"), v2 = list("b", list("c", I("d"))))
+)
+```
+### 4.3 替换任意长度的列表
+上面的示例演示了一种简洁而强大的方法，可以使代码更加动态。然而，开发人员可能需要处理许多其他更复杂的情况。一个常见的问题是处理任意长度的参数列表。
+
+一个明显的用例是通过在j参数中注入一个列表调用来模拟.SD功能。
+```{r opt_max_print_4, include = FALSE}
+options(max.print = 4L) # 2 rows
+```
+
+```{r splice_sd}
+cols = c("Sepal.Length", "Sepal.Width")
+DT[, .SD, .SDcols = cols]
+```
+我们可以cols参数拼接到一个列表调用中，使j参数看起来像下面的代码。
+```{r splice_tobe}
+DT[, list(Sepal.Length, Sepal.Width)]
+```
+拼接是一种操作，其中必须将对象列表内联到表达式中，作为要调用的参数序列。在base R中，可以使用as.call(c(quote(list), cols))将cols拼接到列表中。此外，从R 4.0.0开始，bquote函数中有一个用于此类操作的新接口。
+
+在data.table中，我们通过自动将对象列表加入到使用这些对象的列表调用中，使它变得更容易。
+这意味着env list参数中的任何list对象都将被转换为list调用，使得该用例的API简单如下面所示。
+
+```{r splice_datatable}
+DT[, j,
+   env = list(j = as.list(cols)),
+   verbose = TRUE]
+```
+
+如上面的示例所示，在env List参数中as.list，而不是简单list。as.list在env中使用。
+接下来更详细的讨论如何enlist-ing。
+```{r splice_enlist}
+# 将上面的'j'列表转换为一个列表调用(call)，等同于as.list的作用
+DT[, j,  
+   env = list(j = quote(list(Sepal.Length, Sepal.Width))),
+   verbose = TRUE]
+# 与上面相同，但接受字符向量as.name把字符变为name，as.call的作用，生成call
+DT[, j,  
+   env = list(j = as.call(c(quote(list), lapply(cols, as.name)))),
+   verbose = TRUE]
+```
+
+现在让我们尝试传递一个**符号列表**，而不是对这些符号进行列表调用。我们将使用I()来逃脱自动enlist-ing，但这也将关闭字符到符号的转换，因此我们还必须使用as.name。
+
+```{r splice_not, error=TRUE}
+DT[, j,  # list of symbols
+   env = I(list(j = lapply(cols, as.name))),
+   verbose = TRUE]
+```
+运行上述代码会出现错误，因为env输出的不是列表调用。
+
+```{r splice_yes}
+# 同样正确的方法，自动enlist-ing 列表为列表调用
+DT[, j,  
+   env = list(j = as.list(cols)),
+   verbose = TRUE]
+```
+看一下上述两个表达式的区别：
+```{r splice_substitute2_not}
+str(substitute2(j, env = I(list(j = lapply(cols, as.name)))))
+
+str(substitute2(j, env = list(j = as.list(cols))))
+```
+输出的一个symbol，一个是language list。还是不太懂，作者建议去看[substitute2的手册](https://rdatatable.gitlab.io/data.table/library/data.table/html/substitute2.html)。
+
+### 4.4 复杂查询的替换
+让我们以一个更复杂的函数为例，计算均方根。
+$$
+x_{RMS} = \sqrt{(x_{1}^{2}+x_{2}^{2}+...+x_{n}^{2})/n}
+$$
+它在输入时接受任意数量的变量，但现在我们不能只是将参数列表拼接到列表调用中，因为每个参数都必须包装在square调用中。在这种情况下，我们必须手工拼接而不是依赖data.table的自动enlist。
+```{r opt_max_print_12, include = FALSE}
+options(max.print = 12L) # 2 rows
+```
+
+```{r complex}
+outer = "sqrt"
+inner = "square"
+vars = c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width")
+
+# 变量转换为symbol，储存在列表
+syms = lapply(vars, as.name)
+# 定义一个函数，生成language对象
+to_inner_call = function(var, fun) call(fun, var)
+# 把language对象存在表格中
+inner_calls = lapply(syms, to_inner_call, inner)
+print(inner_calls)
+to_add_call = function(x, y) call("+", x, y)
+# 生成平方和累加的表达式，类型为language
+add_calls = Reduce(to_add_call, inner_calls)
+print(add_calls)
+
+#均方根表达式，类型同样为language
+rms = substitute2(
+  expr = outer((add_calls)/len),
+  env = list(
+    outer = outer,
+    add_calls = add_calls,
+    len = length(vars)
+  )
+)
+print(rms)
+
+# 根据构建的表达式，在DT中使用求解
+DT[, j, env = list(j = rms)]
+
+# 当时也可以不使用rms，直接在DT中构建表达式
+DT[,outer((add_calls)/len),env =list(
+      outer = outer,
+    add_calls = add_calls,
+    len = length(vars)
+)]
+
+# 返回data.table
+j = substitute2(j, list(j = as.list(setNames(nm = c(vars, "Species", "rms")))))
+j[["rms"]] = rms
+print(j)
+DT[,j, env=list(j=j)]
+
+# 另外一种返回data.table的方法
+j = as.call(c(
+  quote(list),
+  lapply(setNames(nm = vars), as.name),
+  list(Species = as.name("Species")),
+  list(rms = rms)
+))
+print(j)
+DT[, j, env = list(j = j)]
+```
+### 4.5 计划放弃的接口
+`get`、`mget`、`eval`等。
