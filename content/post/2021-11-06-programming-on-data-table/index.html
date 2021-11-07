@@ -16,7 +16,7 @@ tags:
 <p>在数据处理脚本中，data.table是主角。但是如何更为简单、方便和高效的传递参数给data.table，的确缺乏指导。前段时间看到其官方主页的这篇<a href="https://rdatatable.gitlab.io/data.table/articles/datatable-programming.html">vignette</a>，的确有种见猎心喜的感觉。</p>
 <div id="简介" class="section level2">
 <h2>1 简介</h2>
-<p>data.table，从它的第一个版本开始，就通过定义[.data.table方法启用了subset和with(或within)函数。subset和with是基本的R函数，它们有助于减少代码中的重复，增强可读性，并减少用户必须输入的字符总数。这个功能在R中是可能的，因为它有一个非常独特的特性，叫做惰性求值或延迟求值（Lazy evaluation）。</p>
+<p>data.table，从它的第一个版本开始，就通过定义<code>[.data.table</code>方法启用了subset和with(或within)函数。subset和with是基本的R函数，它们有助于减少代码中的重复，增强可读性，并减少用户必须输入的字符总数。这个功能在R中是可能的，因为它有一个非常独特的特性，叫做惰性求值或延迟求值（Lazy evaluation）。</p>
 <p>该特性允许一个函数在参数被计算之前捕获参数，并在不同于调用参数的范围内计算参数。让我们回顾一下subset函数的用法。</p>
 <pre class="r"><code>subset(iris, Species == &quot;setosa&quot;)
 #   Sepal.Length Sepal.Width Petal.Length Petal.Width Species
@@ -83,15 +83,15 @@ deparse(substitute(a))
 <li>代码注入漏洞</li>
 <li>存在更好的选择</li>
 </ul>
-<p>对这三条理由，理解并不是很深刻。姑且相信大神们的判断吧。只是觉得，通过eval(parse(text=…))形式，出了问题，不好调试，不容易知道哪参数出现了错误。</p>
+<p>对这三条理由，理解并不是很深刻。姑且相信大神们的判断吧。只是觉得，通过eval(parse(text=…))形式，出了问题，不好调试，不容易知道哪些参数出现了错误。</p>
 <p>R项目核心开发者Martin Machler曾经说过:</p>
 <blockquote>
 <p>抱歉，但我不明白为什么很多人甚至认为字符串是可以计算的。你必须改变你的心态，真的。忘记一端的字符串与另一端的表达式、调用和求值之间的所有连接。(可能)唯一的连接是通过parse(text = ….)，所有优秀的R程序员都应该知道，这很少是构造表达式(或调用)的有效或安全的方法。而是了解更多关于substitute()、quote()以及使用do.call(substitute, ……)的威力。</p>
 </blockquote>
 <p>下边是更简单和更好的方法。</p>
 </div>
-<div id="语言计算-computing-on-the-language" class="section level3">
-<h3>3.3 语言计算 Computing on the language</h3>
+<div id="基于语言对象计算-computing-on-the-language" class="section level3">
+<h3>3.3 基于语言对象计算 Computing on the language</h3>
 <p>上述函数，以及其他一些函数(包括as. call, as.name/as.symbol, bquote和eval)，可以被归类为在语言上进行计算的函数，因为它们对语言对象(例如call, name/symbol)进行操作。</p>
 <pre class="r"><code>my_subset = function(data, col, value) {
   eval(substitute(subset(data, col == value)))
@@ -112,7 +112,7 @@ my_subset(iris, Species, &quot;setosa&quot;)
 <div id="基于data.table编程" class="section level2">
 <h2>4 基于data.table编程</h2>
 <p>现在我们已经建立了正确的方法来参数化代码进行延迟评估。那么我们转换到这个vignette的主题,针对data.table进行编程。</p>
-<p>从1.14.2开始, data.table提供了一个健壮的机制,参数化表达式，提供给[.data.table 的i、j和by(或keyby)参数。它是建立在base R substitute函数上的,并模仿其接口。接下来,我们介绍substitute2作为一个更健壮和更友好的版本，替代base R substitute。</p>
+<p>从1.14.2开始, data.table提供了一个健壮的机制,参数化表达式，提供给<code>[.data.table</code> 的i、j和by(或keyby)参数。它是建立在base R substitute函数上的,并模仿其接口。接下来,我们介绍substitute2作为一个更健壮和更友好的版本，替代base R substitute。</p>
 <p>关于base::substitute and data.table::substitute2的差异，参见<a href="https://rdatatable.gitlab.io/data.table/library/data.table/html/substitute2.html">substitute2手册</a>。</p>
 <div id="替换变量variables和名字names" class="section level3">
 <h3>4.1 替换变量variables和名字names</h3>
@@ -156,7 +156,7 @@ f(argX = suppliedArgX)
 # sqrt(square(a) + square(b))</code></pre>
 <p>我们可以在输出中看到，函数名以及传递给这些函数的变量名都被替换了。
 在这个简单的例子中，也可以使用base R的替换，尽管它需要使用lapply(env, as.name)。</p>
-<p>现在，在[.data.table内部进行替换，我们不需要调用substitute2函数。由于它现在已在内部使用，我们所要做的就是提供env参数，就像我们在上面的例子中为substitute2函数提供的一样。替换可以应用于[.data.table方法的i、j和by(或keyby)参数。注意，将verbose参数设置为TRUE可用于在应用替换后打印表达式。这对调试非常有用。</p>
+<p>现在，在<code>[.data.table</code>内部进行替换，我们不需要调用substitute2函数。由于它现在已在内部使用，我们所要做的就是提供env参数，就像我们在上面的例子中为substitute2函数提供的一样。替换可以应用于<code>[.data.table</code>方法的i、j和by(或keyby)参数。注意，将verbose参数设置为TRUE可用于在应用替换后打印表达式。这对调试非常有用。</p>
 <p>让我们使用鸢尾花数据集进行演示。作为一个例子，让我们假设我们想要计算萼片的直角斜边，想象把萼片的宽度和长度作为直角三角形的另外两个边。</p>
 <p>直接输出直角斜边。</p>
 <pre class="r"><code>DT = as.data.table(iris)

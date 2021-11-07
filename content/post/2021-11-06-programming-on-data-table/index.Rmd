@@ -14,7 +14,7 @@ data.table实在是太强大，看它cran的介绍“Fast aggregation of large d
 在数据处理脚本中，data.table是主角。但是如何更为简单、方便和高效的传递参数给data.table，的确缺乏指导。前段时间看到其官方主页的这篇[vignette](https://rdatatable.gitlab.io/data.table/articles/datatable-programming.html)，的确有种见猎心喜的感觉。
 
 ## 1 简介
-data.table，从它的第一个版本开始，就通过定义[.data.table方法启用了subset和with(或within)函数。subset和with是基本的R函数，它们有助于减少代码中的重复，增强可读性，并减少用户必须输入的字符总数。这个功能在R中是可能的，因为它有一个非常独特的特性，叫做惰性求值或延迟求值（Lazy evaluation）。
+data.table，从它的第一个版本开始，就通过定义`[.data.table`方法启用了subset和with(或within)函数。subset和with是基本的R函数，它们有助于减少代码中的重复，增强可读性，并减少用户必须输入的字符总数。这个功能在R中是可能的，因为它有一个非常独特的特性，叫做惰性求值或延迟求值（Lazy evaluation）。
 
 该特性允许一个函数在参数被计算之前捕获参数，并在不同于调用参数的范围内计算参数。让我们回顾一下subset函数的用法。
 ```{r init, include = FALSE}
@@ -92,7 +92,7 @@ deparse(substitute(a))
 * 代码注入漏洞
 * 存在更好的选择
 
-对这三条理由，理解并不是很深刻。姑且相信大神们的判断吧。只是觉得，通过eval(parse(text=...))形式，出了问题，不好调试，不容易知道哪参数出现了错误。
+对这三条理由，理解并不是很深刻。姑且相信大神们的判断吧。只是觉得，通过eval(parse(text=...))形式，出了问题，不好调试，不容易知道哪些参数出现了错误。
 
 R项目核心开发者Martin Machler曾经说过:
 
@@ -100,7 +100,7 @@ R项目核心开发者Martin Machler曾经说过:
 
 下边是更简单和更好的方法。
 
-### 3.3 语言计算 Computing on the language
+### 3.3 基于语言对象计算 Computing on the language
 上述函数，以及其他一些函数(包括as. call, as.name/as.symbol, bquote和eval)，可以被归类为在语言上进行计算的函数，因为它们对语言对象(例如call, name/symbol)进行操作。
 
 ```{r subset_substitute}
@@ -119,7 +119,7 @@ pryr, lazyeval and rlang。其中pryr已经被废弃了。
 ## 4 基于data.table编程
 现在我们已经建立了正确的方法来参数化代码进行延迟评估。那么我们转换到这个vignette的主题,针对data.table进行编程。
 
-从1.14.2开始, data.table提供了一个健壮的机制,参数化表达式，提供给[.data.table 的i、j和by(或keyby)参数。它是建立在base R substitute函数上的,并模仿其接口。接下来,我们介绍substitute2作为一个更健壮和更友好的版本，替代base R substitute。
+从1.14.2开始, data.table提供了一个健壮的机制,参数化表达式，提供给`[.data.table` 的i、j和by(或keyby)参数。它是建立在base R substitute函数上的,并模仿其接口。接下来,我们介绍substitute2作为一个更健壮和更友好的版本，替代base R substitute。
 
 关于base::substitute and data.table::substitute2的差异，参见[substitute2手册](https://rdatatable.gitlab.io/data.table/library/data.table/html/substitute2.html)。
 
@@ -166,7 +166,7 @@ substitute2(
 我们可以在输出中看到，函数名以及传递给这些函数的变量名都被替换了。
 在这个简单的例子中，也可以使用base  R的替换，尽管它需要使用lapply(env, as.name)。
 
-现在，在[.data.table内部进行替换，我们不需要调用substitute2函数。由于它现在已在内部使用，我们所要做的就是提供env参数，就像我们在上面的例子中为substitute2函数提供的一样。替换可以应用于[.data.table方法的i、j和by(或keyby)参数。注意，将verbose参数设置为TRUE可用于在应用替换后打印表达式。这对调试非常有用。
+现在，在`[.data.table`内部进行替换，我们不需要调用substitute2函数。由于它现在已在内部使用，我们所要做的就是提供env参数，就像我们在上面的例子中为substitute2函数提供的一样。替换可以应用于`[.data.table`方法的i、j和by(或keyby)参数。注意，将verbose参数设置为TRUE可用于在应用替换后打印表达式。这对调试非常有用。
 
 让我们使用鸢尾花数据集进行演示。作为一个例子，让我们假设我们想要计算萼片的直角斜边，想象把萼片的宽度和长度作为直角三角形的另外两个边。
 
