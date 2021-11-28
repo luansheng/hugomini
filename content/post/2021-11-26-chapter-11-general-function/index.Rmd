@@ -247,20 +247,21 @@ system.time(lapply(1:5000, boot_lm))
 system.time(mclapply(1:5000, boot_lm, mc.cores = 4))
 ```
 并行是有一定的优势：
-> system.time(lapply(1:5000, boot_lm))
-> 用户  系统  流逝 
-> 5.621 0.000 5.620 
-> system.time(mclapply(1:5000, boot_lm, mc.cores = 4))
-> 用户  系统  流逝 
-> 4.261 0.396 1.574 
+
+> system.time(lapply(1:5000, boot_lm))    
+> 用户  系统  流逝     
+> 5.621 0.000 5.620     
+> system.time(mclapply(1:5000, boot_lm, mc.cores = 4))    
+> 用户  系统  流逝     
+> 4.261 0.396 1.574     
 
 但是分派给多个CPU并收集结果，也是需要一些额外的开销，所以看起来mc.cores=8也没有更快。
 
-> system.time(lapply(1:5000, boot_lm))
-> 用户  系统  流逝 
-> 5.535 0.000 5.534 
-> system.time(mclapply(1:5000, boot_lm, mc.cores = 8))
-> 用户  系统  流逝 
-> 4.338 0.566 1.251 
+> system.time(lapply(1:5000, boot_lm))    
+> 用户  系统  流逝     
+> 5.535 0.000 5.534     
+> system.time(mclapply(1:5000, boot_lm, mc.cores = 8))    
+> 用户  系统  流逝     
+> 4.338 0.566 1.251     
 
 ### 11.2.6 练习
