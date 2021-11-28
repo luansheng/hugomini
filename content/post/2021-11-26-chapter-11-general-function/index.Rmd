@@ -1,5 +1,5 @@
 ---
-title: Chapter 11 泛函
+title: 高级R编程 第11章 泛函
 author: Sheng Luan
 date: '2021-11-26'
 slug: chapter-11-general-function
@@ -116,7 +116,7 @@ vapply(list(), is.numeric, logical(1))
 ```
 
 # 下边的情形，sapply会返回列表，因为第二列的类型是2种，而vapply会给出错误提示，因为长度不对。
-```{r}
+```{r vapply_error, error=TRUE}
 df <- data.frame(x=1:10,y=letters[1:10])
 sapply(df, class)
 vapply(df, class, FUN.VALUE = character(1))
