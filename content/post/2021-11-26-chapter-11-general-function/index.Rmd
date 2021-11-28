@@ -1,0 +1,266 @@
+---
+title: Chapter 11 泛函
+author: Sheng Luan
+date: '2021-11-26'
+slug: chapter-11-general-function
+categories:
+  - R
+  - 编程
+tags:
+  - 泛函
+---
+
+## 11.1 第一个泛函： lapply()
+
+该函数接收函数，以列表形式返回结果。该函数在Base R中是以c语言实现的，所以速度很快。
+
+为了理解该函数的工作机制，考虑一个简单R版本
+```{r r_lapply}
+lapply2 <-  function(x, f, ...) {
+  out <- vector("list", length(x))
+  #seq_along函数自动获得参数的长度，生成自1开始的序列
+  for (i in seq_along(x)) {
+    out[[i]] <-  f(x[[i]])
+  }
+}
+```
+实际上该函数就对for循环模式的包装器。lapply的优点是减少与循环相关的引用代码，可以更加容易的处理列表。把注意力放在**处理函数**上。
+
+数据框也是列表，因此可以利用lapply对数据框的列进行操作。
+```{r lapply_data.frame}
+# 获得每一列的类型
+unlist(lapply(mtcars, class))
+# 对每一列求和
+unlist(lapply(mtcars, sum))
+```
+lapply有个问题，很难改变调用函数的参数。一种方案就是使用匿名函数。下边例子，将mean函数中的参数trim设置为不同的值。
+```{r}
+trims <- c(0, 0.1, 0.2, 0.5)
+x <- rcauchy(1000)
+unlist(lapply(trims, function(trim) mean(x, trim = trim)))
+
+```
+### 11.1.1 循环模式
+
+优先推荐使用这种模式` for (i in seq_along(x))`，存储和调用效率更高。
+
+三种调用lapply的方式
+
+* lapply(xs function(x) {})
+* lapply(seq_along(xs) function(i) {})
+* lapply(names(xs) function(nm) {})
+
+通常会使用第一种，可以返回结果。如果需要知道元素的位置，可以考虑第二种和第三种。
+
+### 11.1.2 练习题
+1. 下边两种方法，之所以相同，是因为第二种方法，最后一个参数x，传递给mean()函数。
+```{r}
+trims <- c(0, 0.1, 0.2, 0.5)
+x <- rcauchy(1000)
+# \() 替代function()，仅4.1版本支持 
+lapply(trims, \(trim) mean(x, trim=trim))
+lapply(trims, mean, x=x)
+```
+2. 对数据框的每一列进行标准化
+```{r}
+scale01 <- \(x) {
+  rng <- range(x, na.rm = TRUE)
+  return((x - rng[1])/(rng[2] - rng[1]))
+}
+lapply(mtcars, scale01)
+```
+
+3. 实现多个公式的线性拟合, data = matcars参数传递给lm()。
+```{r}
+formulas <-
+  list(mpg ~ disp, mpg ~ I(1 / disp),
+       mpg ~ disp + wt,
+       mpg ~ I(1 / disp) + wt)
+lapply(formulas, lm, data = mtcars)
+```
+4. 针对每个bootstraps数据集，进行回归分析
+```{r}
+#利用lapply生成数据集，以后应该善用该函数
+bootstraps <- lapply(1:10, function(i) {
+  # 有放回的重复抽样，因此会有重复记录
+  rows <- sample(1:nrow(mtcars), replace = TRUE)
+  mtcars[rows, ]
+})
+
+# 对10个数据集，分别进行回归分析
+lapply(bootstraps, lm, formula = mpg ~ disp)
+```
+
+5. 提取每个模型的$R^{2}$ 
+```{r}
+rsq <- \(mod) summary(mod)$r.squared
+bootstraps_lm <- lapply(bootstraps, lm, formula = mpg ~ disp)
+lapply(bootstraps_lm, rsq)
+```
+
+## 11.2 跟lapply相似的泛函数
+### 11.2.1 sapply和vapply
+没想到lapply竟然这么有用，可以省略掉非常多的循环。
+
+lapply输出的结果是列表。sapply会自动猜测返回值的类型（列表或向量两种类型）。vapply输出的只是向量类型，但是需要通过FUN.VALUE参数指明返回值的类型。
+
+对于数据框，两个函数返回的都是向量。
+```{r}
+sapply(mtcars, is.numeric)
+vapply(mtcars, is.numeric, FUN.VALUE = logical(1))
+```
+针对列表，sapply返回一个空列表，vapply返回一个长度为0的逻辑向量。sapply可能会返回列表，而vapply一直会返回向量。
+```{r}
+sapply(list(), is.numeric)
+vapply(list(), is.numeric, logical(1))
+```
+
+# 下边的情形，sapply会返回列表，因为第二列的类型是2种，而vapply会给出错误提示，因为长度不对。
+```{r}
+df <- data.frame(x=1:10,y=letters[1:10])
+sapply(df, class)
+vapply(df, class, FUN.VALUE = character(1))
+
+df2 <- data.frame(x=1:10,y=Sys.time() + 1:10)
+sapply(df2, class)
+
+vapply(df2, class, FUN.VALUE = character(1))
+```
+
+作者模拟了sapply和vapply的函数运行机制。
+```{r}
+sapply2 <- \(x, f, ...) {
+  res <- lapply2(x, f, ...)
+  simplify2array(res)
+}
+
+# 对于vapply，判定条件，要求长度和类型都要匹配
+vapply2 <- \(x, f, f.value, ...) {
+  # n×1列矩阵
+  out <- matrix(rep(f.value, length(x), nrow=length(x)))
+  for(i in seq_along(x)) {
+    res <- f(x[[i]], ...)
+    stopifnot(
+      length(res) == length(f.value),
+      typeof(res) == typeof(f.value)
+    )
+    out[i,] <- res
+  }
+  out
+}
+
+```
+
+### 11.2.2 多重输入：map和mapply
+lapply只有第一个参数是可变的，用于计算平均值非常简单，因为mean函数也是只有一个输入参数。
+
+但是如果要操作两个输入参数，怎么办？譬如计算加权均值。
+用lapply和vapply也可以操作，但是逻辑相对复杂，不够直接明了。
+```{r}
+xs <- replicate(5, runif(10), simplify = FALSE)
+ws <- replicate(5, rpois(10,5)+1, simplify = FALSE)
+unlist(lapply(seq_along(xs), \(i) {
+  weighted.mean(xs[[i]],ws[[i]])
+}))
+
+# vapply
+vapply(seq_along(xs), \(i) {
+  weighted.mean(xs[[i]],ws[[i]])
+}, FUN.VALUE = numeric(1))
+
+```
+
+理用Map函数，可以简单明了的实现对两个数据框操作。但是Map为什么首字母要大写啊，看着别扭，不统一。
+
+与lapply相反，Map函数调用的函数在第一个参数位置，后边跟两个输入列表变量。
+```{r}
+unlist(Map(weighted.mean,xs,ws))
+```
+
+通过匿名函数，也可以设定调用函数的参数。
+```{r}
+unlist(Map(\(x,w) weighted.mean(x,w, na.rm=TRUE), xs, ws))
+```
+### 11.2.3 滚动计算
+数据平滑不是很理解。编制一个移动平均值计算函数：
+
+```{r}
+rollmean <- \(x, n) {
+  out <- rep(NA, length(x))
+  
+  #取小值，譬如2.5会取2
+  offset <-  trunc(n / 2)
+  for(i in (offset + 1):(length(x) - (n - offset +1))) {
+    out[i] <- mean(x[(i-offset):(i+offset-1)])
+  }
+  out
+}
+x <- seq(1,3,length=1e2)+runif(1e2)
+plot(x)
+lines(rollmean(x,6), col="blue",lwd=2)
+```
+选取一个窗口，在此范围内的n个数字，用于计算均值。
+
+如果想用中位数，而不是平均值进行绘制，只需要将代码中mean函数改为median即可。但是如果我们不像再建立一个新函数，可以考虑建立一个rollapply函数。
+```{r}
+rollapply <- \(x, n, f, ...) {
+  out <- rep(NA, length(x))
+  
+  #取小值，譬如2.5会取2
+  offset <-  trunc(n / 2)
+  for(i in (offset + 1):(length(x) - (n - offset +1))) {
+    out[i] <- f(x[(i-offset):(i+offset-1)], ...)
+  }
+  out
+}
+x <- seq(1,3,length=1e2)+rt(1e2, df=2) / 2
+plot(x)
+lines(rollapply(x,6,median), col="red",lwd=2)
+```
+进一步对函数中的循环代码进行改造，试着用vapply代替。
+```{r}
+rollapply <- \(x, n, f, ...) {
+  #取小值，譬如2.5会取2
+  offset <-  trunc(n / 2)
+  posis <- (offset + 1):(length(x) - (n - offset +1))
+  out <- vapply(posis, \(i) f(x[(i-offset):(i+offset-1)], ...), FUN.VALUE = numeric(1))
+  return(out)
+}
+x <- seq(1,3,length=1e2)+rt(1e2, df=2) / 2
+plot(x)
+lines(rollapply(x,6,median), col="red",lwd=2)
+```
+
+### 11.2.4 并行
+实际上lapply的工作是可以并行的。本文主要是理用parallel包中的几个函数，来提高运算速度。
+
+在windows平台下，貌似不能够真正的进行并行计算，mc.cores参数值只能设置为1。因此下述代码在linux服务器上进行运算。
+```{r mclapply, eval=FALSE}
+library(parallel)
+boot_df <- function(x) x[sample(nrow(x), replace = TRUE),]
+rsquared <- function(mod) summary(mod)$r.square
+boot_lm <- function(i) {
+  rsquared(lm(mpg ~ wt + disp, data=boot_df(mtcars)))
+}
+
+system.time(lapply(1:5000, boot_lm))
+system.time(mclapply(1:5000, boot_lm, mc.cores = 4))
+```
+并行是有一定的优势：
+> system.time(lapply(1:5000, boot_lm))
+> 用户  系统  流逝 
+> 5.621 0.000 5.620 
+> system.time(mclapply(1:5000, boot_lm, mc.cores = 4))
+> 用户  系统  流逝 
+> 4.261 0.396 1.574 
+
+但是分派给多个CPU并收集结果，也是需要一些额外的开销，所以看起来mc.cores=8也没有更快。
+
+> system.time(lapply(1:5000, boot_lm))
+> 用户  系统  流逝 
+> 5.535 0.000 5.534 
+> system.time(mclapply(1:5000, boot_lm, mc.cores = 8))
+> 用户  系统  流逝 
+> 4.338 0.566 1.251 
+
+### 11.2.6 练习
