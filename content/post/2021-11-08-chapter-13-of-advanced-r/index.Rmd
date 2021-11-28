@@ -1,0 +1,185 @@
+---
+title: 高级R编程 第13章 非标准计算
+author: Sheng Luan
+date: '2021-11-08'
+slug: chapter-13-of-advanced-r
+categories:
+  - 编程
+tags:
+  - substitute
+---
+
+先来看一个R plot绘制的图：
+```{r plot}
+x <- seq(0,2*pi,length=100)
+sinx <- sin(x)
+plot(x,sinx,type="l")
+```
+从图中可以看出，plot函数自动把x和y轴的标题设置为两个变量的名字：x和sinx。在大部分编程语言中，我们**只可以访问函数参数x和sinx的值**，而**不是参数自身**。在R中，这种对函数参数进行计算的方式，称为**非标准计算，简称为NSE**。
+
+## 13.1 表达式获取
+Base R中的substitue()函数用来实现非标准计算。它用来查找函数参数，但并不关心函数参数的值。
+```{r substitue}
+f <- function(x) {
+  substitute(x)
+}
+f(1:10)
+x <- 10
+f(x)
+y <- 13
+f(x+y^2)
+```
+substitute()返回的是表达式类型。该函数的参数使用了一种特殊的类型，**约定（promise）**。该类型捕获用来计算的表达式和执行该表达式的环境。
+
+substitute()和deparse()经常会搭配使用。deparse()以substitute()的返回结果（表达式）为参数，输出一个**字符向量**。
+```{r deparse}
+g <- function(x) deparse(substitute(x))
+g(1:10)
+g(x)
+g(x+y^2)
+```
+上述函数组合的一个用法，譬如在加载包时，可以不用输入双引号。
+```{r librarycase}
+library(data.table)
+library("data.table")
+```
+其他函数，例如plot.default()，使用上述函数来提供默认的标签。
+
+data.frame函数使用上述函数来记录整合进数据框的变量的名称。
+```{r dataframecase}
+x <- 1:4
+y <- letters[1:4]
+names(data.frame(x,y))
+```
+### 练习
+
+#### 1 为什么deparse解析会返回多个字符串，这是因为，它的参数中，定义了width.cutoff参数，超过60字符，就会切割。
+
+```{r ex1}
+g(a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p+q+r+s+t+u+v+w+x+y+z)
+
+```
+避免切割的方法，重新定义g函数
+```{r ex2}
+g <- function(x) paste0(deparse(substitute(x)), collapse = "")
+g(a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p+q+r+s+t+u+v+w+x+y+z)
+```
+### 2 为什么as.Date.default()使用substitute()和deparse()
+从下边代码中可以看到，当无法判断x的类型时，会输出消息不知道如何转换x为日期类型。因此需要通过这两个函数获得x的name。
+
+```{r as_Date_default, eval=FALSE}
+function (x, ...) 
+{
+    if (inherits(x, "Date")) 
+        x
+    else if (is.null(x)) 
+        .Date(numeric())
+    else if (is.logical(x) && all(is.na(x))) 
+        .Date(as.numeric(x))
+    else stop(gettextf("do not know how to convert '%s' to class %s", 
+        deparse1(substitute(x)), dQuote("Date")), domain = NA)
+}
+```
+
+```{r ex3,error=TRUE}
+as.Date(as.name("a"))
+```
+
+
+对于`pairwise.t.test()`函数，其中有一行代码`DNAME <- paste(deparse1(substitute(x)), "and", deparse1(substitute(g)))`，需要获得其参数x和g的name作为输出结果的数据名，因此用到上述两个函数。
+
+### 3 pairwise.t.test()假设deparse()总是返回一个长度为1的字符向量，如何构建一个违反这个假设的输入?
+只需要将变量名字命名为x1、x2等2个字符的变量即可。
+
+### 4
+```{r}
+#返回表达式
+f <- function(x) substitute(x)
+#返回字符串
+g <- function(a) deparse(f(x=a))
+
+# 返回1:10
+f(1:10)
+
+# 返回"x"，因为对f()函数来说，substitute函数看到的是a，而不是1:10
+g(1:10)
+
+# 返回"x"
+g(x+y^2/z+exp(a*sin(b)))
+
+#
+```
+
+## 13.2 subset函数的非标准计算
+```{r}
+sample_df <- data.frame(a = 1:5, b = 5:1, c = c(5, 3, 1, 4, 1))
+subset(sample_df, a > 3)
+subset(sample_df, b == c)
+```
+
+表达式 a > 3 或b == c在指定数据框sample_df中执行，而不是在当前或全局环境中。**这其实是非标准计算的本质。**
+
+subset的工作机制：
+
+* 希望对a能够解释成sample_df$a而不是全局globalenv()$a。因此需要用到eval()函数在特定的环境中对表达式进行计算。
+* quote()函数捕获输入表达式本身，但是并不对其进行任何高级转换。
+
+```{r}
+quote(1:10)
+quote(x)
+quote(x+y^2)
+```
+quote()和eval()是对立的。在下边的例子中，每个eval都会剥去一层quote()。
+```{r}
+quote(2+2)
+eval(quote(2+2)) #4
+
+quote(quote(2+2)) #quote(2+2)
+eval(quote(quote(2+2))) # 2+2
+
+eval(eval(quote(quote(2+2)))) #4
+```
+
+eval()的第二个参数设置执行代码的环境，在特定环境e中设定x的值为9，那么eval评估会输出9。
+```{r}
+x <- 10
+eval(quote(x))
+e <- new.env()
+e$x <- 9
+eval(expr = quote(x), envir = e)
+```
+eval()的第二个参数也可以是列表或者数据框
+
+```{r}
+eval(expr = quote(x), envir = list(x=8))
+eval(expr = quote(x), envir = data.frame(x=7))
+```
+
+根据上述eval函数的功能，可以实现subset的部分功能
+```{r}
+eval(expr = quote(a > 3), envir = sample_df)
+eval(expr = quote(b == c), envir = sample_df)
+```
+
+如果忘记对第一个参数使用quote进行引用，会产生错误的结果
+```{r notquote, error=TRUE}
+eval(a>3, envir = sample_df)
+```
+考虑使用eval()和subset()编写subset函数。
+首先捕获代表条件的调用，然后在数据库的上下文中执行它，最后使用这个结果提取子集。
+```{r subset23, error=TRUE}
+subset2 <- function(x, condition) {
+  row_index <- eval(substitute(condition), x)
+  x[row_index,]
+}
+subset2(sample_df, a >3)
+
+subset3 <- function(x, condition) {
+  row_index <- eval(quote(condition), x)
+  x[row_index,]
+}
+subset3(sample_df, a >3)
+
+
+```
+
