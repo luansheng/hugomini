@@ -52,7 +52,127 @@ names(data.frame(x,y))</code></pre>
 <pre><code>## [1] &quot;x&quot; &quot;y&quot;</code></pre>
 <div id="练习" class="section level3">
 <h3>练习</h3>
-<pre class="r"><code>g(a+b+c+d+e+f+g+h)</code></pre>
-<pre><code>## [1] &quot;a + b + c + d + e + f + g + h&quot;</code></pre>
+<div id="为什么deparse解析会返回多个字符串这是因为它的参数中定义了width.cutoff参数超过60字符就会切割" class="section level4">
+<h4>1 为什么deparse解析会返回多个字符串，这是因为，它的参数中，定义了width.cutoff参数，超过60字符，就会切割。</h4>
+<pre class="r"><code>g(a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p+q+r+s+t+u+v+w+x+y+z)</code></pre>
+<pre><code>## [1] &quot;a + b + c + d + e + f + g + h + i + j + k + l + m + n + o + p + &quot;
+## [2] &quot;    q + r + s + t + u + v + w + x + y + z&quot;</code></pre>
+<p>避免切割的方法，重新定义g函数</p>
+<pre class="r"><code>g &lt;- function(x) paste0(deparse(substitute(x)), collapse = &quot;&quot;)
+g(a+b+c+d+e+f+g+h+i+j+k+l+m+n+o+p+q+r+s+t+u+v+w+x+y+z)</code></pre>
+<pre><code>## [1] &quot;a + b + c + d + e + f + g + h + i + j + k + l + m + n + o + p +     q + r + s + t + u + v + w + x + y + z&quot;</code></pre>
 </div>
+</div>
+<div id="为什么as.date.default使用substitute和deparse" class="section level3">
+<h3>2 为什么as.Date.default()使用substitute()和deparse()</h3>
+<p>从下边代码中可以看到，当无法判断x的类型时，会输出消息不知道如何转换x为日期类型。因此需要通过这两个函数获得x的name。</p>
+<pre class="r"><code>function (x, ...) 
+{
+    if (inherits(x, &quot;Date&quot;)) 
+        x
+    else if (is.null(x)) 
+        .Date(numeric())
+    else if (is.logical(x) &amp;&amp; all(is.na(x))) 
+        .Date(as.numeric(x))
+    else stop(gettextf(&quot;do not know how to convert &#39;%s&#39; to class %s&quot;, 
+        deparse1(substitute(x)), dQuote(&quot;Date&quot;)), domain = NA)
+}</code></pre>
+<pre class="r"><code>as.Date(as.name(&quot;a&quot;))</code></pre>
+<pre><code>## Error in as.Date.default(as.name(&quot;a&quot;)): 不知如何将&#39;as.name(&quot;a&quot;)&#39;转换成&quot;Date&quot;类别</code></pre>
+<p>对于<code>pairwise.t.test()</code>函数，其中有一行代码<code>DNAME &lt;- paste(deparse1(substitute(x)), "and", deparse1(substitute(g)))</code>，需要获得其参数x和g的name作为输出结果的数据名，因此用到上述两个函数。</p>
+</div>
+<div id="pairwise.t.test假设deparse总是返回一个长度为1的字符向量如何构建一个违反这个假设的输入" class="section level3">
+<h3>3 pairwise.t.test()假设deparse()总是返回一个长度为1的字符向量，如何构建一个违反这个假设的输入?</h3>
+<p>只需要将变量名字命名为x1、x2等2个字符的变量即可。</p>
+</div>
+<div id="section" class="section level3">
+<h3>4</h3>
+<pre class="r"><code>#返回表达式
+f &lt;- function(x) substitute(x)
+#返回字符串
+g &lt;- function(a) deparse(f(x=a))
+
+# 返回1:10
+f(1:10)</code></pre>
+<pre><code>## 1:10</code></pre>
+<pre class="r"><code># 返回&quot;x&quot;，因为对f()函数来说，substitute函数看到的是a，而不是1:10
+g(1:10)</code></pre>
+<pre><code>## [1] &quot;a&quot;</code></pre>
+<pre class="r"><code># 返回&quot;x&quot;
+g(x+y^2/z+exp(a*sin(b)))</code></pre>
+<pre><code>## [1] &quot;a&quot;</code></pre>
+<pre class="r"><code>#</code></pre>
+</div>
+</div>
+<div id="subset函数的非标准计算" class="section level2">
+<h2>13.2 subset函数的非标准计算</h2>
+<pre class="r"><code>sample_df &lt;- data.frame(a = 1:5, b = 5:1, c = c(5, 3, 1, 4, 1))
+subset(sample_df, a &gt; 3)</code></pre>
+<pre><code>##   a b c
+## 4 4 2 4
+## 5 5 1 1</code></pre>
+<pre class="r"><code>subset(sample_df, b == c)</code></pre>
+<pre><code>##   a b c
+## 1 1 5 5
+## 5 5 1 1</code></pre>
+<p>表达式 a &gt; 3 或b == c在指定数据框sample_df中执行，而不是在当前或全局环境中。<strong>这其实是非标准计算的本质。</strong></p>
+<p>subset的工作机制：</p>
+<ul>
+<li>希望对a能够解释成sample_df<span class="math inline">\(a而不是全局globalenv()\)</span>a。因此需要用到eval()函数在特定的环境中对表达式进行计算。</li>
+<li>quote()函数捕获输入表达式本身，但是并不对其进行任何高级转换。</li>
+</ul>
+<pre class="r"><code>quote(1:10)</code></pre>
+<pre><code>## 1:10</code></pre>
+<pre class="r"><code>quote(x)</code></pre>
+<pre><code>## x</code></pre>
+<pre class="r"><code>quote(x+y^2)</code></pre>
+<pre><code>## x + y^2</code></pre>
+<p>quote()和eval()是对立的。在下边的例子中，每个eval都会剥去一层quote()。</p>
+<pre class="r"><code>quote(2+2)</code></pre>
+<pre><code>## 2 + 2</code></pre>
+<pre class="r"><code>eval(quote(2+2)) #4</code></pre>
+<pre><code>## [1] 4</code></pre>
+<pre class="r"><code>quote(quote(2+2)) #quote(2+2)</code></pre>
+<pre><code>## quote(2 + 2)</code></pre>
+<pre class="r"><code>eval(quote(quote(2+2))) # 2+2</code></pre>
+<pre><code>## 2 + 2</code></pre>
+<pre class="r"><code>eval(eval(quote(quote(2+2)))) #4</code></pre>
+<pre><code>## [1] 4</code></pre>
+<p>eval()的第二个参数设置执行代码的环境，在特定环境e中设定x的值为9，那么eval评估会输出9。</p>
+<pre class="r"><code>x &lt;- 10
+eval(quote(x))</code></pre>
+<pre><code>## [1] 10</code></pre>
+<pre class="r"><code>e &lt;- new.env()
+e$x &lt;- 9
+eval(expr = quote(x), envir = e)</code></pre>
+<pre><code>## [1] 9</code></pre>
+<p>eval()的第二个参数也可以是列表或者数据框</p>
+<pre class="r"><code>eval(expr = quote(x), envir = list(x=8))</code></pre>
+<pre><code>## [1] 8</code></pre>
+<pre class="r"><code>eval(expr = quote(x), envir = data.frame(x=7))</code></pre>
+<pre><code>## [1] 7</code></pre>
+<p>根据上述eval函数的功能，可以实现subset的部分功能</p>
+<pre class="r"><code>eval(expr = quote(a &gt; 3), envir = sample_df)</code></pre>
+<pre><code>## [1] FALSE FALSE FALSE  TRUE  TRUE</code></pre>
+<pre class="r"><code>eval(expr = quote(b == c), envir = sample_df)</code></pre>
+<pre><code>## [1]  TRUE FALSE FALSE FALSE  TRUE</code></pre>
+<p>如果忘记对第一个参数使用quote进行引用，会产生错误的结果</p>
+<pre class="r"><code>eval(a&gt;3, envir = sample_df)</code></pre>
+<pre><code>## Error in eval(a &gt; 3, envir = sample_df): 找不到对象&#39;a&#39;</code></pre>
+<p>考虑使用eval()和subset()编写subset函数。
+首先捕获代表条件的调用，然后在数据库的上下文中执行它，最后使用这个结果提取子集。</p>
+<pre class="r"><code>subset2 &lt;- function(x, condition) {
+  row_index &lt;- eval(substitute(condition), x)
+  x[row_index,]
+}
+subset2(sample_df, a &gt;3)</code></pre>
+<pre><code>##   a b c
+## 4 4 2 4
+## 5 5 1 1</code></pre>
+<pre class="r"><code>subset3 &lt;- function(x, condition) {
+  row_index &lt;- eval(quote(condition), x)
+  x[row_index,]
+}
+subset3(sample_df, a &gt;3)</code></pre>
+<pre><code>## Error in eval(quote(condition), x): 找不到对象&#39;a&#39;</code></pre>
 </div>
