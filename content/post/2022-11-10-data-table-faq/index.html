@@ -1,0 +1,278 @@
+---
+title: "data.table FAQ中文版"
+author: "Sheng Luan"
+date: "2022-11-10"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+categories: 数据清洗
+tags: Data.table
+slug: "data-table-faq"
+---
+
+
+
+<p>data.table中文版功能强大，但是某些用法却很隐晦。一直想熟悉一遍data.table的<a href="https://rdatatable.gitlab.io/data.table/articles/datatable-faq.html">FAQs</a>，进一步提高自己的数据清洗能力。</p>
+<div id="初学者faqs" class="section level1">
+<h1>1 初学者FAQs</h1>
+<div id="为什么dt-5和dt2-5返回包括一列的data.table而不是像data.frame一样返回向量" class="section level2">
+<h2>1.1 为什么DT[ , 5]和DT[2, 5]返回包括一列的data.table，而不是像data.frame一样返回向量</h2>
+<p>请注意，下边的写法，作者并不推荐。</p>
+<pre class="r"><code>library(data.table)
+DT = data.table(x=rep(c(&quot;b&quot;,&quot;a&quot;,&quot;c&quot;),each=3), y=c(1,3,6), v=1:9)
+DT[ , 3] #返回data.table</code></pre>
+<pre><code>##    v
+## 1: 1
+## 2: 2
+## 3: 3
+## 4: 4
+## 5: 5
+## 6: 6
+## 7: 7
+## 8: 8
+## 9: 9</code></pre>
+<pre class="r"><code>class(DT[ , 3])</code></pre>
+<pre><code>## [1] &quot;data.table&quot; &quot;data.frame&quot;</code></pre>
+<pre class="r"><code>DT[2, 3] #返回data.table</code></pre>
+<pre><code>##    v
+## 1: 2</code></pre>
+<pre class="r"><code>class(DT[2, 3])</code></pre>
+<pre><code>## [1] &quot;data.table&quot; &quot;data.frame&quot;</code></pre>
+<p>当在函数中使用 data.table 时，可能会接受不同的输入，为了保持一致性，使用DT[…]可以确保返回一个data.table。您不必像在data.frame中那样，需要记住使用<code>drop=FALSE</code>参数。data.table 于 2006 年首次发布，与 data.frame 的这种差异从一开始就就存在。</p>
+<pre class="r"><code>DF = setDF(copy(DT))
+DF[ , 3] #返回向量</code></pre>
+<pre><code>## [1] 1 2 3 4 5 6 7 8 9</code></pre>
+<pre class="r"><code>class(DF[ , 3])</code></pre>
+<pre><code>## [1] &quot;integer&quot;</code></pre>
+<pre class="r"><code>DF[ , 3, drop=FALSE] #返回data.frame</code></pre>
+<pre><code>##   v
+## 1 1
+## 2 2
+## 3 3
+## 4 4
+## 5 5
+## 6 6
+## 7 7
+## 8 8
+## 9 9</code></pre>
+<pre class="r"><code>class(DF[ , 3, drop=FALSE])</code></pre>
+<pre><code>## [1] &quot;data.frame&quot;</code></pre>
+<p>您可能听说过，<strong>按数字而不是名称引用列通常是不好的做法</strong>。如果你的同事后来读你的代码，他们可能不得不四处寻找哪一列是第5列。如果某个人在R程序中更改了列的位置大于5，但是忘记更改代码中引用列编号 5 的所有位置，则可能会产生错误的结果，并且不会发出警告或错误。这是人为错误错，不是R的错，也不是data.table的错。这真的很糟糕。请不要这样做。这与专业SQL开发人员的口头禅相同：永远不要使用<code>select *</code>，总是按列名显式选择，这会对将来的更改保持鲁棒性。</p>
+<p>ps：<strong>尽量不用直接用数字提取列信息</strong></p>
+<p>假设第 5 列被命名为<code>"Region"</code>，您真的需要<strong>以向量的形式</strong>而不是 data.table提取该列内容。使用列名，<strong>写为<code>DT$region</code>或者<code>DT[["region"]]</code></strong>，具有更强的鲁棒性。如果使用R基础语法，鼓励使用<code>$</code>；如果使用data.table，推荐<code>DT[["region"]]</code>。当与&lt;-组合赋值时(使用:=代替)，但仅按名称选择单个列时，鼓励使用它们（意思不明确）。</p>
+<pre class="r"><code>DT[[&#39;x&#39;]] #返回向量</code></pre>
+<pre><code>## [1] &quot;b&quot; &quot;b&quot; &quot;b&quot; &quot;a&quot; &quot;a&quot; &quot;a&quot; &quot;c&quot; &quot;c&quot; &quot;c&quot;</code></pre>
+<pre class="r"><code>DT$x #返回向量</code></pre>
+<pre><code>## [1] &quot;b&quot; &quot;b&quot; &quot;b&quot; &quot;a&quot; &quot;a&quot; &quot;a&quot; &quot;c&quot; &quot;c&quot; &quot;c&quot;</code></pre>
+<pre class="r"><code>DT[ , x] #返回向量</code></pre>
+<pre><code>## [1] &quot;b&quot; &quot;b&quot; &quot;b&quot; &quot;a&quot; &quot;a&quot; &quot;a&quot; &quot;c&quot; &quot;c&quot; &quot;c&quot;</code></pre>
+<pre class="r"><code>typeof(DT) #DT本质上是以列表存储的</code></pre>
+<pre><code>## [1] &quot;list&quot;</code></pre>
+<p><strong>ps：如果想以向量的形式提取列内容，可以写作<code>DT$Region</code>或者<code>DT[["Region"]]</code>，DT本质上可以理解为一个列表。</strong></p>
+<p>在某些情况下，<strong>通过数字引用列似乎是唯一的方法</strong>，例如有序列。在这些情况下，就像data.frame一样，你可以这样写为<code>DT[ , 5:20]</code>，或者<code>DT[ , c(1, 4, 10)]</code>。 但是，考虑到将来列数和列顺序的变化，建议<strong>使用一个列命名范围如<code>DT[,columnRed:columnViolet]</code></strong> 或者命名每一列<code>DT[,c("columnRed","columnOrange","columnYellow")]</code>。前期工作量可能会比较大，但将来你，以及你的同事可能会感谢自己，你的同事将来可能会感谢你。至少你可以说，如果出现问题，至少你已经尽力编写健壮的代码。</p>
+<pre class="r"><code>DT[ , x:y] #列范围方式也是可以的</code></pre>
+<pre><code>##    x y
+## 1: b 1
+## 2: b 3
+## 3: b 6
+## 4: a 1
+## 5: a 3
+## 6: a 6
+## 7: c 1
+## 8: c 3
+## 9: c 6</code></pre>
+<pre class="r"><code>class(DT[ , x:y])</code></pre>
+<pre><code>## [1] &quot;data.table&quot; &quot;data.frame&quot;</code></pre>
+<pre class="r"><code>DT[ , c(&quot;x&quot;, &quot;y&quot;, &quot;v&quot;)] #直接指定字符类型的列名作为向量也可以提取</code></pre>
+<pre><code>##    x y v
+## 1: b 1 1
+## 2: b 3 2
+## 3: b 6 3
+## 4: a 1 4
+## 5: a 3 5
+## 6: a 6 6
+## 7: c 1 7
+## 8: c 3 8
+## 9: c 6 9</code></pre>
+<pre class="r"><code>class(DT[ , c(&quot;x&quot;, &quot;y&quot;, &quot;v&quot;)])</code></pre>
+<pre><code>## [1] &quot;data.table&quot; &quot;data.frame&quot;</code></pre>
+<pre class="r"><code>DT[ , &quot;x&quot;] #只提取x列</code></pre>
+<pre><code>##    x
+## 1: b
+## 2: b
+## 3: b
+## 4: a
+## 5: a
+## 6: a
+## 7: c
+## 8: c
+## 9: c</code></pre>
+<pre class="r"><code>DT[ , c(&quot;x&quot;)] #同上</code></pre>
+<pre><code>##    x
+## 1: b
+## 2: b
+## 3: b
+## 4: a
+## 5: a
+## 6: a
+## 7: c
+## 8: c
+## 9: c</code></pre>
+<p><strong>ps：考虑使用列命名范围如<code>DT[,columnRed:columnViolet]</code>代替使用<code>DT[ , 5:20]</code></strong></p>
+<p>但是，我们真正希望您做的是使用<strong><code>DT[ , .(columnRed,columnOrange,columnYellow)]</code></strong>这种形式来写代码；即，<strong>使用列名，就好像它们真的是<code>DT[...]</code>内部的变量一样</strong>。您不必像在 data.frame 中那样为每一列添加前缀<code>DT$</code>。<strong>.<code>()</code>可以理解为<code>list()</code>的一个别名</strong>，如果您愿意，可以使用<code>list()</code>代替<code>.()</code>。你可以在<strong><code>list()</code>中放置带有表达式的列名</strong>，并且返回不同长度的不同类型。我们过去曾强烈鼓励你这样做，以至于我们故意根本不让<code>DT[,5]</code>这种写法生效。在 2016年 11 月v1.9.8 发布之前 ，<code>DT[,5]</code>仅能返回数字5。当时的想法是，我们可以更简单地告诉大家，即<code>DT[...]</code>内部分总是在DT的框架内进行评估（它们将列名视为变量）。5评估为5，这种行为与上述单一规则一致。如果您真的想按列名称或数字选择列，我们要求您写为<code>DT[,5,with=FALSE]</code>。从 2016 年 11 月开始，您不需要使用<code>with=FALSE</code>，我们将看到为了与 data.frame 保持更大一致性，将如何帮助或阻碍新用户和长期用户。没有阅读此FAQ的新用户，甚至没有阅读第一个条目，如果他们期望data.table像data.frame一样工作，希望不会像以前那样被data.table绊倒。希望他们不会错过理解我们在<code>DT[i, j, by]</code>内放置列表达式的意图和建议。如果他们像data.frame一样使用data.table，他们将不会获得任何好处。如果您认识这样的人，请友好地推荐他们像您一样阅读本文档。</p>
+<p><strong>ps：当要进行列计算时，</strong>使用<strong><code>DT[ , .(columnRed,columnOrange,columnYellow)]</code>更方便；.()等同于list()。</strong></p>
+<pre class="r"><code>DT[ , .(x,y)] #data.table作者鼓励这种写法</code></pre>
+<pre><code>##    x y
+## 1: b 1
+## 2: b 3
+## 3: b 6
+## 4: a 1
+## 5: a 3
+## 6: a 6
+## 7: c 1
+## 8: c 3
+## 9: c 6</code></pre>
+<pre class="r"><code>DT[ , list(x,y)] #效果同上</code></pre>
+<pre><code>##    x y
+## 1: b 1
+## 2: b 3
+## 3: b 6
+## 4: a 1
+## 5: a 3
+## 6: a 6
+## 7: c 1
+## 8: c 3
+## 9: c 6</code></pre>
+<pre class="r"><code>DT[ , .(toupper(x), y^2)] #可以直接对列进行计算和变换</code></pre>
+<pre><code>##    V1 V2
+## 1:  B  1
+## 2:  B  9
+## 3:  B 36
+## 4:  A  1
+## 5:  A  9
+## 6:  A 36
+## 7:  C  1
+## 8:  C  9
+## 9:  C 36</code></pre>
+<p><strong>ps:</strong> <strong><code>DT[ , 5]</code>这种写法是不鼓励的，只是为了保持跟data.frame的一致性。</strong></p>
+<p>提醒：您可以像使用变量一样将列名包裹在<em>任何</em>R表达式中放入<code>DT[...]</code>；例如，尝试<code>DT[, colA*colB/2]</code>。<strong>因为您使用列名就好像它们是变量一样，所以这里确实会返回一个向量</strong>。使用<code>.()</code>包装后，将会返回一个data.table，<code>DT[,.(colA*colB/2)]</code>；写为<code>DT[,.(myResult = colA*colB/2)]</code>，命名返回的列。我们将让您猜测如何从此查询中返回两件事。在匿名主体中做一堆事情也很常见：<code>DT[, { x&lt;-colA+10; x*x/2 }]</code>；或者调用另一个包的函数：<code>DT[ , fitdistr(columnA, "normal")]</code>。</p>
+<pre class="r"><code>DT[ , y*v] #返回一个变量</code></pre>
+<pre><code>## [1]  1  6 18  4 15 36  7 24 54</code></pre>
+<pre class="r"><code>DT[ , .(y*v)] #返回一个data.table</code></pre>
+<pre><code>##    V1
+## 1:  1
+## 2:  6
+## 3: 18
+## 4:  4
+## 5: 15
+## 6: 36
+## 7:  7
+## 8: 24
+## 9: 54</code></pre>
+<pre class="r"><code>DT[ , list(y*v)] #跟上边等同</code></pre>
+<pre><code>##    V1
+## 1:  1
+## 2:  6
+## 3: 18
+## 4:  4
+## 5: 15
+## 6: 36
+## 7:  7
+## 8: 24
+## 9: 54</code></pre>
+<pre class="r"><code>DT[ , .(yv=y*v)] #将返回的新列命名为yv,推荐这种写法！！！</code></pre>
+<pre><code>##    yv
+## 1:  1
+## 2:  6
+## 3: 18
+## 4:  4
+## 5: 15
+## 6: 36
+## 7:  7
+## 8: 24
+## 9: 54</code></pre>
+<pre class="r"><code>DT[ , {z &lt;- y*10; z*z/2}] #在j（列计算）位置，可以放置多个表达式，返回最后一个表达式的值，同样是向量</code></pre>
+<pre><code>## [1]   50  450 1800   50  450 1800   50  450 1800</code></pre>
+<pre class="r"><code>DT[ , .({z &lt;- y*10; z*z/2})] #返回列表</code></pre>
+<pre><code>##      V1
+## 1:   50
+## 2:  450
+## 3: 1800
+## 4:   50
+## 5:  450
+## 6: 1800
+## 7:   50
+## 8:  450
+## 9: 1800</code></pre>
+<pre class="r"><code>DT[ , MASS::fitdistr(y*v,&quot;normal&quot;)] #调用MASS包中的fitdistr函数求均值和标准差</code></pre>
+<pre><code>##      mean         sd    
+##   18.333333   16.377491 
+##  ( 5.459164) ( 3.860212)</code></pre>
+<p>简单小结一下：</p>
+<ul>
+<li><p><code>DT[ , 5]</code>返回data.table</p></li>
+<li><p><code>DT[ , c("Region")]</code> 返回data.table</p></li>
+<li><p><code>DT[ , .(Region)]</code> 返回data.table；<strong>推荐这种写法</strong>，可以方便做列转换和计算</p></li>
+<li><p><code>DT$Region</code> 返回一个向量</p></li>
+<li><p><code>DT[["Region"]]</code> 返回一个向量，<strong>推荐这种写法</strong></p></li>
+<li><p><code>DT[ , Region]</code> 返回一个向量</p></li>
+</ul>
+</div>
+<div id="为什么dtregion返回一个单列的data.table而不是向量" class="section level2">
+<h2>1.2 为什么DT[，“region”]返回一个单列的data.table而不是向量?</h2>
+<p>答案参见 1.1。可以用<code>DT$Region</code>或者<code>DT[["Region"]]</code>返回向量。</p>
+</div>
+<div id="为什么dt-region返回一个向量我想要返回一个单列的data.table" class="section level2">
+<h2>1.3 为什么<code>DT[ , region]</code>返回一个向量?我想要返回一个单列的data.table。</h2>
+<p><code>DT[ , region]</code>返回一个向量的解释，参见1.1，是这样说的：<strong>因为您使用列名就好像它们是变量一样，所以这里确实会返回一个向量。如果想返回data.table，可以使用<code>DT[ , .(region)]</code>这种写法。</strong></p>
+</div>
+<div id="为什么dt-x-y-z不起作用我想要返回包括三列xy和z的一个data.table" class="section level2">
+<h2>1.4 为什么<code>DT[ , x, y, z]</code>不起作用？我想要返回包括三列x、y和z的一个data.table。</h2>
+<p>data.table的书写形式为<code>DT[i, j, by]</code>，列计算和提取需要放在第二个参数j中。正确的写法：<code>DT[ , .(x, y, z)]</code>或者<code>DT[ , c("x", "y", "z")]</code>。</p>
+</div>
+<div id="我对变量mycol进行赋值mycol-x但是dt-mycol返回一个字符x而不是dt中x列的内容如何让dt中查找mycol变量中包含的列名x" class="section level2">
+<h2>1.5 我对变量<code>mycol</code>进行赋值<code>mycol = "x"</code>，但是<code>DT[ , mycol]</code>返回一个字符”x”，而不是DT中x列的内容。如何让DT中查找<code>mycol</code>变量中包含的列名x?</h2>
+<p>在2016年11月发布的v1.9.8中，有一种启用新行为的功能：<code>options(datatable.WhenJisSymbolThenCallingScope=TRUE)</code>。然后它就会像您预期的那样工作，就像data.Frame一样。如果您是data.table的新用户，您可能应该这样做。您可以将此命令放在.Rprofile文件中，这样您就不必再次记住。</p>
+<p>在没有启用这种新行为的情况下，<strong>j表达式看到的是调用作用域中的对象</strong>。变量mycol并不存在于DT的列名中，因此data.table随后在调用作用域中查找，在那里找到mycol，并返回它的值”x”。当前，这是正确的行为。如果mycol是列名，那么该列的数据就会被返回。如果写作<code>DT[ , mycol, with=False]</code>，将根据需求，返回DT中x列的数据。这种写法，在未来也会奏效。因为data.table也是一个列表，如果要返回向量，可以写作<code>DT[[mycol]]</code>。</p>
+<p>ps：这种需求在数据处理中很常见。譬如，需要灵活的指定提取某些列的内容。我们通常会提前在一个变量中定义要提取的列名。如果是要返回一个data.table，可以这样写：<code>DT[ , ..mycol]</code>或者<code>DT[ , mycol, with = FALSE]</code>或者<code>DT[ , .SD, .SDcols = mycol]</code>。</p>
+<p>稍微扩展一下：前缀<code>..</code>是告诉data.table显式引用变量<code>mycol</code>的父范围，而不是来自DT数据集。</p>
+<p>如果想返回一个向量，可以这样写<code>DT[[mycol]]</code>。</p>
+<pre class="r"><code>mycol &lt;- c(&quot;x&quot;)
+DT[ , ..mycol] #返回一个data.table</code></pre>
+<pre><code>##    x
+## 1: b
+## 2: b
+## 3: b
+## 4: a
+## 5: a
+## 6: a
+## 7: c
+## 8: c
+## 9: c</code></pre>
+<pre class="r"><code>DT[ , mycol, with = FALSE] #返回一个data.table</code></pre>
+<pre><code>##    x
+## 1: b
+## 2: b
+## 3: b
+## 4: a
+## 5: a
+## 6: a
+## 7: c
+## 8: c
+## 9: c</code></pre>
+<pre class="r"><code>DT[ , .SD, .SDcols=mycol] #利用.SD返回一个data.table</code></pre>
+<pre><code>##    x
+## 1: b
+## 2: b
+## 3: b
+## 4: a
+## 5: a
+## 6: a
+## 7: c
+## 8: c
+## 9: c</code></pre>
+<pre class="r"><code>DT[[mycol]] #返回一个向量</code></pre>
+<pre><code>## [1] &quot;b&quot; &quot;b&quot; &quot;b&quot; &quot;a&quot; &quot;a&quot; &quot;a&quot; &quot;c&quot; &quot;c&quot; &quot;c&quot;</code></pre>
+</div>
+</div>

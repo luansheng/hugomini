@@ -1,0 +1,248 @@
+---
+title: 使用data.table中的.SD 进行数据分析
+author: Sheng Luan
+date: '2022-11-03'
+slug: data-table-sd
+categories:
+  - 数据清洗
+tags:
+  - Data.table
+---
+
+```{r}
+rm(list=ls())
+library(data.table)
+```
+
+原文来自data.table自带的一个Vignette: **U[sing .SD for Data Analysis](https://cran.r-project.org/web/packages/data.table/vignettes/datatable-sd-usage.html)。**
+
+# 1 什么是.SD
+
+简单理解，.SD是在数据分析中，用于捕获变量的缩写。.SD可以理解为一个子集、自身copy或者引用。除了不能用:=对它赋值外，.SD可以理解为一个data.table。
+
+.SD主要有2个用途：
+
+-   通过.SDCols提取列
+
+-   针对分组数据进行清洗
+
+# 2 准备使用的数据
+
+使用来自Lahman数据库的棒球数据。需要提前安装Lahman R包。
+
+然后加载Lahman包，获得球队数据，将其转为data.table类型。
+
+```{r}
+library(Lahman)
+Teams <- copy(Teams)
+setDT(Teams)
+Teams
+```
+
+获得投手Pitcher的数据集
+
+```{r}
+Pitching <- copy(Pitching)
+setDT(Pitching)
+Pitching
+```
+
+球队记录了给定年份的一些统计数据，而投球记录了给定年份的给定投手的统计数据。数据的定义，参加这个[文档](https://www.seanlahman.com/files/database/readme2017.txt)。
+
+# 3 针对未分组数据的.SD操作
+
+查看投手的成绩，两种方式：
+
+第一种：
+
+```{r}
+Pitching
+```
+
+第二种：
+
+```{r}
+Pitching[, .SD] #返回整个data.table
+```
+
+两种方式是等价的:
+
+```{r}
+identical(Pitching, Pitching[, .SD])
+```
+
+如果从子集的角度来理解，. sd仍然是数据的子集，它**只是一个不令人注意的子集，即集合本身**。
+
+## 3.1 配合.SDcols提取
+
+如果我们只想从data.table中提取特定的多列，可以使用.SDcols配合操作。譬如，提取投手的接球成绩信息。
+
+```{r}
+# W: Wins; L: Losses; G: Games
+Pitching[, .SD, .SDcols=c("W","L","G")]
+```
+
+上边这样做，其实没有多大意义，完全可以用`Pitching[,c("W","L","G")]类似语句`代替。我们关注的重点还是对.SD进一步处理。
+
+## 3.2 列类型转换
+
+譬如，后续分析需要把多列从字符类型转为因子类型。首先查看列类型
+
+```{r}
+# teamIDBR: Team ID used by Baseball Reference website
+# teamIDlahman45: Team ID used in Lahman database version 4.5
+# teamIDretro: Team ID used by Retrosheet
+fkt = c('teamIDBR', 'teamIDlahman45', 'teamIDretro')
+# confirm that they're stored as `character`
+Teams[ , sapply(.SD, is.character), .SDcols = fkt]
+
+```
+
+用基础的R语法也可以实现:
+
+```{r}
+setDF(Teams)
+sapply(Teams[ , fkt], is.character) #
+setDT(Teams)
+```
+
+sapply返回的是向量，矩阵，或者是数组（当simplify=TRUE时）。
+
+转换的思路是这样的：理解这种语法的关键是要记住，可以将data.table(以及data.Frame)视为**一个列表**，**列表中每个元素对应data.table中的一列**，因此，sapply/lapply将FUN参数(在本例中为is.character)应用到data.table中的每一列，并像sapply/lapply通常所做的那样返回结果。
+
+```{r}
+Teams[ , (fkt):=lapply(.SD,factor), .SDcols=fkt]
+head(unique(Teams[[fkt[1L]]]))
+```
+
+需要特别注意：
+
+-   lapply返回的是列表，每一列的结果，作为一个列表元素存储。在上边代码中，将返回的列表中的每一个元素，赋值给fkt变量中命名的一列。
+
+-   **请注意，我们必须将fkt放在圆括号()中，以强制data.table将其解释为列名，而不是尝试分配名为'fkt'的列。**
+
+实际上，.SDcols参数可以非常灵活的指定待提取的列：
+
+-   可以通过一个包括列名的字符变量指定待提取的列（如上所示）
+
+-   也可以通过列的位置（整数）指定待提取的列
+
+-   也可以通过一个逻辑变量TRUE/FALSE来定义是否包括某一列
+
+-   也可基于正则表达式的模式匹配
+
+下边例子，获得因子类型列的位置，然后将其转为字符类型。
+
+```{r}
+# while .SDcols accepts a logical vector,
+#   := does not, so we need to convert to column
+#   positions with which()
+fkt_idx = which(sapply(Teams, is.factor))
+Teams[ , (fkt_idx) := lapply(.SD, as.character), .SDcols = fkt_idx]
+head(unique(Teams[[fkt_idx[1L]]]))
+```
+
+.SDcols也可以被赋值正则表达式，譬如提取包括team单词的列，共计有4列。
+
+```{r}
+# while .SDcols accepts a logical vector,
+#   := does not, so we need to convert to column
+#   positions with which()
+Teams[ , .SD, .SDcols = patterns("team")]
+```
+
+貌似存在问题，在列计算时，:=是不接受右手边的逻辑类型的，因此当要对列进行计算时，必须将其转为整数位置。
+
+```{r}
+team_idx <- grep("team", names(Teams), value = TRUE) 
+Teams[ , (team_idx):=lapply(.SD, factor), .SDcols=team_idx]
+```
+
+如果设置grep中的参数value=FALSE，将返回每个列的整数位置，但是作者不建议这样做，通过整数位置来提取列，一旦列位置变化，会带来潜在的危险。
+
+## 3.3 控制模型的右手边
+
+构建可变的模型是稳健统计分析的核心特征。让我们试着使用投球表中的一小部分协变量来预测投手的**ERA(自责失分，自责分，一种衡量表现的指标)**。W ( wins )与ERA之间的(线性)关系如何，取决于设定中包含哪些其他的协变量?
+
+下面是一个利用.SD的强大功能的简短脚本，探讨解决这个问题：
+
+首先生成要分析的协变量的所有组合，是利用combn函数实现的，0L:length(extra_var)实际上对应了combn中的m参数。
+
+```{r}
+extra_var = c('yearID', 'teamID', 'G', 'L')
+models = unlist(
+  lapply(0L:length(extra_var), combn, x = extra_var, simplify = FALSE),
+  recursive = FALSE
+) #消除一层列表
+```
+
+定义画图需要的常用颜色，这个不错，作图可以参考。
+
+```{r}
+# here are 16 visually distinct colors, taken from the list of 20 here:
+#   https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
+col16 = c('#e6194b', '#3cb44b', '#ffe119', '#0082c8',
+          '#f58231', '#911eb4', '#46f0f0', '#f032e6',
+          '#d2f53c', '#fabebe', '#008080', '#e6beff',
+          '#aa6e28', '#fffac8', '#800000', '#aaffc3')
+```
+
+准备执行回归分析，提取W的回归系数。这里巧妙的利用.SDcols来生成不同的数据，提供给.SD，供lm调用。非常巧妙的构思，利用了data.table强大的列计算能力。**代码虽然短，但是分析了16个lm模型，值的学习**。
+
+```{r}
+par(oma = c(2, 0, 0, 0))
+lm_coef = sapply(models, function(rhs) {
+  # using ERA ~ . and data = .SD, then varying which
+  #   columns are included in .SD allows us to perform this
+  #   iteration over 16 models succinctly.
+  #   coef(.)['W'] extracts the W coefficient from each model fit
+  Pitching[ , coef(lm(ERA ~ ., data = .SD))['W'], .SDcols = c('W', rhs)]
+})
+barplot(lm_coef, names.arg = sapply(models, paste, collapse = '/'),
+        main = 'Wins Coefficient\nWith Various Covariates',
+        col = col16, las = 2L, cex.names = .8)
+```
+
+# 4 .SD 分组操作
+
+这应该是.SD最常用的场景。我们经常需要在组水平上执行操作。在data.table中，通过by =或者keyby = 切出多个数据组，每一个数据组，可以认为是一个data.table子集。这样，实际上.SD包括了多个切出的data.table子集。每一次针对其中一个data.table子集操作。
+
+## 4.2 提取分组子集
+
+提取每个棒球队的数据集，并且返回每个棒球队的最后一条记录。.N表示每个棒球队的记录总数。
+
+```{r}
+Teams[ , .SD[.N], by=teamID]
+```
+
+如果想显示每个棒球队的第一条记录，可以将.SD[.N]替换为.SD[1L]。
+
+## 4.2 组优化
+
+如果我们想知道每个球队total number of runs（数据集中是R字段）最大的年份，可以用以下代码实现：
+
+```{r}
+Teams[ , .SD[which.max(R)], by=teamID]
+```
+
+如果只想返回某些字段信息，可以通过.SDcols定制展现的字段，譬如只想显示年份和R：
+
+```{r}
+Teams[ , .SD[which.max(R)], by=teamID, .SDcols=c("R","yearID")]
+```
+
+## 4.3 组水平上的回归分析
+
+统计每个球队ERA回归到W上的系数是多少。
+
+```{r}
+#统计所有球队的整体水平
+overall_coef = Pitching[ , coef(lm(ERA ~ W))['W']]
+#筛选记录数上大于20的球队，进行回归分析
+Pitching[ , if (.N > 20L) .(w_coef = coef(lm(ERA ~ W, data=.SD))['W']), by = teamID
+          ][ , hist(w_coef, 20L, las = 1L,
+                    xlab = 'Fitted Coefficient on W',
+                    ylab = 'Number of Teams', col = 'darkgreen',
+                    main = 'Team-Level Distribution\nWin Coefficients on ERA')]
+abline(v = overall_coef, lty = 2L, col = 'red')
+```

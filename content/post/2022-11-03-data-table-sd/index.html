@@ -1,0 +1,486 @@
+---
+title: 使用data.table中的.SD 进行数据分析
+author: Sheng Luan
+date: '2022-11-03'
+slug: data-table-sd
+categories:
+  - 数据清洗
+tags:
+  - Data.table
+---
+
+
+
+<pre class="r"><code>rm(list=ls())
+library(data.table)</code></pre>
+<p>原文来自data.table自带的一个Vignette: <strong>U<a href="https://cran.r-project.org/web/packages/data.table/vignettes/datatable-sd-usage.html">sing .SD for Data Analysis</a>。</strong></p>
+<div id="什么是.sd" class="section level1">
+<h1>1 什么是.SD</h1>
+<p>简单理解，.SD是在数据分析中，用于捕获变量的缩写。.SD可以理解为一个子集、自身copy或者引用。除了不能用:=对它赋值外，.SD可以理解为一个data.table。</p>
+<p>.SD主要有2个用途：</p>
+<ul>
+<li><p>通过.SDCols提取列</p></li>
+<li><p>针对分组数据进行清洗</p></li>
+</ul>
+</div>
+<div id="准备使用的数据" class="section level1">
+<h1>2 准备使用的数据</h1>
+<p>使用来自Lahman数据库的棒球数据。需要提前安装Lahman R包。</p>
+<p>然后加载Lahman包，获得球队数据，将其转为data.table类型。</p>
+<pre class="r"><code>library(Lahman)
+Teams &lt;- copy(Teams)
+setDT(Teams)
+Teams</code></pre>
+<pre><code>##       yearID lgID teamID franchID divID Rank   G Ghome   W   L DivWin WCWin
+##    1:   1871   NA    BS1      BNA  &lt;NA&gt;    3  31    NA  20  10   &lt;NA&gt;  &lt;NA&gt;
+##    2:   1871   NA    CH1      CNA  &lt;NA&gt;    2  28    NA  19   9   &lt;NA&gt;  &lt;NA&gt;
+##    3:   1871   NA    CL1      CFC  &lt;NA&gt;    8  29    NA  10  19   &lt;NA&gt;  &lt;NA&gt;
+##    4:   1871   NA    FW1      KEK  &lt;NA&gt;    7  19    NA   7  12   &lt;NA&gt;  &lt;NA&gt;
+##    5:   1871   NA    NY2      NNA  &lt;NA&gt;    5  33    NA  16  17   &lt;NA&gt;  &lt;NA&gt;
+##   ---                                                                      
+## 2981:   2021   NL    SLN      STL     C    2 162    81  90  72      N     Y
+## 2982:   2021   AL    TBA      TBD     E    1 162    81 100  62      Y     N
+## 2983:   2021   AL    TEX      TEX     W    5 162    81  60 102      N     N
+## 2984:   2021   AL    TOR      TOR     E    4 162    80  91  71      N     N
+## 2985:   2021   NL    WAS      WSN     E    5 162    81  65  97      N     N
+##       LgWin WSWin   R   AB    H X2B X3B  HR  BB   SO  SB CS HBP SF  RA  ER  ERA
+##    1:     N  &lt;NA&gt; 401 1372  426  70  37   3  60   19  73 16  NA NA 303 109 3.55
+##    2:     N  &lt;NA&gt; 302 1196  323  52  21  10  60   22  69 21  NA NA 241  77 2.76
+##    3:     N  &lt;NA&gt; 249 1186  328  35  40   7  26   25  18  8  NA NA 341 116 4.11
+##    4:     N  &lt;NA&gt; 137  746  178  19   8   2  33    9  16  4  NA NA 243  97 5.17
+##    5:     N  &lt;NA&gt; 302 1404  403  43  21   1  33   15  46 15  NA NA 313 121 3.72
+##   ---                                                                          
+## 2981:     N     N 706 5351 1303 261  22 198 478 1341  89 22  86 44 672 626 3.98
+## 2982:     N     N 857 5507 1336 288  36 222 585 1542  88 42  72 41 651 593 3.67
+## 2983:     N     N 625 5405 1254 225  24 167 433 1381 106 29  58 31 815 758 4.79
+## 2984:     N     N 846 5476 1455 285  13 262 496 1218  81 20  51 35 663 610 3.91
+## 2985:     N     N 724 5385 1388 272  20 182 573 1303  56 26  84 31 820 743 4.80
+##       CG SHO SV IPouts   HA HRA BBA  SOA   E  DP    FP                    name
+##    1: 22   1  3    828  367   2  42   23 243  24 0.834    Boston Red Stockings
+##    2: 25   0  1    753  308   6  28   22 229  16 0.829 Chicago White Stockings
+##    3: 23   0  0    762  346  13  53   34 234  15 0.818  Cleveland Forest Citys
+##    4: 19   1  0    507  261   5  21   17 163   8 0.803    Fort Wayne Kekiongas
+##    5: 32   1  0    879  373   7  42   22 235  14 0.840        New York Mutuals
+##   ---                                                                         
+## 2981:  3  15 50   4251 1234 152 608 1225  84 137 0.986     St. Louis Cardinals
+## 2982:  1  13 42   4367 1264 184 436 1478  80 130 0.986          Tampa Bay Rays
+## 2983:  0   3 31   4273 1402 232 513 1239  83 146 0.986           Texas Rangers
+## 2984:  1  14 34   4216 1257 209 473 1468  90 122 0.984       Toronto Blue Jays
+## 2985:  1   8 36   4183 1364 247 548 1346  96 116 0.983    Washington Nationals
+##                               park attendance BPF PPF teamIDBR teamIDlahman45
+##    1:          South End Grounds I         NA 103  98      BOS            BS1
+##    2:      Union Base-Ball Grounds         NA 104 102      CHI            CH1
+##    3: National Association Grounds         NA  96 100      CLE            CL1
+##    4:               Hamilton Field         NA 101 107      KEK            FW1
+##    5:     Union Grounds (Brooklyn)         NA  90  88      NYU            NY2
+##   ---                                                                        
+## 2981:            Busch Stadium III    2102530  92  92      STL            SLN
+## 2982:              Tropicana Field     761072  92  91      TBR            TBA
+## 2983:             Globe Life Field    2110258  99 101      TEX            TEX
+## 2984:                 Sahlen Field     805901 102 101      TOR            TOR
+## 2985:               Nationals Park    1465543  95  96      WSN            MON
+##       teamIDretro
+##    1:         BS1
+##    2:         CH1
+##    3:         CL1
+##    4:         FW1
+##    5:         NY2
+##   ---            
+## 2981:         SLN
+## 2982:         TBA
+## 2983:         TEX
+## 2984:         TOR
+## 2985:         WAS</code></pre>
+<p>获得投手Pitcher的数据集</p>
+<pre class="r"><code>Pitching &lt;- copy(Pitching)
+setDT(Pitching)
+Pitching</code></pre>
+<pre><code>##         playerID yearID stint teamID lgID  W  L  G GS CG SHO SV IPouts   H  ER
+##     1: bechtge01   1871     1    PH1   NA  1  2  3  3  2   0  0     78  43  23
+##     2: brainas01   1871     1    WS3   NA 12 15 30 30 30   0  0    792 361 132
+##     3: fergubo01   1871     1    NY2   NA  0  0  1  0  0   0  0      3   8   3
+##     4: fishech01   1871     1    RC1   NA  4 16 24 24 22   1  0    639 295 103
+##     5: fleetfr01   1871     1    NY2   NA  0  1  1  1  1   0  0     27  20  10
+##    ---                                                                        
+## 49426: zeuchtj01   2021     1    TOR   AL  0  2  5  3  0   0  0     45  21  11
+## 49427: zimmebr02   2021     1    BAL   AL  4  5 14 13  0   0  0    193  75  36
+## 49428: zimmejo02   2021     1    MIL   NL  0  0  2  0  0   0  0     17   8   5
+## 49429: zimmeky01   2021     1    KCA   AL  4  1 52  2  0   0  2    162  46  29
+## 49430: zuberty01   2021     1    KCA   AL  0  3 31  0  0   0  0     82  26  19
+##        HR BB SO BAOpp   ERA IBB WP HBP BK  BFP GF   R SH SF GIDP
+##     1:  0 11  1    NA  7.96  NA  7  NA  0  146  0  42 NA NA   NA
+##     2:  4 37 13    NA  4.50  NA  7  NA  0 1291  0 292 NA NA   NA
+##     3:  0  0  0    NA 27.00  NA  2  NA  0   14  0   9 NA NA   NA
+##     4:  3 31 15    NA  4.35  NA 20  NA  0 1080  1 257 NA NA   NA
+##     5:  0  3  0    NA 10.00  NA  0  NA  0   57  0  21 NA NA   NA
+##    ---                                                          
+## 49426:  6  9  8 0.323  6.60   0  0   0  0   74  0  16  0  0    2
+## 49427: 14 22 56 0.291  5.04   0  0   2  1  285  0  37  1  2    3
+## 49428:  1  2  0 0.348  7.94   0  0   1  0   26  1   5  0  0    1
+## 49429:  7 30 46 0.243  4.83   1  9   0  0  223  9  32  0  4   13
+## 49430:  6 17 25 0.250  6.26   1  2   1  0  123  6  20  0  1    2</code></pre>
+<p>球队记录了给定年份的一些统计数据，而投球记录了给定年份的给定投手的统计数据。数据的定义，参加这个<a href="https://www.seanlahman.com/files/database/readme2017.txt">文档</a>。</p>
+</div>
+<div id="针对未分组数据的.sd操作" class="section level1">
+<h1>3 针对未分组数据的.SD操作</h1>
+<p>查看投手的成绩，两种方式：</p>
+<p>第一种：</p>
+<pre class="r"><code>Pitching</code></pre>
+<pre><code>##         playerID yearID stint teamID lgID  W  L  G GS CG SHO SV IPouts   H  ER
+##     1: bechtge01   1871     1    PH1   NA  1  2  3  3  2   0  0     78  43  23
+##     2: brainas01   1871     1    WS3   NA 12 15 30 30 30   0  0    792 361 132
+##     3: fergubo01   1871     1    NY2   NA  0  0  1  0  0   0  0      3   8   3
+##     4: fishech01   1871     1    RC1   NA  4 16 24 24 22   1  0    639 295 103
+##     5: fleetfr01   1871     1    NY2   NA  0  1  1  1  1   0  0     27  20  10
+##    ---                                                                        
+## 49426: zeuchtj01   2021     1    TOR   AL  0  2  5  3  0   0  0     45  21  11
+## 49427: zimmebr02   2021     1    BAL   AL  4  5 14 13  0   0  0    193  75  36
+## 49428: zimmejo02   2021     1    MIL   NL  0  0  2  0  0   0  0     17   8   5
+## 49429: zimmeky01   2021     1    KCA   AL  4  1 52  2  0   0  2    162  46  29
+## 49430: zuberty01   2021     1    KCA   AL  0  3 31  0  0   0  0     82  26  19
+##        HR BB SO BAOpp   ERA IBB WP HBP BK  BFP GF   R SH SF GIDP
+##     1:  0 11  1    NA  7.96  NA  7  NA  0  146  0  42 NA NA   NA
+##     2:  4 37 13    NA  4.50  NA  7  NA  0 1291  0 292 NA NA   NA
+##     3:  0  0  0    NA 27.00  NA  2  NA  0   14  0   9 NA NA   NA
+##     4:  3 31 15    NA  4.35  NA 20  NA  0 1080  1 257 NA NA   NA
+##     5:  0  3  0    NA 10.00  NA  0  NA  0   57  0  21 NA NA   NA
+##    ---                                                          
+## 49426:  6  9  8 0.323  6.60   0  0   0  0   74  0  16  0  0    2
+## 49427: 14 22 56 0.291  5.04   0  0   2  1  285  0  37  1  2    3
+## 49428:  1  2  0 0.348  7.94   0  0   1  0   26  1   5  0  0    1
+## 49429:  7 30 46 0.243  4.83   1  9   0  0  223  9  32  0  4   13
+## 49430:  6 17 25 0.250  6.26   1  2   1  0  123  6  20  0  1    2</code></pre>
+<p>第二种：</p>
+<pre class="r"><code>Pitching[, .SD] #返回整个data.table</code></pre>
+<pre><code>##         playerID yearID stint teamID lgID  W  L  G GS CG SHO SV IPouts   H  ER
+##     1: bechtge01   1871     1    PH1   NA  1  2  3  3  2   0  0     78  43  23
+##     2: brainas01   1871     1    WS3   NA 12 15 30 30 30   0  0    792 361 132
+##     3: fergubo01   1871     1    NY2   NA  0  0  1  0  0   0  0      3   8   3
+##     4: fishech01   1871     1    RC1   NA  4 16 24 24 22   1  0    639 295 103
+##     5: fleetfr01   1871     1    NY2   NA  0  1  1  1  1   0  0     27  20  10
+##    ---                                                                        
+## 49426: zeuchtj01   2021     1    TOR   AL  0  2  5  3  0   0  0     45  21  11
+## 49427: zimmebr02   2021     1    BAL   AL  4  5 14 13  0   0  0    193  75  36
+## 49428: zimmejo02   2021     1    MIL   NL  0  0  2  0  0   0  0     17   8   5
+## 49429: zimmeky01   2021     1    KCA   AL  4  1 52  2  0   0  2    162  46  29
+## 49430: zuberty01   2021     1    KCA   AL  0  3 31  0  0   0  0     82  26  19
+##        HR BB SO BAOpp   ERA IBB WP HBP BK  BFP GF   R SH SF GIDP
+##     1:  0 11  1    NA  7.96  NA  7  NA  0  146  0  42 NA NA   NA
+##     2:  4 37 13    NA  4.50  NA  7  NA  0 1291  0 292 NA NA   NA
+##     3:  0  0  0    NA 27.00  NA  2  NA  0   14  0   9 NA NA   NA
+##     4:  3 31 15    NA  4.35  NA 20  NA  0 1080  1 257 NA NA   NA
+##     5:  0  3  0    NA 10.00  NA  0  NA  0   57  0  21 NA NA   NA
+##    ---                                                          
+## 49426:  6  9  8 0.323  6.60   0  0   0  0   74  0  16  0  0    2
+## 49427: 14 22 56 0.291  5.04   0  0   2  1  285  0  37  1  2    3
+## 49428:  1  2  0 0.348  7.94   0  0   1  0   26  1   5  0  0    1
+## 49429:  7 30 46 0.243  4.83   1  9   0  0  223  9  32  0  4   13
+## 49430:  6 17 25 0.250  6.26   1  2   1  0  123  6  20  0  1    2</code></pre>
+<p>两种方式是等价的:</p>
+<pre class="r"><code>identical(Pitching, Pitching[, .SD])</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<p>如果从子集的角度来理解，. sd仍然是数据的子集，它<strong>只是一个不令人注意的子集，即集合本身</strong>。</p>
+<div id="配合.sdcols提取" class="section level2">
+<h2>3.1 配合.SDcols提取</h2>
+<p>如果我们只想从data.table中提取特定的多列，可以使用.SDcols配合操作。譬如，提取投手的接球成绩信息。</p>
+<pre class="r"><code># W: Wins; L: Losses; G: Games
+Pitching[, .SD, .SDcols=c(&quot;W&quot;,&quot;L&quot;,&quot;G&quot;)]</code></pre>
+<pre><code>##         W  L  G
+##     1:  1  2  3
+##     2: 12 15 30
+##     3:  0  0  1
+##     4:  4 16 24
+##     5:  0  1  1
+##    ---         
+## 49426:  0  2  5
+## 49427:  4  5 14
+## 49428:  0  0  2
+## 49429:  4  1 52
+## 49430:  0  3 31</code></pre>
+<p>上边这样做，其实没有多大意义，完全可以用<code>Pitching[,c("W","L","G")]类似语句</code>代替。我们关注的重点还是对.SD进一步处理。</p>
+</div>
+<div id="列类型转换" class="section level2">
+<h2>3.2 列类型转换</h2>
+<p>譬如，后续分析需要把多列从字符类型转为因子类型。首先查看列类型</p>
+<pre class="r"><code># teamIDBR: Team ID used by Baseball Reference website
+# teamIDlahman45: Team ID used in Lahman database version 4.5
+# teamIDretro: Team ID used by Retrosheet
+fkt = c(&#39;teamIDBR&#39;, &#39;teamIDlahman45&#39;, &#39;teamIDretro&#39;)
+# confirm that they&#39;re stored as `character`
+Teams[ , sapply(.SD, is.character), .SDcols = fkt]</code></pre>
+<pre><code>##       teamIDBR teamIDlahman45    teamIDretro 
+##           TRUE           TRUE           TRUE</code></pre>
+<p>用基础的R语法也可以实现:</p>
+<pre class="r"><code>setDF(Teams)
+sapply(Teams[ , fkt], is.character) #</code></pre>
+<pre><code>##       teamIDBR teamIDlahman45    teamIDretro 
+##           TRUE           TRUE           TRUE</code></pre>
+<pre class="r"><code>setDT(Teams)</code></pre>
+<p>sapply返回的是向量，矩阵，或者是数组（当simplify=TRUE时）。</p>
+<p>转换的思路是这样的：理解这种语法的关键是要记住，可以将data.table(以及data.Frame)视为<strong>一个列表</strong>，<strong>列表中每个元素对应data.table中的一列</strong>，因此，sapply/lapply将FUN参数(在本例中为is.character)应用到data.table中的每一列，并像sapply/lapply通常所做的那样返回结果。</p>
+<pre class="r"><code>Teams[ , (fkt):=lapply(.SD,factor), .SDcols=fkt]
+head(unique(Teams[[fkt[1L]]]))</code></pre>
+<pre><code>## [1] BOS CHI CLE KEK NYU ATH
+## 101 Levels: ALT ANA ARI ATH ATL BAL BLA BLN BLU BOS BRA BRG BRO BSN BTT ... WSN</code></pre>
+<p>需要特别注意：</p>
+<ul>
+<li><p>lapply返回的是列表，每一列的结果，作为一个列表元素存储。在上边代码中，将返回的列表中的每一个元素，赋值给fkt变量中命名的一列。</p></li>
+<li><p><strong>请注意，我们必须将fkt放在圆括号()中，以强制data.table将其解释为列名，而不是尝试分配名为’fkt’的列。</strong></p></li>
+</ul>
+<p>实际上，.SDcols参数可以非常灵活的指定待提取的列：</p>
+<ul>
+<li><p>可以通过一个包括列名的字符变量指定待提取的列（如上所示）</p></li>
+<li><p>也可以通过列的位置（整数）指定待提取的列</p></li>
+<li><p>也可以通过一个逻辑变量TRUE/FALSE来定义是否包括某一列</p></li>
+<li><p>也可基于正则表达式的模式匹配</p></li>
+</ul>
+<p>下边例子，获得因子类型列的位置，然后将其转为字符类型。</p>
+<pre class="r"><code># while .SDcols accepts a logical vector,
+#   := does not, so we need to convert to column
+#   positions with which()
+fkt_idx = which(sapply(Teams, is.factor))
+Teams[ , (fkt_idx) := lapply(.SD, as.character), .SDcols = fkt_idx]
+head(unique(Teams[[fkt_idx[1L]]]))</code></pre>
+<pre><code>## [1] &quot;NA&quot; &quot;NL&quot; &quot;AA&quot; &quot;UA&quot; &quot;PL&quot; &quot;AL&quot;</code></pre>
+<p>.SDcols也可以被赋值正则表达式，譬如提取包括team单词的列，共计有4列。</p>
+<pre class="r"><code># while .SDcols accepts a logical vector,
+#   := does not, so we need to convert to column
+#   positions with which()
+Teams[ , .SD, .SDcols = patterns(&quot;team&quot;)]</code></pre>
+<pre><code>##       teamID teamIDBR teamIDlahman45 teamIDretro
+##    1:    BS1      BOS            BS1         BS1
+##    2:    CH1      CHI            CH1         CH1
+##    3:    CL1      CLE            CL1         CL1
+##    4:    FW1      KEK            FW1         FW1
+##    5:    NY2      NYU            NY2         NY2
+##   ---                                           
+## 2981:    SLN      STL            SLN         SLN
+## 2982:    TBA      TBR            TBA         TBA
+## 2983:    TEX      TEX            TEX         TEX
+## 2984:    TOR      TOR            TOR         TOR
+## 2985:    WAS      WSN            MON         WAS</code></pre>
+<p>貌似存在问题，在列计算时，:=是不接受右手边的逻辑类型的，因此当要对列进行计算时，必须将其转为整数位置。</p>
+<pre class="r"><code>team_idx &lt;- grep(&quot;team&quot;, names(Teams), value = TRUE) 
+Teams[ , (team_idx):=lapply(.SD, factor), .SDcols=team_idx]</code></pre>
+<p>如果设置grep中的参数value=FALSE，将返回每个列的整数位置，但是作者不建议这样做，通过整数位置来提取列，一旦列位置变化，会带来潜在的危险。</p>
+</div>
+<div id="控制模型的右手边" class="section level2">
+<h2>3.3 控制模型的右手边</h2>
+<p>构建可变的模型是稳健统计分析的核心特征。让我们试着使用投球表中的一小部分协变量来预测投手的<strong>ERA(自责失分，自责分，一种衡量表现的指标)</strong>。W ( wins )与ERA之间的(线性)关系如何，取决于设定中包含哪些其他的协变量?</p>
+<p>下面是一个利用.SD的强大功能的简短脚本，探讨解决这个问题：</p>
+<p>首先生成要分析的协变量的所有组合，是利用combn函数实现的，0L:length(extra_var)实际上对应了combn中的m参数。</p>
+<pre class="r"><code>extra_var = c(&#39;yearID&#39;, &#39;teamID&#39;, &#39;G&#39;, &#39;L&#39;)
+models = unlist(
+  lapply(0L:length(extra_var), combn, x = extra_var, simplify = FALSE),
+  recursive = FALSE
+) #消除一层列表</code></pre>
+<p>定义画图需要的常用颜色，这个不错，作图可以参考。</p>
+<pre class="r"><code># here are 16 visually distinct colors, taken from the list of 20 here:
+#   https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
+col16 = c(&#39;#e6194b&#39;, &#39;#3cb44b&#39;, &#39;#ffe119&#39;, &#39;#0082c8&#39;,
+          &#39;#f58231&#39;, &#39;#911eb4&#39;, &#39;#46f0f0&#39;, &#39;#f032e6&#39;,
+          &#39;#d2f53c&#39;, &#39;#fabebe&#39;, &#39;#008080&#39;, &#39;#e6beff&#39;,
+          &#39;#aa6e28&#39;, &#39;#fffac8&#39;, &#39;#800000&#39;, &#39;#aaffc3&#39;)</code></pre>
+<p>准备执行回归分析，提取W的回归系数。这里巧妙的利用.SDcols来生成不同的数据，提供给.SD，供lm调用。非常巧妙的构思，利用了data.table强大的列计算能力。<strong>代码虽然短，但是分析了16个lm模型，值的学习</strong>。</p>
+<pre class="r"><code>par(oma = c(2, 0, 0, 0))
+lm_coef = sapply(models, function(rhs) {
+  # using ERA ~ . and data = .SD, then varying which
+  #   columns are included in .SD allows us to perform this
+  #   iteration over 16 models succinctly.
+  #   coef(.)[&#39;W&#39;] extracts the W coefficient from each model fit
+  Pitching[ , coef(lm(ERA ~ ., data = .SD))[&#39;W&#39;], .SDcols = c(&#39;W&#39;, rhs)]
+})
+barplot(lm_coef, names.arg = sapply(models, paste, collapse = &#39;/&#39;),
+        main = &#39;Wins Coefficient\nWith Various Covariates&#39;,
+        col = col16, las = 2L, cex.names = .8)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+</div>
+</div>
+<div id="sd-分组操作" class="section level1">
+<h1>4 .SD 分组操作</h1>
+<p>这应该是.SD最常用的场景。我们经常需要在组水平上执行操作。在data.table中，通过by =或者keyby = 切出多个数据组，每一个数据组，可以认为是一个data.table子集。这样，实际上.SD包括了多个切出的data.table子集。每一次针对其中一个data.table子集操作。</p>
+<div id="提取分组子集" class="section level2">
+<h2>4.2 提取分组子集</h2>
+<p>提取每个棒球队的数据集，并且返回每个棒球队的最后一条记录。.N表示每个棒球队的记录总数。</p>
+<pre class="r"><code>Teams[ , .SD[.N], by=teamID]</code></pre>
+<pre><code>##      teamID yearID lgID franchID divID Rank   G Ghome   W   L DivWin WCWin
+##   1:    BS1   1875   NA      BNA  &lt;NA&gt;    1  82    NA  71   8   &lt;NA&gt;  &lt;NA&gt;
+##   2:    CH1   1871   NA      CNA  &lt;NA&gt;    2  28    NA  19   9   &lt;NA&gt;  &lt;NA&gt;
+##   3:    CL1   1872   NA      CFC  &lt;NA&gt;    7  22    NA   6  16   &lt;NA&gt;  &lt;NA&gt;
+##   4:    FW1   1871   NA      KEK  &lt;NA&gt;    7  19    NA   7  12   &lt;NA&gt;  &lt;NA&gt;
+##   5:    NY2   1875   NA      NNA  &lt;NA&gt;    6  71    NA  30  38   &lt;NA&gt;  &lt;NA&gt;
+##  ---                                                                      
+## 145:    ANA   2004   AL      ANA     W    1 162    81  92  70      Y     N
+## 146:    ARI   2021   NL      ARI     W    5 162    81  52 110      N     N
+## 147:    MIL   2021   NL      MIL     C    1 162    81  95  67      Y     N
+## 148:    TBA   2021   AL      TBD     E    1 162    81 100  62      Y     N
+## 149:    MIA   2021   NL      FLA     E    4 162    81  67  95      N     N
+##      LgWin WSWin   R   AB    H X2B X3B  HR  BB   SO  SB CS HBP SF  RA  ER  ERA
+##   1:     Y  &lt;NA&gt; 831 3515 1128 167  51  15  33   52  93 37  NA NA 343 152 1.87
+##   2:     N  &lt;NA&gt; 302 1196  323  52  21  10  60   22  69 21  NA NA 241  77 2.76
+##   3:     N  &lt;NA&gt; 174  943  272  28   5   0  17   13  12  3  NA NA 254 126 5.70
+##   4:     N  &lt;NA&gt; 137  746  178  19   8   2  33    9  16  4  NA NA 243  97 5.17
+##   5:     N  &lt;NA&gt; 328 2685  633  82  21   7  19   47  20 24  NA NA 425 174 2.46
+##  ---                                                                          
+## 145:     N     N 836 5675 1603 272  37 162 450  942 143 46  73 41 734 692 4.28
+## 146:     N     N 679 5489 1297 308  31 144 537 1465  43 16  54 28 893 804 5.11
+## 147:     N     N 738 5362 1251 255  18 194 586 1465  82 21  88 35 623 558 3.50
+## 148:     N     N 857 5507 1336 288  36 222 585 1542  88 42  72 41 651 593 3.67
+## 149:     N     N 623 5348 1244 226  23 158 450 1553 106 29  65 30 701 622 3.96
+##      CG SHO SV IPouts   HA HRA BBA  SOA   E  DP    FP                    name
+##   1: 60  10 17   2196  751   2  33  110 483  56 0.870    Boston Red Stockings
+##   2: 25   0  1    753  308   6  28   22 229  16 0.829 Chicago White Stockings
+##   3: 15   0  0    597  285   6  24   11 184  17 0.816  Cleveland Forest Citys
+##   4: 19   1  0    507  261   5  21   17 163   8 0.803    Fort Wayne Kekiongas
+##   5: 70   3  0   1910  718   4  21   77 526  30 0.838        New York Mutuals
+##  ---                                                                         
+## 145:  2  11 50   4363 1476 170 502 1164  90 126 0.985          Anaheim Angels
+## 146:  3   4 22   4252 1480 232 555 1238 100 113 0.983    Arizona Diamondbacks
+## 147:  2  19 44   4308 1156 168 537 1618  94 102 0.984       Milwaukee Brewers
+## 148:  1  13 42   4367 1264 184 436 1478  80 130 0.986          Tampa Bay Rays
+## 149:  1   8 33   4245 1282 162 529 1381 122 146 0.979           Miami Marlins
+##                              park attendance BPF PPF teamIDBR teamIDlahman45
+##   1:          South End Grounds I         NA 103  96      BOS            BS1
+##   2:      Union Base-Ball Grounds         NA 104 102      CHI            CH1
+##   3: National Association Grounds         NA  96 100      CLE            CL1
+##   4:               Hamilton Field         NA 101 107      KEK            FW1
+##   5:     Union Grounds (Brooklyn)         NA  99 100      NYU            NY2
+##  ---                                                                        
+## 145:    Angels Stadium of Anaheim    3375677  97  97      ANA            ANA
+## 146:                  Chase Field    1043010  99 101      ARI            ARI
+## 147:                  Miller Park    1824282 101 101      MIL            ML4
+## 148:              Tropicana Field     761072  92  91      TBR            TBA
+## 149:                 Marlins Park     642617  98  99      MIA            FLO
+##      teamIDretro
+##   1:         BS1
+##   2:         CH1
+##   3:         CL1
+##   4:         FW1
+##   5:         NY2
+##  ---            
+## 145:         ANA
+## 146:         ARI
+## 147:         MIL
+## 148:         TBA
+## 149:         MIA</code></pre>
+<p>如果想显示每个棒球队的第一条记录，可以将.SD[.N]替换为.SD[1L]。</p>
+</div>
+<div id="组优化" class="section level2">
+<h2>4.2 组优化</h2>
+<p>如果我们想知道每个球队total number of runs（数据集中是R字段）最大的年份，可以用以下代码实现：</p>
+<pre class="r"><code>Teams[ , .SD[which.max(R)], by=teamID]</code></pre>
+<pre><code>##      teamID yearID lgID franchID divID Rank   G Ghome   W  L DivWin WCWin LgWin
+##   1:    BS1   1875   NA      BNA  &lt;NA&gt;    1  82    NA  71  8   &lt;NA&gt;  &lt;NA&gt;     Y
+##   2:    CH1   1871   NA      CNA  &lt;NA&gt;    2  28    NA  19  9   &lt;NA&gt;  &lt;NA&gt;     N
+##   3:    CL1   1871   NA      CFC  &lt;NA&gt;    8  29    NA  10 19   &lt;NA&gt;  &lt;NA&gt;     N
+##   4:    FW1   1871   NA      KEK  &lt;NA&gt;    7  19    NA   7 12   &lt;NA&gt;  &lt;NA&gt;     N
+##   5:    NY2   1872   NA      NNA  &lt;NA&gt;    3  56    NA  34 20   &lt;NA&gt;  &lt;NA&gt;     N
+##  ---                                                                           
+## 145:    ANA   2000   AL      ANA     W    3 162    81  82 80      N     N     N
+## 146:    ARI   1999   NL      ARI     W    1 162    81 100 62      Y     N     N
+## 147:    MIL   1999   NL      MIL     C    5 161    80  74 87      N     N     N
+## 148:    TBA   2021   AL      TBD     E    1 162    81 100 62      Y     N     N
+## 149:    MIA   2017   NL      FLA     E    2 162    78  77 85      N     N     N
+##      WSWin   R   AB    H X2B X3B  HR  BB   SO  SB CS HBP SF  RA  ER  ERA CG SHO
+##   1:  &lt;NA&gt; 831 3515 1128 167  51  15  33   52  93 37  NA NA 343 152 1.87 60  10
+##   2:  &lt;NA&gt; 302 1196  323  52  21  10  60   22  69 21  NA NA 241  77 2.76 25   0
+##   3:  &lt;NA&gt; 249 1186  328  35  40   7  26   25  18  8  NA NA 341 116 4.11 23   0
+##   4:  &lt;NA&gt; 137  746  178  19   8   2  33    9  16  4  NA NA 243  97 5.17 19   1
+##   5:  &lt;NA&gt; 523 2426  670  87  14   4  58   52  59 22  NA NA 362 172 3.02 54   3
+##  ---                                                                           
+## 145:     N 864 5628 1574 309  34 236 608 1024  93 52  47 43 869 805 5.00  5   3
+## 146:     N 908 5658 1566 289  46 216 588 1045 137 39  48 60 676 615 3.77 16   9
+## 147:     N 815 5582 1524 299  30 165 658 1065  81 33  55 51 886 813 5.07  2   5
+## 148:     N 857 5507 1336 288  36 222 585 1542  88 42  72 41 651 593 3.67  1  13
+## 149:     N 778 5602 1497 271  31 194 486 1282  91 30  67 41 822 772 4.82  1   7
+##      SV IPouts   HA HRA BBA  SOA   E  DP    FP                    name
+##   1: 17   2196  751   2  33  110 483  56 0.870    Boston Red Stockings
+##   2:  1    753  308   6  28   22 229  16 0.829 Chicago White Stockings
+##   3:  0    762  346  13  53   34 234  15 0.818  Cleveland Forest Citys
+##   4:  0    507  261   5  21   17 163   8 0.803    Fort Wayne Kekiongas
+##   5:  1   1536  622   2  33   46 323  33 0.868        New York Mutuals
+##  ---                                                                  
+## 145: 46   4344 1534 228 662  846 134 182 0.978          Anaheim Angels
+## 146: 42   4402 1387 176 543 1198 104 132 0.983    Arizona Diamondbacks
+## 147: 40   4328 1618 213 616  987 127 146 0.979       Milwaukee Brewers
+## 148: 42   4367 1264 184 436 1478  80 130 0.986          Tampa Bay Rays
+## 149: 34   4328 1450 193 627 1202  73 156 0.988           Miami Marlins
+##                              park attendance BPF PPF teamIDBR teamIDlahman45
+##   1:          South End Grounds I         NA 103  96      BOS            BS1
+##   2:      Union Base-Ball Grounds         NA 104 102      CHI            CH1
+##   3: National Association Grounds         NA  96 100      CLE            CL1
+##   4:               Hamilton Field         NA 101 107      KEK            FW1
+##   5:     Union Grounds (Brooklyn)         NA  93  92      NYU            NY2
+##  ---                                                                        
+## 145:   Edison International Field    2066982 102 103      ANA            ANA
+## 146:            Bank One Ballpark    3019654 101 101      ARI            ARI
+## 147:               County Stadium    1701796  99  99      MIL            ML4
+## 148:              Tropicana Field     761072  92  91      TBR            TBA
+## 149:                 Marlins Park    1583014  93  93      MIA            FLO
+##      teamIDretro
+##   1:         BS1
+##   2:         CH1
+##   3:         CL1
+##   4:         FW1
+##   5:         NY2
+##  ---            
+## 145:         ANA
+## 146:         ARI
+## 147:         MIL
+## 148:         TBA
+## 149:         MIA</code></pre>
+<p>如果只想返回某些字段信息，可以通过.SDcols定制展现的字段，譬如只想显示年份和R：</p>
+<pre class="r"><code>Teams[ , .SD[which.max(R)], by=teamID, .SDcols=c(&quot;R&quot;,&quot;yearID&quot;)]</code></pre>
+<pre><code>##      teamID   R yearID
+##   1:    BS1 831   1875
+##   2:    CH1 302   1871
+##   3:    CL1 249   1871
+##   4:    FW1 137   1871
+##   5:    NY2 523   1872
+##  ---                  
+## 145:    ANA 864   2000
+## 146:    ARI 908   1999
+## 147:    MIL 815   1999
+## 148:    TBA 857   2021
+## 149:    MIA 778   2017</code></pre>
+</div>
+<div id="组水平上的回归分析" class="section level2">
+<h2>4.3 组水平上的回归分析</h2>
+<p>统计每个球队ERA回归到W上的系数是多少。</p>
+<pre class="r"><code>#统计所有球队的整体水平
+overall_coef = Pitching[ , coef(lm(ERA ~ W))[&#39;W&#39;]]
+#筛选记录数上大于20的球队，进行回归分析
+Pitching[ , if (.N &gt; 20L) .(w_coef = coef(lm(ERA ~ W, data=.SD))[&#39;W&#39;]), by = teamID
+          ][ , hist(w_coef, 20L, las = 1L,
+                    xlab = &#39;Fitted Coefficient on W&#39;,
+                    ylab = &#39;Number of Teams&#39;, col = &#39;darkgreen&#39;,
+                    main = &#39;Team-Level Distribution\nWin Coefficients on ERA&#39;)]</code></pre>
+<pre><code>## $breaks
+##  [1] -0.46 -0.44 -0.42 -0.40 -0.38 -0.36 -0.34 -0.32 -0.30 -0.28 -0.26 -0.24
+## [13] -0.22 -0.20 -0.18 -0.16 -0.14 -0.12 -0.10 -0.08 -0.06 -0.04 -0.02  0.00
+## 
+## $counts
+##  [1]  1  1  1  2  0  3  2  1  3  3  7 10  8  6  4  5  4  2  3  1  1  1  1
+## 
+## $density
+##  [1] 0.7142857 0.7142857 0.7142857 1.4285714 0.0000000 2.1428571 1.4285714
+##  [8] 0.7142857 2.1428571 2.1428571 5.0000000 7.1428571 5.7142857 4.2857143
+## [15] 2.8571429 3.5714286 2.8571429 1.4285714 2.1428571 0.7142857 0.7142857
+## [22] 0.7142857 0.7142857
+## 
+## $mids
+##  [1] -0.45 -0.43 -0.41 -0.39 -0.37 -0.35 -0.33 -0.31 -0.29 -0.27 -0.25 -0.23
+## [13] -0.21 -0.19 -0.17 -0.15 -0.13 -0.11 -0.09 -0.07 -0.05 -0.03 -0.01
+## 
+## $xname
+## [1] &quot;w_coef&quot;
+## 
+## $equidist
+## [1] TRUE
+## 
+## attr(,&quot;class&quot;)
+## [1] &quot;histogram&quot;</code></pre>
+<pre class="r"><code>abline(v = overall_coef, lty = 2L, col = &#39;red&#39;)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+</div>
+</div>

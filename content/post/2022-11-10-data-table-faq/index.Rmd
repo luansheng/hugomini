@@ -1,0 +1,204 @@
+---
+title: "data.table FAQ中文版"
+author: "Sheng Luan"
+date: "2022-11-10"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+categories: 数据清洗
+tags: Data.table
+slug: "data-table-faq"
+---
+
+data.table中文版功能强大，但是某些用法却很隐晦。一直想熟悉一遍data.table的[FAQs](https://rdatatable.gitlab.io/data.table/articles/datatable-faq.html)，进一步提高自己的数据清洗能力。
+
+# 1 初学者FAQs
+
+## 1.1 为什么DT[ , 5]和DT[2, 5]返回包括一列的data.table，而不是像data.frame一样返回向量
+
+请注意，下边的写法，作者并不推荐。
+
+```{r}
+library(data.table)
+DT = data.table(x=rep(c("b","a","c"),each=3), y=c(1,3,6), v=1:9)
+DT[ , 3] #返回data.table
+class(DT[ , 3])
+DT[2, 3] #返回data.table
+class(DT[2, 3])
+```
+
+当在函数中使用 data.table 时，可能会接受不同的输入，为了保持一致性，使用DT[...]可以确保返回一个data.table。您不必像在data.frame中那样，需要记住使用`drop=FALSE`参数。data.table 于 2006 年首次发布，与 data.frame 的这种差异从一开始就就存在。
+
+```{r}
+DF = setDF(copy(DT))
+DF[ , 3] #返回向量
+class(DF[ , 3])
+DF[ , 3, drop=FALSE] #返回data.frame
+class(DF[ , 3, drop=FALSE])
+```
+
+您可能听说过，**按数字而不是名称引用列通常是不好的做法**。如果你的同事后来读你的代码，他们可能不得不四处寻找哪一列是第5列。如果某个人在R程序中更改了列的位置大于5，但是忘记更改代码中引用列编号 5 的所有位置，则可能会产生错误的结果，并且不会发出警告或错误。这是人为错误错，不是R的错，也不是data.table的错。这真的很糟糕。请不要这样做。这与专业SQL开发人员的口头禅相同：永远不要使用`select *`，总是按列名显式选择，这会对将来的更改保持鲁棒性。
+
+ps：**尽量不用直接用数字提取列信息**
+
+假设第 5 列被命名为`"Region"`，您真的需要**以向量的形式**而不是 data.table提取该列内容。使用列名，**写为`DT$region`或者`DT[["region"]]`**，具有更强的鲁棒性。如果使用R基础语法，鼓励使用`$`；如果使用data.table，推荐`DT[["region"]]`。当与\<-组合赋值时(使用:=代替)，但仅按名称选择单个列时，鼓励使用它们（意思不明确）。
+
+```{r}
+DT[['x']] #返回向量
+DT$x #返回向量
+DT[ , x] #返回向量
+typeof(DT) #DT本质上是以列表存储的
+```
+
+**ps：如果想以向量的形式提取列内容，可以写作`DT$Region`或者`DT[["Region"]]`，DT本质上可以理解为一个列表。**
+
+在某些情况下，**通过数字引用列似乎是唯一的方法**，例如有序列。在这些情况下，就像data.frame一样，你可以这样写为`DT[ , 5:20]`，或者`DT[ , c(1, 4, 10)]`。 但是，考虑到将来列数和列顺序的变化，建议**使用一个列命名范围如`DT[,columnRed:columnViolet]`** 或者命名每一列`DT[,c("columnRed","columnOrange","columnYellow")]`。前期工作量可能会比较大，但将来你，以及你的同事可能会感谢自己，你的同事将来可能会感谢你。至少你可以说，如果出现问题，至少你已经尽力编写健壮的代码。
+
+```{r}
+DT[ , x:y] #列范围方式也是可以的
+class(DT[ , x:y])
+DT[ , c("x", "y", "v")] #直接指定字符类型的列名作为向量也可以提取
+class(DT[ , c("x", "y", "v")])
+
+DT[ , "x"] #只提取x列
+DT[ , c("x")] #同上
+
+```
+
+**ps：考虑使用列命名范围如`DT[,columnRed:columnViolet]`代替使用`DT[ , 5:20]`**
+
+但是，我们真正希望您做的是使用**`DT[ , .(columnRed,columnOrange,columnYellow)]`**这种形式来写代码；即，**使用列名，就好像它们真的是`DT[...]`内部的变量一样**。您不必像在 data.frame 中那样为每一列添加前缀`DT$`。**.`()`可以理解为`list()`的一个别名**，如果您愿意，可以使用`list()`代替`.()`。你可以在**`list()`中放置带有表达式的列名**，并且返回不同长度的不同类型。我们过去曾强烈鼓励你这样做，以至于我们故意根本不让`DT[,5]`这种写法生效。在 2016年 11 月v1.9.8 发布之前 ，`DT[,5]`仅能返回数字5。当时的想法是，我们可以更简单地告诉大家，即`DT[...]`内部分总是在DT的框架内进行评估（它们将列名视为变量）。5评估为5，这种行为与上述单一规则一致。如果您真的想按列名称或数字选择列，我们要求您写为`DT[,5,with=FALSE]`。从 2016 年 11 月开始，您不需要使用`with=FALSE`，我们将看到为了与 data.frame 保持更大一致性，将如何帮助或阻碍新用户和长期用户。没有阅读此FAQ的新用户，甚至没有阅读第一个条目，如果他们期望data.table像data.frame一样工作，希望不会像以前那样被data.table绊倒。希望他们不会错过理解我们在`DT[i, j, by]`内放置列表达式的意图和建议。如果他们像data.frame一样使用data.table，他们将不会获得任何好处。如果您认识这样的人，请友好地推荐他们像您一样阅读本文档。
+
+**ps：当要进行列计算时，**使用**`DT[ , .(columnRed,columnOrange,columnYellow)]`更方便；.()等同于list()。**
+
+```{r}
+DT[ , .(x,y)] #data.table作者鼓励这种写法
+DT[ , list(x,y)] #效果同上
+DT[ , .(toupper(x), y^2)] #可以直接对列进行计算和变换
+```
+
+**ps:** **`DT[ , 5]`这种写法是不鼓励的，只是为了保持跟data.frame的一致性。**
+
+提醒：您可以像使用变量一样将列名包裹在*任何*R表达式中放入`DT[...]`；例如，尝试`DT[, colA*colB/2]`。**因为您使用列名就好像它们是变量一样，所以这里确实会返回一个向量**。使用`.()`包装后，将会返回一个data.table，`DT[,.(colA*colB/2)]`；写为`DT[,.(myResult = colA*colB/2)]`，命名返回的列。我们将让您猜测如何从此查询中返回两件事。在匿名主体中做一堆事情也很常见：`DT[, { x<-colA+10; x*x/2 }]`；或者调用另一个包的函数：`DT[ , fitdistr(columnA, "normal")]`。
+
+```{r}
+DT[ , y*v] #返回一个变量
+DT[ , .(y*v)] #返回一个data.table
+DT[ , list(y*v)] #跟上边等同
+DT[ , .(yv=y*v)] #将返回的新列命名为yv,推荐这种写法！！！
+DT[ , {z <- y*10; z*z/2}] #在j（列计算）位置，可以放置多个表达式，返回最后一个表达式的值，同样是向量
+DT[ , .({z <- y*10; z*z/2})] #返回列表
+DT[ , MASS::fitdistr(y*v,"normal")] #调用MASS包中的fitdistr函数求均值和标准差
+```
+
+简单小结一下：
+
+-   `DT[ , 5]`返回data.table
+
+-   `DT[ , c("Region")]` 返回data.table
+
+-   `DT[ , .(Region)]` 返回data.table；**推荐这种写法**，可以方便做列转换和计算
+
+-   `DT$Region` 返回一个向量
+
+-   `DT[["Region"]]` 返回一个向量，**推荐这种写法**
+
+-   `DT[ , Region]` 返回一个向量
+
+## 1.2 为什么DT[，"region"]返回一个单列的data.table而不是向量?
+
+答案参见 1.1。可以用`DT$Region`或者`DT[["Region"]]`返回向量。
+
+## 1.3 为什么`DT[ , region]`返回一个向量?我想要返回一个单列的data.table。
+
+`DT[ , region]`返回一个向量的解释，参见1.1，是这样说的：**因为您使用列名就好像它们是变量一样，所以这里确实会返回一个向量。如果想返回data.table，可以使用`DT[ , .(region)]`这种写法。**
+
+## 1.4 为什么`DT[ , x, y, z]`不起作用？我想要返回包括三列x、y和z的一个data.table。
+
+data.table的书写形式为`DT[i, j, by]`，列计算和提取需要放在第二个参数j中。正确的写法：`DT[ , .(x, y, z)]`或者`DT[ , c("x", "y", "z")]`。
+
+## 1.5 我对变量`mycol`进行赋值`mycol = "x"`，但是`DT[ , mycol]`返回一个字符"x"，而不是DT中x列的内容。如何让DT中查找`mycol`变量中包含的列名x?
+
+在2016年11月发布的v1.9.8中，有一种启用新行为的功能：`options(datatable.WhenJisSymbolThenCallingScope=TRUE)`。然后它就会像您预期的那样工作，就像data.Frame一样。如果您是data.table的新用户，您可能应该这样做。您可以将此命令放在.Rprofile文件中，这样您就不必再次记住。
+
+在没有启用这种新行为的情况下，**j表达式看到的是调用作用域中的对象**。变量mycol并不存在于DT的列名中，因此data.table随后在调用作用域中查找，在那里找到mycol，并返回它的值"x"。当前，这是正确的行为。如果mycol是列名，那么该列的数据就会被返回。如果写作`DT[ , mycol, with=False]`，将根据需求，返回DT中x列的数据。这种写法，在未来也会奏效。因为data.table也是一个列表，如果要返回向量，可以写作`DT[[mycol]]`。
+
+ps：这种需求在数据处理中很常见。譬如，需要灵活的指定提取某些列的内容。我们通常会提前在一个变量中定义要提取的列名。如果是要返回一个data.table，可以这样写：`DT[ , ..mycol]`或者`DT[ , mycol, with = FALSE]`或者`DT[ , .SD, .SDcols = mycol]`。
+
+稍微扩展一下：前缀`..`是告诉data.table显式引用变量`mycol`的父范围，而不是来自DT数据集。
+
+如果想返回一个向量，可以这样写`DT[[mycol]]`。
+
+```{r}
+mycol <- c("x")
+DT[ , ..mycol] #返回一个data.table
+DT[ , mycol, with = FALSE] #返回一个data.table
+DT[ , .SD, .SDcols=mycol] #利用.SD返回一个data.table
+DT[[mycol]] #返回一个向量
+```
+
+`with`参数的名称来自R基础函数`with()`。当`with=TRUE`(默认)时，data.table的操作类似于`with()`函数，即`DT[ , mycol]`的行为类似于`with(DT, mycol)`。当`with=FALSE`时，标准的data.frame求值规则适用于`j`中的所有变量，并且不能再直接使用列名。
+
+```{r eval=FALSE, message=TRUE, warning=TRUE, include=FALSE}
+DT[ , y, with=TRUE] #with=TRUE默认，并且返回向量
+DT[ , y, with=FALSE] #会出现错误提示，不在从DT中查找y列
+
+```
+
+## **1.6 使用列名时，就像它们是`DT[...]`中的变量一样有什么好处？**
+
+`j`不一定只是列名。您可以将列名的任何R表达式直接写在`j`中，例如`DT[ ,  mean(x*y/z)]`。对于i也是如此，例如`DT[x>1000, sum(y*z)]`。
+
+这将在`i`表达式为真的行集上运行`j`表达式。有时候，甚至可以不返回数据，例如`DT[x>1000, Plot(y, z)]`。只需添加`by=`即可**按组计算**`j`；例如，`DT[x>1000, sum(y*z), by=w]`。这对根据`w`列划分的每个组运行`j`，但仅在`x>1000`的行集上运行。通过将查询的3个部分(i=where、j=select和by=group by)放在方括号中，data.table在计算任何一部分之前将其视为一个整体。因此，它可以优化组合查询的性能。它之所以能做到这一点，是因为R语言具有独特的**延迟计算（Lazy Evaluation）**(Python和Julia没有)。data.table在评估DT[...]中的表达式之前首先查看他们，并对其进行优化。例如，如果data.table看到您只使用了100列中的2列，那么它就不会费心地将j表达式不需要的98列放入子集。
+
+```{r}
+DT
+DT[v>5, sum(y)] #对于v>5的行集，求y列的和
+DT[v>3, sum(y*v), by=x] #对于v>3的行集，根据x划分为a和c两个子集，分别对y*v求和
+```
+
+## 1.7 好的，我开始明白data.table是关于什么的了，但是为什么您不直接增强R中的data.Frame呢？为什么一定要是新的包呢？
+
+如上所述，[.data.table中的j与[.data.frame中的j有根本的不同。即使像DF[, 1]这样简单的写法在基础R中被更改为返回一个data.frame而不是一个向量时，这也会破坏1000多个cran包和用户代码中的现有代码。一旦我们创建了一个继承自data.frame的新类，我们就有机会更改一些东西，并且我们做到了。我们希望data.table稍有不同，并以这种方式工作，以便使用更复杂的语法。还有其他不同之处(见下文)。
+
+此外，data.table继承自data.frame，这也是一个数据框。一个data.table可以被传递给任何只接受data.frame的包，并且该包可以在data.table上使用[.data.Frame语法。关于如何实现这一点，请参阅[该回答](https://stackoverflow.com/a/10529888/403310)。
+
+我们也在可能的情况下提出了对R的增强。其中一项被接受为R 2.12.0中的新功能：
+
+> `unique()` and [`match()`](https://rdrr.io/r/base/match.html) are now faster on character vectors where all elements are in the global CHARSXP cache and have unmarked encoding (ASCII). Thanks to Matt Dowle for suggesting improvements to the way the hash code is generated in unique.c.
+
+第二个建议是在duplicate.c中使用memcpy，这比c中的for循环快得多，这将改进R在内部复制数据的方式(在某些方面提高了13倍)。作者在R-Devel邮件列表提出了该[建议](https://stat.ethz.ch/pipermail/r-devel/2010-April/057249.html)。
+
+被接受的第三个更重要的建议是，R从R 3.3.0开始使用data.table的基数排序代码：
+
+> The radix sort algorithm and implementation from data.table (forder) replaces the previous radix (counting) sort and adds a new method for order(). Contributed by Matt Dowle and Arun Srinivasan, the new algorithm supports logical, integer (even with large values), real, and character vectors. It outperforms all other methods, but there are some caveats (see ?sort).
+
+对于开发团队，这是一个大事件，我们庆祝了很久。ps：**可以看出，作者对于R开发团队采用他们的算法，很是自豪。用了一个谚语：**until the cows came home，长时间地；很久的意思。
+
+## 1.8 为什么默认设置是这样的?它为什么会这样运作?
+
+简单的答案是，主要作者最初设计它是为了自己使用。他想要那样。他发现这是一种更自然、更快的代码编写方式，执行起来也更快。
+
+## 1.9 这不是已经做了在基础R中with()和subset()函数的功能吗?
+
+到目前为止讨论的一些特性是，是这样的。这个包建立在基本功能之上。它可以做同样的事情，但所需的代码更少，如果使用正确，执行速度会快很多倍。
+
+## 1.10为什么X[Y]也返回来自Y的所有列?它不应该返回X的子集吗?
+
+这在v1.5.3(2011年2月)中有所改变。从那时起，`X[Y]`包含Y的非连接列。我们将此特性称为联接继承作用域，因为不仅X列对j表达式可用，Y列也可用。缺点是X[Y]效率较低，因为Y的非连接列的每一项都是重复的，以匹配X中匹配的行(可能很多)数量。因此，我们强烈鼓励`X[Y, j]`而不是`X[Y]`。参见下一个常见问题解答。
+
+## 1.11 What is the difference between `X[Y]` and `merge(X, Y)`?
+
+`X[Y]` is a join, looking up `X`'s rows using `Y` (or `Y`'s key if it has one) as an index.
+
+`Y[X]` is a join, looking up `Y`'s rows using `X` (or `X`'s key if it has one) as an index.
+
+`merge(X,Y)`^[1](http://127.0.0.1:51074/help/library/data.table/doc/datatable-faq.html#fn1)^ does both ways at the same time. The number of rows of `X[Y]` and `Y[X]` usually differ, whereas the number of rows returned by `merge(X, Y)` and `merge(Y, X)` is the same.
+
+*BUT* that misses the main point. Most tasks require something to be done on the data after a join or merge. Why merge all the columns of data, only to use a small subset of them afterwards? You may suggest `merge(X[ , ColsNeeded1], Y[ , ColsNeeded2])`, but that requires the programmer to work out which columns are needed. `X[Y, j]` in data.table does all that in one step for you. When you write `X[Y, sum(foo*bar)]`, data.table automatically inspects the `j` expression to see which columns it uses. It will subset those columns only; the others are ignored. Memory is only created for the columns `j` uses and `Y`columns enjoy standard R recycling rules within the context of each group. Let's say `foo` is in `X` and `bar` is in `Y` (along with 20 other columns in `Y`). Isn't `X[Y, sum(foo*bar)]` quicker to program and quicker to run than a `merge` of everything wastefully followed by a `subset`?\
+X[Y]是一个连接，使用Y(或者Y的键，如果有的话)作为索引来查找X中的行。Y[X]是一个连接，使用X(或X的键，如果有的话)作为索引查找Y的行。
+
+merge(X,Y)1同时执行这两种操作。X[Y]和Y[X]的行数通常不同，而merge(X, Y)和merge(Y, X)返回的行数是相同的。
+
+但这没有抓住重点。大多数任务都需要在联接或合并后对数据执行一些操作。如果只使用一小部分数据集，为什么要合并所有的数据列呢?您可能建议merge`(X[, ColsNeeded1]， Y[, ColsNeeded1)])`，但这需要程序员确定需要哪些列。X[Y, j]的数据。Table为您一步完成了所有这些操作。当你写入X[Y, sum(foo\*bar)]， data。表自动检查j表达式，以查看它使用了哪些列。它将只对这些列进行子集;其他的都被忽略了。内存只为j使用的列创建，Y列在每个组的上下文中享受标准的R回收规则。假设foo在X中，bar在Y中(还有20个其他列在Y中)，那么X[Y, sum(foo\*bar)]的编程速度和运行速度不是比所有东西都被一个子集浪费地合并更快吗?
