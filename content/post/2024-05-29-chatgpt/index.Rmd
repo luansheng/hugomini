@@ -1,0 +1,119 @@
+---
+title: 机器学习和chatGPT
+author: Package Build
+date: '2024-05-29'
+slug: chatgpt
+categories:
+  - 机器学习
+tags:
+  - mlr3
+---
+最近一年发生的事情实在是太多了，chatGPT改变了我们学习的方式。再去做一个知识存储器，已经变得毫无意义。从另外一个角度看，我们已经不需要去记忆。chatGPT就是我们的第二大脑。我们要做的是，如何利用chatGPT来实现自己的想法。创造性、批判性思维是未来衡量一个人是否优秀的重要标准。
+
+看看如何用chatGPT来构建一个机器学习的代码，实现对性别的预测。
+```{r warning=FALSE}
+rm(list=ls())
+# 安装和加载必要的包
+library(mlr3)
+library(mlr3learners)
+library(mlr3filters)
+library(mlr3tuning)
+library(data.table)
+library(mlr3verse)
+library(mlr3viz)
+
+# 读取包括SNP和性别信息的训练文件
+sex_snp_dt <- fread(file="../datasets/BP_55K_SNP_Sex.csv", sep=",",header = TRUE) 
+
+
+# 创建任务
+sex_task <- as_task_classif(sex_snp_dt, target = "Sex",id="PreSex")
+
+# 去除ID列
+features_to_keep <- setdiff(sex_task$feature_names, "ID")
+
+# Select only the desired features
+sex_task$select(features_to_keep)
+
+# 创建随机森林学习器，基于Gini指数的减少来衡量变量的重要性
+rf_learner <- lrn("classif.ranger", predict_type= "prob", importance = "impurity", keep.inbag = TRUE, num.trees=100, write.forest = TRUE)
+
+# 查看学习器的参数
+rf_learner$param_set
+
+# 创建交叉验证
+resampling <- rsmp("cv", folds = 5)
+
+# 进行交叉验证
+resample_result <- resample(sex_task, rf_learner, resampling, store_models = TRUE)
+
+# 设置评估参考群数据的预测能力的度量标准
+# 准确性
+measure_acc <- msr("classif.acc")
+# 工作特征曲线下面积
+measure_auc <- msr("classif.auc")
+
+# 打印交叉验证结果
+resample_result$aggregate(measure_acc)
+resample_result$aggregate(measure_auc)
+
+autoplot(resample_result,type = "roc")
+
+# 定义超参数搜索空间
+#	1.	mtry：每个树分割节点随机选择的变量数量。
+#	•	p_int(1, ncol(data) - 1)：mtry的取值范围是从1到数据集中变量数量减1。
+#	2.	min.node.size：树叶节点的最小样本数。
+#	•	p_int(1, 10)：min.node.size的取值范围是1到10。
+search_space <- ps(
+  mtry = p_int(1, length(sex_task$feature_names) - 1),
+  min.node.size = p_int(1, 10)
+)
+
+# 定义调优实例
+tuner <- tnr("grid_search", resolution = 10)
+instance <- ti(
+  task = sex_task,
+  learner = rf_learner,
+  resampling = resampling,
+  measure = measure_acc,
+  search_space = search_space,
+  terminator = trm("evals", n_evals = 20)
+)
+
+
+# 进行超参数调优
+tuner$optimize(instance)
+
+# 获取最佳参数
+best_params <- instance$result_learner_param_vals
+print(best_params)
+
+# 使用最佳参数训练模型
+rf_learner$param_set$values <- best_params
+rf_learner$train(sex_task)
+
+# 获取特征重要性
+importance <- as.data.table(rf_learner$importance(), keep.rownames = TRUE)
+setnames(importance, c("Feature", "Importance"))
+
+# 打印变量重要性
+print(importance)
+
+```
+可视化随机森林的结果
+```{r}
+library(ggparty)
+# 获取随机森林模型中的所有树
+
+autoplot(sex_task)
+
+# ROC curve for resample result
+autoplot(resample_result, type = "roc")
+
+rp_learner = lrn("classif.rpart", keep_model = TRUE)
+rp_learner$train(sex_task)
+autoplot(rp_learner, type = "ggparty")
+
+
+```
+
