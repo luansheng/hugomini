@@ -1,0 +1,150 @@
+---
+title: 选择指数制定中的加权值计算基础知识
+author: Package Build
+date: '2025-09-14'
+slug: calculating-weights-in-selection-index
+categories:
+  - 数量遗传学
+tags:
+  - weight
+  - selection index
+---
+
+## 目的
+
+理解smith-hazel公式，求导性状加权值的原理。
+
+核心公式如下：
+
+$$
+\begin{align*}
+P=Var(x) \\
+G=Cov(x,g) \\
+Pb=Ga \\
+\end{align*}
+$$
+
+其中$P$为表型方差-协方差矩阵；G为表型与育种值的遗传协方差矩阵，常用$G_{A}$ 也就是加性遗传方差-协方差矩阵代替 $G$；a通常为经济加权或者相对经济重要性；b为我们要获得的加权值，通过以下公式获得：
+
+$$
+b=P^{-1}Ga
+$$
+
+这就是Smith-Hazel的核心公式。它自动考虑了性状间的**尺度差异**（P）和**遗传关联（G）**。
+
+上述公式求导出来的b，主要是结合表型使用的。当前，利用ASReml等软件，通常可以获得EBV。因此，当x是EBV时，公式可以近似写为：
+
+$$
+b=G^{-1}_{A}a
+$$
+
+略微理解了，后续有时间再补充。
+
+## 迷你的小例子
+
+手动计算加权。首先给出体重BW和出肉率MY两个性状的遗传力，遗传相关，表型标准差。
+
+```{r}
+## --- 输入参数 ---
+h2_BW <- 0.47; h2_MY <- 0.47
+rg     <- 0.41
+sdP_BW <- 4.13; sdP_MY <- 0.02   # 若有真实表型SD，用真实值替换
+```
+
+生成P、G矩阵
+
+```{r}
+## --- 构造 GA ---
+VA_BW <- h2_BW * sdP_BW^2
+VA_MY <- h2_MY * sdP_MY^2
+COV_A <- rg * sqrt(VA_BW * VA_MY)
+GA <- matrix(c(VA_BW, COV_A,
+               COV_A, VA_MY), 2, 2,
+             dimnames = list(c("BW","MY"), c("BW","MY")))
+
+```
+
+设置求解b的函数solve_index()。这个函数的参数包括GA矩阵、经济加权a，选择强度i。这里的选择强度，主要是用来评估预期遗传进展。
+
+```{r}
+## 工具函数：给定 a 计算 b，并给出期望响应
+solve_index <- function(GA, a, i = 1.755) {
+  b <- solve(GA, a)                 # w ∝ GA^{-1} a
+  b <- as.numeric(b / sum(b))       # 归一化到和=1（不改排序）
+  sdI <- sqrt(drop(t(b) %*% GA %*% b))
+  Delta <- as.numeric(i * (GA %*% b) / sdI)  # 每个性状的期望遗传响应（标准化单位）
+  names(b) <- rownames(GA); names(Delta) <- rownames(GA)
+  list(b = b, sdI = sdI, Delta = Delta)
+}
+```
+
+首先考虑一个等权重的情况：
+
+```{r}
+
+## --- 情形A：等重 a=(1,1) ---
+res_equal <- solve_index(GA, a = c(1,1))
+res_equal$b      
+res_equal$Delta  
+```
+
+再考虑一个出肉率权重更高的情况：
+
+```{r}
+## --- 情形B：偏重MY a=(1,1.5) ---
+res_MYhi <- solve_index(GA, a = c(1,1.5))
+res_MYhi$b     
+res_MYhi$Delta 
+```
+
+## AlphaSimR中的Smith-Hazel实现
+
+AlphaSimR中有一个Smith-Hazel函数。
+
+构建一个基础群体的单倍型，包括10个个体，1条染色体，10个QTL标记。
+
+```{r}
+# 基础群体
+library(AlphaSimR)
+founderPop = quickHaplo(nInd = 10, nChr = 1, segSites = 10)
+```
+
+设置模拟参数
+
+```{r}
+SP = SimParam$new(founderPop)
+
+```
+
+模拟两个性状，包括遗传相关矩阵等。性状间是负相关：-0.5。diag生成一个对角线为1的矩阵。
+
+addTraitA() 这个函数只考虑加性效应，**Additive**的意思。接受性状的参数。
+
+setVarE() 设置性状的遗传力均为0.5
+
+```{r}
+G = 1.5 * diag(2)-0.5
+SP$addTraitA(10, mean = c(0,0), var = c(1, 1), corA = G)
+SP$setVarE(h2=c(0.5, 0.5))
+```
+
+利用基础群体和设置的相关参数，创建育种群体
+
+```{r}
+pop= newPop(founderPop, simParam = SP)
+```
+
+计算Smith-Hazel 权重
+
+```{r}
+econWt = c(1, 1)
+b = smithHazel(econWt, varG(pop), varP(pop))
+b
+```
+
+然后根据新的权重b，计算选择指数，选择优秀个体
+
+```{r}
+pop2= selectInd(pop, nInd = 2, trait = selIndex, simParam = SP, b=b)
+pop2
+```
