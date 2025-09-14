@@ -1,72 +1,79 @@
-1.  Liu Mianyu, Dai Ping, Kong Jie, Meng Xianhong, Sui Juan, Luo Kun, Chen Baolong, Fu Qiang, Cao Baoxiang, Cao Jiawang, Luan Sheng. Assessing accuracy of genomic breeding values of selection candidates under biosecurity restrictions by progeny testing in Chinese shrimp *Fenneropenaeus chinensis*. Aquaculture, 2023, 566, 739181. <https://doi.org/10.1016/j.aquaculture.2022.739181>
+1.  Kang Ziyi, Kong Jie, Li Qi, Sui Juan, Dai Ping, Luo Kun, Meng Xianhong, Chen Baolong, Cao Jiawang, Tan Jian, Fu Qiang, Xing Qun, **Luan Sheng.** Genomic selection strategies to overcome genotype by environment interactions in biosecurity-based aquaculture breeding programs. Genet Sel Evol., 2025, 57, 2. <https://doi.org/10.1186/s12711-025-00949-3>.
 
-2.  **Luan Sheng**, Qiang Guangfeng, Cao Baoxiang, Luo Kun, Meng Xianhong, Chen Baolong, Kong Jie. Feed competition reduces heritable variation for body weight in *Litopenaeus vannamei*. Genetics Selection Evolution, 2020, 52:45. <https://doi.org/10.1186/s12711-020-00565-3>
+2.  Kang Ziyi, Kong Jie, Li Qi, Sui Juan, Dai Ping, Luo Kun, Meng Xianhong, Chen Baolong, Cao Jiawang, Tan Jian, Fu Qiang, Wang Zhaoxin, **Luan Sheng**. Genomic selection for hard-to-measure traits in aquaculture: Challenges in balancing genetic gain and diversity. Aquaculture, 2025, 606, 742576. <https://doi.org/10.1016/j.aquaculture.2025.742576>.
 
-3.  Kong Zhangwei, Kong Jie, Hao Dengchun, Lu Xia, Tan Jian, Meng Xianhong, Luo Kun, Cao Baoxiang, Li Xupeng, **Luan Sheng***. Reducing the Common Environmental Effect on* Litopenaeus vannamei\* Body Weight by Rearing Communally at Early Developmental Stages and Using a Reconstructed Pedigree. J. Ocean Univ. China, 2020, 19(4): 923--930 (2020). <https://doi.org/10.1007/s11802-020-4324-5>
+3.  Zhou Hao, Qiang Guangfeng, Xia Yan, Tan Jian, Fu Qiang, Luo Kun, Meng Xianhong, Chen Baolong, Chen Meiijia, Sui Juan, Dai Ping, Li Xupeng, Liu Mianyu, Xing Qun, Kong Jie, **Luan Sheng**. Copy Number Variations in Short Tandem Repeats Modulate Growth Traits in Penaeid Shrimp Through Neighboring Gene Regulation. Animals, 2025, 15, 262. <https://doi.org/10.3390/ani15020262>.
 
-4.  Liu Junyu, Yang Guoliang, Kong Jie, Xia Zhenglong, Sui Juan, Tang Qiongying, Luo Kun, Dai Ping, Lu Xia, Meng Xianhong, **Luan Sheng***. Using single-step genomic best linear unbiased prediction to improve the efficiency of genetic evaluation on body weight in* Macrobrachium rosenbergii\*. Aquaculture, 2020, <https://doi.org/10.1016/j.aquaculture.2020.735577>
+4.  张士薇，代平，高广春，孟宪红，罗坤，隋娟，谭建，傅强，曹家旺，陈宝龙，李旭鹏，强光峰，邢群，戚云辉，孔杰，**栾生.** 基于深度学习算法的凡纳滨对虾生长表型测定系统研发及应用. 水产学报, 2025, 49, 059117--059117. <https://doi.org/10.11964/jfc.20240714612>.
 
-5.  Dai Ping, Liu Junyu, Sui Juan, Meng Xianhong, Kong Jie, **Luan Sheng***.Evaluation of the utility of genomic information to improve genetic evaluation of feed efficiency traits of the Pacific white shrimp* Litopenaeus vannamei\*.Aquaculture, 2020, 527. <https://doi.org/10.1016/j.aquaculture.2020.735421>
+5.  Kang Ziyi, Kong Jie, Sui Juan, Dai Ping, Luo Kun, Meng Xianhong, Liu Junyu, Chen Baolong, Cao Jiawang, Tan Jian, Fu Qiang, Li Qi, **Luan Sheng**. Optimal open nucleus breeding system for long-term genetic gain in the Pacific white shrimp using genomic selection. Aquaculture, 2024, 586, 740760. <https://doi.org/10.1016/j.aquaculture.2024.740760>.
 
-6.  孙犁,卢霞,孔杰,孟宪红,闫允君,李波波,仲伟鹏,陈宝龙,曹宝祥,罗坤,**栾生**\*.中国明对虾calcineurin B基因的克隆及其在竞争行为中作用的初探.水产学报,2020,44(1):11~20
+6.  Liu Mianyu, Dai Ping, Kong Jie, Meng Xianhong, Sui Juan, Luo Kun, Chen Baolong, Fu Qiang, Cao Baoxiang, Cao Jiawang, **Luan Sheng**. Assessing accuracy of genomic breeding values of selection candidates under biosecurity restrictions by progeny testing in Chinese shrimp *Fenneropenaeus chinensis*. Aquaculture, 2023, 566, 739181. <https://doi.org/10.1016/j.aquaculture.2022.739181>.
 
-7.  刘峻宇, 杨国梁, 孔杰, 夏正龙, 罗坤, 唐琼英, 卢霞, 孟宪红, 李景芬, **栾生**\*.罗氏沼虾开放和闭锁核心育种群生长和存活性能分析.中国水产科学,2019,26(5):861-868.
+7.  **Luan Sheng**, Qiang Guangfeng, Cao Baoxiang, Luo Kun, Meng Xianhong, Chen Baolong, Kong Jie. Feed competition reduces heritable variation for body weight in *Litopenaeus vannamei*. Genetics Selection Evolution, 2020, 52:45. <https://doi.org/10.1186/s12711-020-00565-3>.
 
-8.  刘峻宇, 刘均辉, 孔杰, 代平, 于洋, 孟宪红, 罗坤, 曹宝祥, 陈宝龙, **栾生***, **高焕***. 凡纳滨对虾SNP标记开发与家系亲缘关系验证分析.渔业科学进展, 2019, <https://doi.org/10.19663/j.issn2095-9869.20191022001>
+8.  Kong Zhangwei, Kong Jie, Hao Dengchun, Lu Xia, Tan Jian, Meng Xianhong, Luo Kun, Cao Baoxiang, Li Xupeng, **Luan Sheng***. Reducing the Common Environmental Effect on* *Litopenaeus vannamei* Body Weight by Rearing Communally at Early Developmental Stages and Using a Reconstructed Pedigree. J. Ocean Univ. China, 2020, 19(4): 923--930 (2020). <https://doi.org/10.1007/s11802-020-4324-5>.
 
-9.  Sui Juan, **Luan Sheng**#, Yang Guoliang, Xia Zhenglong, Luo Kun, Tang Qiongying, Lu Xia, Meng Xianhong, Kong Jie\*. Genetic parameters and selection response for the harvest body weight of the giant freshwater prawn (Macrobrachium rosenbergii) in a breeding program in China. PLOS ONE, 2019, 14(8): e0218379. <https://doi.org/10.1371/journal.pone.0218379>.
+9.  Liu Junyu, Yang Guoliang, Kong Jie, Xia Zhenglong, Sui Juan, Tang Qiongying, Luo Kun, Dai Ping, Lu Xia, Meng Xianhong, **Luan Sheng***.* Using single-step genomic best linear unbiased prediction to improve the efficiency of genetic evaluation on body weight in *Macrobrachium rosenbergii*. Aquaculture, 2020, <https://doi.org/10.1016/j.aquaculture.2020.735577>.
 
-10. Dai Ping, Kong Jie, Meng Xianhong, Luo Kun, Lu Xia, Chen Baolong, Cao Baoxiang, **Luan Sheng***. Genotype by environment interaction for feed efficiency trait of the juvenile Pacific white shrimp* Litopenaeus vannamei\* held in individuals vs. in groups. Aquaculture, 2019, 500:506-513.
+10. Dai Ping, Liu Junyu, Sui Juan, Meng Xianhong, Kong Jie, **Luan Sheng***.* Evaluation of the utility of genomic information to improve genetic evaluation of feed efficiency traits of the Pacific white shrimp *Litopenaeus vannamei*. Aquaculture, 2020, 527. <https://doi.org/10.1016/j.aquaculture.2020.735421>.
 
-11. Lu Xia, Kong Jie, Meng Xianhong, Cao Baoxiang, Luo Kun, Dai Ping, **Luan Sheng***. Identification of SNP markers associated with tolerance to ammonia toxicity by selective genotyping from de novo assembled transcriptome in* Litopenaeus vannamei\*. Fish & Shellfish Immunology, 2018, 73: 158-166.
+11. 孙犁, 卢霞, 孔杰, 孟宪红, 闫允君, 李波波, 仲伟鹏, 陈宝龙, 曹宝祥, 罗坤, **栾生**. 中国明对虾calcineurin B基因的克隆及其在竞争行为中作用的初探. 水产学报, 2020, 44(1):11~20.
 
-12. Dai Ping, Kong Jie , Wang Sen, Lu Xia, Luo Kun, Cao Baoxiang, Meng Xianhong, **Luan Sheng***. Identiﬁcation of SNPs Associated With Residual Feed Intake From the Muscle of* Litopenaeus vannamei\* Using Bulk Segregant RNA Seq. Aquaculture, 2018, 497:56-63.
+12. 刘峻宇, 杨国梁, 孔杰, 夏正龙, 罗坤, 唐琼英, 卢霞, 孟宪红, 李景芬, **栾生**. 罗氏沼虾开放和闭锁核心育种群生长和存活性能分析. 中国水产科学, 2019, 26(5):861-868.
 
-13. **Luan Sheng**, Luo Kun, Chai Zhan, Cao Baoxiang, Meng Xianhong, Lu Xia, Liu Ning, Xu Shengyu, Kong Jie. An analysis of indirect genetic effects on adult body weight of the Pacific white shrimp *Litopenaeus vannamei* at low rearing density. Genetics Selection Evolution, 2015, 47:95, <DOI:10.1186/s12711-015-0164-y>.
+13. 刘峻宇, 刘均辉, 孔杰, 代平, 于洋, 孟宪红, 罗坤, 曹宝祥, 陈宝龙, **栾生***,* **高焕**. 凡纳滨对虾SNP标记开发与家系亲缘关系验证分析. 渔业科学进展, 2019, <https://doi.org/10.19663/j.issn2095-9869.20191022001>.
 
-14. **Luan Sheng**, Yang Guoliang, Wang Junyi, Luo Kun, Zhang Yufei, Gao Qiang, Hu Honglang, Kong Jie. Genetic parameters and response to selection for harvest body weight of the giant freshwater prawn *Macrobrachium rosenbergii*. Aquaculture, 2012, 362-363(1-4):88-96.
+14. Sui Juan, **Luan Sheng**, Yang Guoliang, Xia Zhenglong, Luo Kun, Tang Qiongying, Lu Xia, Meng Xianhong, Kong Jie. Genetic parameters and selection response for the harvest body weight of the giant freshwater prawn (*Macrobrachium rosenbergii*) in a breeding program in China. PLOS ONE, 2019, 14(8): e0218379. <https://doi.org/10.1371/journal.pone.0218379>.
 
-15. **Luan Sheng**, Wang Junyi, Yang Guoliang, Luo Kun, Chen Xuefeng, Gao Qiang, Hu Honglang, Kong Jie. Genetic parameters of survival for six generations in the giant freshwater prawn *Macrobrachium rosenbergii*. Aquaculture Research, 2015, 46(6):1345-1355.
+15. Dai Ping, Kong Jie, Meng Xianhong, Luo Kun, Lu Xia, Chen Baolong, Cao Baoxiang, **Luan Sheng***.* Genotype by environment interaction for feed efficiency trait of the juvenile Pacific white shrimp **Litopenaeus vannamei** held in individuals vs. in groups. Aquaculture, 2019, 500:506-513.
 
-16. **Luan Sheng**, Yang Guoliang, Wang Junyi, Luo Kun, Chen Xuefeng, Gao Qiang, Hu Honglang, Kong Jie. Selection responses in survival of *Macrobrachium rosenbergii* after performing five generations of multi-trait selection for growth and survival. Aquaculture International, 2014, 22(3):993-1007.
+16. Lu Xia, Kong Jie, Meng Xianhong, Cao Baoxiang, Luo Kun, Dai Ping, **Luan Sheng***.* Identification of SNP markers associated with tolerance to ammonia toxicity by selective genotyping from de novo assembled transcriptome in *Litopenaeus vannamei*. Fish & Shellfish Immunology, 2018, 73: 158-166.
 
-17. **Luan Sheng**, Kong Jie, Wang Qinyin. Genetic variation of wild and cultured populations of the Kuruma prawn *Marsupenaeus japonicus* (Bate 1888) using microsatellites. Aquaculture Research, 2006, 37(8):785-792.
+17. Dai Ping, Kong Jie , Wang Sen, Lu Xia, Luo Kun, Cao Baoxiang, Meng Xianhong, **Luan Sheng***.* Identiﬁcation of SNPs Associated With Residual Feed Intake From the Muscle of *Litopenaeus vannamei* Using Bulk Segregant RNA Seq*. Aquaculture, 2018, 497:56-63.*
 
-18. TAN Jian, KONG Jie, LUO Kun, CAO Baoxiang, LIU Ning, MENG Xianghong, GUO Zhaojia, XU Shengyu, and **Luan Sheng***. Genetic parameter estimation of reproductive traits of* Litopenaeus vannamei\*. Journal of Ocean University of China. 2017, 16(1): 161-167.
+18. **Luan Sheng**, Luo Kun, Chai Zhan, Cao Baoxiang, Meng Xianhong, Lu Xia, Liu Ning, Xu Shengyu, Kong Jie. An analysis of indirect genetic effects on adult body weight of the Pacific white shrimp *Litopenaeus vannamei* at low rearing density. Genetics Selection Evolution, 2015, 47:95, <DOI:10.1186/s12711-015-0164-y>.
 
-19. Sui Juan, **Luan Sheng**#, Luo Kun, Meng Xianhong, Lu Xia, Cao Baoxiang, Li Wenjia, Chai Zhan, Liu Ning, Xu Shengyu, Kong Jie*. Genetic parameters and response to selection for harvest body weight of pacific white shrimp,* Litopenaeus vannamei\*. Aquaculture Research, 2015, 1-9. <DOI:10.1111/are.12729>.
+19. **Luan Sheng**, Yang Guoliang, Wang Junyi, Luo Kun, Zhang Yufei, Gao Qiang, Hu Honglang, Kong Jie. Genetic parameters and response to selection for harvest body weight of the giant freshwater prawn *Macrobrachium rosenbergii*. Aquaculture, 2012, 362-363(1-4):88-96.
 
-20. Sui Juan, **Luan Sheng**#, Luo Kun, Meng Xianhong, Cao Baoxiang, Liu Ning, Li Wenjia, Lu Xia, Chai Zhan, Kong Jie. Genetic parameters and response to selection of harvest body weight of the Chinese shrimp *Fenneropenaeus chinensis* after five generations of multi-trait selection. Aquaculture, 2016, 452: 134--141.
+20. **Luan Sheng**, Wang Junyi, Yang Guoliang, Luo Kun, Chen Xuefeng, Gao Qiang, Hu Honglang, Kong Jie. Genetic parameters of survival for six generations in the giant freshwater prawn *Macrobrachium rosenbergii*. Aquaculture Research, 2015, 46(6):1345-1355.
 
-21. Sui Juan, **Luan Sheng**#, Yang Guoliang, Chen Xuefeng, Luo Kun, Gao Qiang, Wang Junyi, Hu Honglang, Kong Jie. Impact of pedigree depth and inclusion of historical data in the estimation of variance components and breeding values in *Macrobrachium rosenbergii*. Aquaculture, 2016, 464:80-86.
+21. **Luan Sheng**, Yang Guoliang, Wang Junyi, Luo Kun, Chen Xuefeng, Gao Qiang, Hu Honglang, Kong Jie. Selection responses in survival of *Macrobrachium rosenbergii* after performing five generations of multi-trait selection for growth and survival. Aquaculture International, 2014, 22(3):993-1007.
 
-22. Lu Xia, **Luan Sheng**#, Hu LongYang, Mao Yong, Tao Ye, Zhong ShengPing, Kong Jie. High resolution genetic linkage mapping, high temperature tolerance and growth related quantitative trait locus (QTL) identification in *Marsupenaeus japonicus*. Molecular Genetics and Genomics, 2016, <DOI:10.1007/S00438-016-1192-1>.
+22. **Luan Sheng**, Kong Jie, Wang Qinyin. Genetic variation of wild and cultured populations of the Kuruma prawn *Marsupenaeus japonicus* (Bate 1888) using microsatellites. Aquaculture Research, 2006, 37(8):785-792.
 
-23. Lu Xia, **Luan Sheng**#, Hu Longyang, Mao Yong, Kongjie. Genome-wide mining, characterization, and development of microsatellite markers in *Marsupenaeus japonicus* by genome survey sequencing. Chinese Journal of Oceanology and limnology, 2015, DOI: 10.1007/s00343-016-5250-7.
+23. TAN Jian, KONG Jie, LUO Kun, CAO Baoxiang, LIU Ning, MENG Xianghong, GUO Zhaojia, XU Shengyu, and **Luan Sheng***.* Genetic parameter estimation of reproductive traits of *Litopenaeus vannamei*. Journal of Ocean University of China. 2017, 16(1): 161-167.
 
-24. **栾生**,仲伟鹏,谭健, 罗坤, 陈宝龙, 孔杰. 凡纳滨对虾收获体重大规模家系选择效果的计算机模拟分析. 水产学报, 2018, 42(10): 1582-1588.
+24. Sui Juan, **Luan Sheng**, Luo Kun, Meng Xianhong, Lu Xia, Cao Baoxiang, Li Wenjia, Chai Zhan, Liu Ning, Xu Shengyu, Kong Jie*.* Genetic parameters and response to selection for harvest body weight of pacific white shrimp, *Litopenaeus vannamei*. Aquaculture Research, 2015, 1-9. <DOI:10.1111/are.12729>.
 
-25. 仲伟鹏, 罗坤, 孟宪红, 陈宝龙, 隋娟, 孔杰, 曹宝祥, 邢群, **栾生**\*. 限制投喂环境下中国对虾体重的间接遗传效应分析. 中国水产科学, 2018, 25(6):1245-1251.
+25. Sui Juan, **Luan Sheng**, Luo Kun, Meng Xianhong, Cao Baoxiang, Liu Ning, Li Wenjia, Lu Xia, Chai Zhan, Kong Jie. Genetic parameters and response to selection of harvest body weight of the Chinese shrimp *Fenneropenaeus chinensis* after five generations of multi-trait selection. Aquaculture, 2016, 452: 134--141.
 
-26. 强光峰, 杨国梁, 陈雪峰, 孔杰, 夏正龙, 高强, 罗坤, **栾生**\*. 罗氏沼虾高世代育种群体收获体重加性和显性遗传效应. 中国水产科学, 2017, 24(5):1027-1034.
+26. Sui Juan, **Luan Sheng**, Yang Guoliang, Chen Xuefeng, Luo Kun, Gao Qiang, Wang Junyi, Hu Honglang, Kong Jie. Impact of pedigree depth and inclusion of historical data in the estimation of variance components and breeding values in *Macrobrachium rosenbergii*. Aquaculture, 2016, 464:80-86.
 
-27. **栾生**, 边文冀, 邓伟, 胡红浪, 孔杰\*, 秦钦, 陈校辉, 钟立强, 黄太寿. 斑点叉尾鮰基础群体生长和存活性状遗传参数估计. 水产学报, 2012, 36(9): 1313-1321.
+27. Lu Xia, **Luan Sheng**, Hu LongYang, Mao Yong, Tao Ye, Zhong ShengPing, Kong Jie. High resolution genetic linkage mapping, high temperature tolerance and growth related quantitative trait locus (QTL) identification in *Marsupenaeus japonicus*. Molecular Genetics and Genomics, 2016, <DOI:10.1007/S00438-016-1192-1>.
 
-28. **栾生**, 罗坤, 阮晓红, 曹宝祥, 王浩, 杜学芳, 张凯, 孔杰\*. 凡纳滨对虾体重、存活性状的遗传参数和基因型与环境互作效应. 海洋与湖沼, 2013, 44(2): 445-452.
+28. Lu Xia, **Luan Sheng**, Hu Longyang, Mao Yong, Kongjie. Genome-wide mining, characterization, and development of microsatellite markers in *Marsupenaeus japonicus* by genome survey sequencing. Chinese Journal of Oceanology and limnology, 2015, DOI: 10.1007/s00343-016-5250-7.
 
-29. **栾生**, 金武, 孔杰, 罗坤, 孟宪红, 张天时, 王清印. 中国对虾(*Fenneropenaeus chinensis*)多性状复合育种方案的遗传和经济评估. 海洋学报, 2013, 35(2):133-142.
+29. **栾生**, 仲伟鹏, 谭健, 罗坤, 陈宝龙, 孔杰. 凡纳滨对虾收获体重大规模家系选择效果的计算机模拟分析. 水产学报, 2018, 42(10): 1582-1588.
 
-30. **栾生**, 隋娟, 孟宪红, 罗坤, 曹宝祥, 孔杰\*. 最佳遗传贡献理论及其在水产动物选择育种中的应用前景. 渔业科学进展, 2014, 6(35):133-140.
+30. 仲伟鹏, 罗坤, 孟宪红, 陈宝龙, 隋娟, 孔杰, 曹宝祥, 邢群, **栾生**. 限制投喂环境下中国对虾体重的间接遗传效应分析. 中国水产科学, 2018, 25(6):1245-1251.
 
-31. **栾生**, 孔杰, 王清印. 日本囊对虾三个地理群体的多元异速生长分析. 海洋与湖沼, 2006, 38(Supp.):60-65.
+31. 强光峰, 杨国梁, 陈雪峰, 孔杰, 夏正龙, 高强, 罗坤, **栾生**. 罗氏沼虾高世代育种群体收获体重加性和显性遗传效应. 中国水产科学, 2017, 24(5):1027-1034.
 
-32. **栾生**, 孔杰, 王清印, 高 焕, 王伟继, 张庆文.日本囊对虾(*Marsupenaeus japonicus*)基因组微卫星特征分析.自然科学进展, 2007, 17(6):731-740
+32. **栾生**, 边文冀, 邓伟, 胡红浪, 孔杰, 秦钦, 陈校辉, 钟立强, 黄太寿. 斑点叉尾鮰基础群体生长和存活性状遗传参数估计. 水产学报, 2012, 36(9): 1313-1321.
 
-33. **栾生**, 孔杰, 王清印, 高 焕, 王伟继, 张庆文. 日本囊对虾基因组小卫星特征分析. 水产学报, 2007, 31(2) :88-95.
+33. **栾生**, 罗坤, 阮晓红, 曹宝祥, 王浩, 杜学芳, 张凯, 孔杰. 凡纳滨对虾体重、存活性状的遗传参数和基因型与环境互作效应. 海洋与湖沼, 2013, 44(2): 445-452.
 
-34. **栾生**, 孔杰, 张天时, 罗坤, 杨翠华, 田燚, 王清印.基于表型值和育种值的中国对虾生长、抗逆性状相关分析.海洋水产研究, 2008, 29(3):14-20.
+34. **栾生**, 金武, 孔杰, 罗坤, 孟宪红, 张天时, 王清印. 中国对虾(*Fenneropenaeus chinensis*)多性状复合育种方案的遗传和经济评估. 海洋学报, 2013, 35(2):133-142.
 
-35. **栾生**, 孙慧玲, 孔杰. 刺参耳状幼体体长遗传力的估计. 中国水产科学, 2006, 13(3):378-383.
+35. **栾生**, 隋娟, 孟宪红, 罗坤, 曹宝祥, 孔杰. 最佳遗传贡献理论及其在水产动物选择育种中的应用前景. 渔业科学进展, 2014, 6(35):133-140.
 
-#: Co-first author  
-\*: Corresponding author
+36. **栾生**, 孔杰, 王清印. 日本囊对虾三个地理群体的多元异速生长分析. 海洋与湖沼, 2006, 38(Supp.):60-65.
+
+37. **栾生**, 孔杰, 王清印, 高 焕, 王伟继, 张庆文.日本囊对虾(*Marsupenaeus japonicus*)基因组微卫星特征分析.自然科学进展, 2007, 17(6):731-740
+
+38. **栾生**, 孔杰, 王清印, 高 焕, 王伟继, 张庆文. 日本囊对虾基因组小卫星特征分析. 水产学报, 2007, 31(2) :88-95.
+
+39. **栾生**, 孔杰, 张天时, 罗坤, 杨翠华, 田燚, 王清印.基于表型值和育种值的中国对虾生长、抗逆性状相关分析.海洋水产研究, 2008, 29(3):14-20.
+
+40. **栾生**, 孙慧玲, 孔杰. 刺参耳状幼体体长遗传力的估计. 中国水产科学, 2006, 13(3):378-383.
