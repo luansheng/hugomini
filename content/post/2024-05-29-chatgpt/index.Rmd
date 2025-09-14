@@ -1,5 +1,5 @@
 ---
-title: 机器学习和chatGPT
+title: 机器学习包mlr3和chatGPT
 author: Package Build
 date: '2024-05-29'
 slug: chatgpt
@@ -11,7 +11,7 @@ tags:
 最近一年发生的事情实在是太多了，chatGPT改变了我们学习的方式。再去做一个知识存储器，已经变得毫无意义。从另外一个角度看，我们已经不需要去记忆。chatGPT就是我们的第二大脑。我们要做的是，如何利用chatGPT来实现自己的想法。创造性、批判性思维是未来衡量一个人是否优秀的重要标准。
 
 看看如何用chatGPT来构建一个机器学习的代码，实现对性别的预测。
-```{r warning=FALSE}
+```{r warning=TRUE}
 rm(list=ls())
 # 安装和加载必要的包
 library(mlr3)

@@ -1,5 +1,5 @@
 ---
-title: 机器学习和chatGPT
+title: 机器学习包mlr3和chatGPT
 author: Package Build
 date: '2024-05-29'
 slug: chatgpt
@@ -15,16 +15,20 @@ tags:
 <p>看看如何用chatGPT来构建一个机器学习的代码，实现对性别的预测。</p>
 <pre class="r"><code>rm(list=ls())
 # 安装和加载必要的包
-library(mlr3)
-library(mlr3learners)
-library(mlr3filters)
+library(mlr3)</code></pre>
+<pre><code>## Warning: package &#39;mlr3&#39; was built under R version 4.4.3</code></pre>
+<pre class="r"><code>library(mlr3learners)</code></pre>
+<pre><code>## Warning: package &#39;mlr3learners&#39; was built under R version 4.4.3</code></pre>
+<pre class="r"><code>library(mlr3filters)
 library(mlr3tuning)</code></pre>
+<pre><code>## Warning: package &#39;mlr3tuning&#39; was built under R version 4.4.3</code></pre>
 <pre><code>## Loading required package: paradox</code></pre>
 <pre class="r"><code>library(data.table)
-library(mlr3verse)
-library(mlr3viz)
-
-# 读取包括SNP和性别信息的训练文件
+library(mlr3verse)</code></pre>
+<pre><code>## Warning: package &#39;mlr3verse&#39; was built under R version 4.4.3</code></pre>
+<pre class="r"><code>library(mlr3viz)</code></pre>
+<pre><code>## Warning: package &#39;mlr3viz&#39; was built under R version 4.4.3</code></pre>
+<pre class="r"><code># 读取包括SNP和性别信息的训练文件
 sex_snp_dt &lt;- fread(file=&quot;../datasets/BP_55K_SNP_Sex.csv&quot;, sep=&quot;,&quot;,header = TRUE) 
 
 
@@ -111,11 +115,12 @@ resampling &lt;- rsmp(&quot;cv&quot;, folds = 5)
 
 # 进行交叉验证
 resample_result &lt;- resample(sex_task, rf_learner, resampling, store_models = TRUE)</code></pre>
-<pre><code>## INFO  [18:52:45.582] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:45.940] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:45.976] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:46.002] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:46.029] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)</code></pre>
+<pre><code>## Warning: package &#39;mlr3fselect&#39; was built under R version 4.4.3</code></pre>
+<pre><code>## INFO  [18:57:56.050] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:57:56.380] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:57:56.414] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:57:56.441] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:57:56.467] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)</code></pre>
 <pre class="r"><code># 设置评估参考群数据的预测能力的度量标准
 # 准确性
 measure_acc &lt;- msr(&quot;classif.acc&quot;)
@@ -128,7 +133,7 @@ resample_result$aggregate(measure_acc)</code></pre>
 ##   0.9806452</code></pre>
 <pre class="r"><code>resample_result$aggregate(measure_auc)</code></pre>
 <pre><code>## classif.auc 
-##   0.9893049</code></pre>
+##   0.9895788</code></pre>
 <pre class="r"><code>autoplot(resample_result,type = &quot;roc&quot;)</code></pre>
 <p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
 <pre class="r"><code># 定义超参数搜索空间
@@ -155,275 +160,275 @@ instance &lt;- ti(
 
 # 进行超参数调优
 tuner$optimize(instance)</code></pre>
-<pre><code>## INFO  [18:52:46.395] [bbotk] Starting to optimize 2 parameter(s) with &#39;&lt;OptimizerBatchGridSearch&gt;&#39; and &#39;&lt;TerminatorEvals&gt; [n_evals=20, k=0]&#39;
-## INFO  [18:52:46.410] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:46.413] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:46.418] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:46.468] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:46.515] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:46.563] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:46.607] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:46.648] [mlr3] Finished benchmark
-## INFO  [18:52:46.663] [bbotk] Result of batch 1:
-## INFO  [18:52:46.664] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:46.664] [bbotk]    21             3   0.9733871        0      0            0.205
-## INFO  [18:52:46.664] [bbotk]                                 uhash
-## INFO  [18:52:46.664] [bbotk]  c051b256-89e3-4256-a6ce-1689054ae6ce
-## INFO  [18:52:46.666] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:46.668] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:46.673] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:46.714] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:46.757] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:46.796] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:46.834] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:46.871] [mlr3] Finished benchmark
-## INFO  [18:52:46.884] [bbotk] Result of batch 2:
-## INFO  [18:52:46.886] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:46.886] [bbotk]    16             8   0.9798387        0      0            0.177
-## INFO  [18:52:46.886] [bbotk]                                 uhash
-## INFO  [18:52:46.886] [bbotk]  fa478f45-1bc9-483a-8ed3-c10b96e86e45
-## INFO  [18:52:46.887] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:46.890] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:46.895] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:46.932] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:46.966] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:47.006] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:47.041] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:47.074] [mlr3] Finished benchmark
-## INFO  [18:52:47.087] [bbotk] Result of batch 3:
-## INFO  [18:52:47.089] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:47.089] [bbotk]    11             7   0.9806452        0      0            0.154
-## INFO  [18:52:47.089] [bbotk]                                 uhash
-## INFO  [18:52:47.089] [bbotk]  ec5a4a63-d89b-4ba2-9a57-195d577e7013
-## INFO  [18:52:47.090] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:47.092] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:47.097] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:47.136] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:47.173] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:47.214] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:47.251] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:47.286] [mlr3] Finished benchmark
-## INFO  [18:52:47.299] [bbotk] Result of batch 4:
-## INFO  [18:52:47.300] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:47.300] [bbotk]    13             4   0.9798387        0      0            0.163
-## INFO  [18:52:47.300] [bbotk]                                 uhash
-## INFO  [18:52:47.300] [bbotk]  2559466a-ce4e-47e3-a7b8-636e6c3ac611
-## INFO  [18:52:47.301] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:47.304] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:47.308] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:47.357] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:47.403] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:47.450] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:47.499] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:47.542] [mlr3] Finished benchmark
-## INFO  [18:52:47.555] [bbotk] Result of batch 5:
-## INFO  [18:52:47.556] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:47.556] [bbotk]    23             5   0.9782258        0      0            0.212
-## INFO  [18:52:47.556] [bbotk]                                 uhash
-## INFO  [18:52:47.556] [bbotk]  64ddcd9e-ad43-4cce-9d19-2a3a1517ac59
-## INFO  [18:52:47.557] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:47.560] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:47.564] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:47.598] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:47.630] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:47.661] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:47.692] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:47.725] [mlr3] Finished benchmark
-## INFO  [18:52:47.738] [bbotk] Result of batch 6:
-## INFO  [18:52:47.739] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:47.739] [bbotk]     8             8   0.9806452        0      0            0.137
-## INFO  [18:52:47.739] [bbotk]                                 uhash
-## INFO  [18:52:47.739] [bbotk]  6d37bad2-ba1c-4b55-aea8-55171c93652e
-## INFO  [18:52:47.741] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:47.743] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:47.747] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:47.781] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:47.813] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:47.846] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:47.878] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:47.910] [mlr3] Finished benchmark
-## INFO  [18:52:47.923] [bbotk] Result of batch 7:
-## INFO  [18:52:47.925] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:47.925] [bbotk]     8             5   0.9806452        0      0            0.136
-## INFO  [18:52:47.925] [bbotk]                                 uhash
-## INFO  [18:52:47.925] [bbotk]  0884e1c8-62c7-45c7-b5aa-8e5ce9f1ffc8
-## INFO  [18:52:47.926] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:47.928] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:47.933] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:47.958] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:47.983] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:48.008] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:48.033] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:48.060] [mlr3] Finished benchmark
-## INFO  [18:52:48.073] [bbotk] Result of batch 8:
-## INFO  [18:52:48.074] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:48.074] [bbotk]     3             2   0.9806452        0      0            0.106
-## INFO  [18:52:48.074] [bbotk]                                 uhash
-## INFO  [18:52:48.074] [bbotk]  720f10c9-b6cc-4064-af13-f10d471ad670
-## INFO  [18:52:48.075] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:48.078] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:48.082] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:48.107] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:48.134] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:48.161] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:48.187] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:48.215] [mlr3] Finished benchmark
-## INFO  [18:52:48.229] [bbotk] Result of batch 9:
-## INFO  [18:52:48.231] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:48.231] [bbotk]     3            10   0.9806452        0      0            0.106
-## INFO  [18:52:48.231] [bbotk]                                 uhash
-## INFO  [18:52:48.231] [bbotk]  eda90fb4-22e0-4c68-9d75-55ce278cfa67
-## INFO  [18:52:48.232] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:48.235] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:48.240] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:48.272] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:48.304] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:48.336] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:48.496] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:48.526] [mlr3] Finished benchmark
-## INFO  [18:52:48.540] [bbotk] Result of batch 10:
-## INFO  [18:52:48.541] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:48.541] [bbotk]     6             5   0.9806452        0      0            0.264
-## INFO  [18:52:48.541] [bbotk]                                 uhash
-## INFO  [18:52:48.541] [bbotk]  eb0b2e02-6bb6-4cdd-8767-8cf2ca2909ae
-## INFO  [18:52:48.542] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:48.545] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:48.550] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:48.577] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:48.604] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:48.630] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:48.656] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:48.681] [mlr3] Finished benchmark
-## INFO  [18:52:48.696] [bbotk] Result of batch 11:
-## INFO  [18:52:48.697] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:48.697] [bbotk]     3             1   0.9806452        0      0            0.106
-## INFO  [18:52:48.697] [bbotk]                                 uhash
-## INFO  [18:52:48.697] [bbotk]  9621279c-b23c-4bba-a111-5b81c3c5f5f5
-## INFO  [18:52:48.698] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:48.702] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:48.707] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:48.747] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:48.786] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:48.849] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:48.892] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:48.928] [mlr3] Finished benchmark
-## INFO  [18:52:48.942] [bbotk] Result of batch 12:
-## INFO  [18:52:48.943] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:48.943] [bbotk]    13             9   0.9814516        0      0            0.186
-## INFO  [18:52:48.943] [bbotk]                                 uhash
-## INFO  [18:52:48.943] [bbotk]  084e851c-1159-44ab-abaf-d57fdeba5905
-## INFO  [18:52:48.945] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:48.947] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:48.952] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:49.002] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:49.050] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:49.094] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:49.138] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:49.180] [mlr3] Finished benchmark
-## INFO  [18:52:49.195] [bbotk] Result of batch 13:
-## INFO  [18:52:49.196] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:49.196] [bbotk]    21             6   0.9790323        0      0            0.204
-## INFO  [18:52:49.196] [bbotk]                                 uhash
-## INFO  [18:52:49.196] [bbotk]  a7c2a9d0-dc35-47f7-b9ed-ab1c80c387e1
-## INFO  [18:52:49.197] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:49.201] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:49.205] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:49.249] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:49.295] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:49.338] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:49.377] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:49.414] [mlr3] Finished benchmark
-## INFO  [18:52:49.427] [bbotk] Result of batch 14:
-## INFO  [18:52:49.428] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:49.428] [bbotk]    16             3   0.9782258        0      0            0.182
-## INFO  [18:52:49.428] [bbotk]                                 uhash
-## INFO  [18:52:49.428] [bbotk]  d0b6c50e-1a48-4334-9a5c-4bccb03448d3
-## INFO  [18:52:49.430] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:49.432] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:49.437] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:49.463] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:49.488] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:49.514] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:49.538] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:49.562] [mlr3] Finished benchmark
-## INFO  [18:52:49.579] [bbotk] Result of batch 15:
-## INFO  [18:52:49.580] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:49.580] [bbotk]     3             4   0.9806452        0      0            0.104
-## INFO  [18:52:49.580] [bbotk]                                 uhash
-## INFO  [18:52:49.580] [bbotk]  2a9d4a90-59c5-4318-9e98-8361e15fa3c7
-## INFO  [18:52:49.581] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:49.584] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:49.588] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:49.633] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:49.676] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:49.722] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:49.766] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:49.808] [mlr3] Finished benchmark
-## INFO  [18:52:49.823] [bbotk] Result of batch 16:
-## INFO  [18:52:49.824] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:49.824] [bbotk]    18             2   0.9790323        0      0            0.194
-## INFO  [18:52:49.824] [bbotk]                                 uhash
-## INFO  [18:52:49.824] [bbotk]  c166d7c9-d987-446a-80d8-fb6b4ebb3a26
-## INFO  [18:52:49.826] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:49.829] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:49.834] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:49.881] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:49.924] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:49.970] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:50.016] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:50.055] [mlr3] Finished benchmark
-## INFO  [18:52:50.068] [bbotk] Result of batch 17:
-## INFO  [18:52:50.069] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:50.069] [bbotk]    18             6   0.9790323        0      0            0.196
-## INFO  [18:52:50.069] [bbotk]                                 uhash
-## INFO  [18:52:50.069] [bbotk]  b4fcb094-3782-411c-9070-26a623412e70
-## INFO  [18:52:50.070] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:50.073] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:50.077] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:50.114] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:50.148] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:50.183] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:50.218] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:50.253] [mlr3] Finished benchmark
-## INFO  [18:52:50.268] [bbotk] Result of batch 18:
-## INFO  [18:52:50.269] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:50.269] [bbotk]    11             9   0.9806452        0      0            0.153
-## INFO  [18:52:50.269] [bbotk]                                 uhash
-## INFO  [18:52:50.269] [bbotk]  4449e82b-c5be-46c7-9c33-239f446f3c4e
-## INFO  [18:52:50.271] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:50.274] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:50.278] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:50.321] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:50.357] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:50.393] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:50.429] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:50.463] [mlr3] Finished benchmark
-## INFO  [18:52:50.476] [bbotk] Result of batch 19:
-## INFO  [18:52:50.477] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:50.477] [bbotk]    13             6   0.9790323        0      0            0.165
-## INFO  [18:52:50.477] [bbotk]                                 uhash
-## INFO  [18:52:50.477] [bbotk]  e15f1bd4-cd34-40ed-b718-0e109602edc2
-## INFO  [18:52:50.478] [bbotk] Evaluating 1 configuration(s)
-## INFO  [18:52:50.481] [mlr3] Running benchmark with 5 resampling iterations
-## INFO  [18:52:50.485] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
-## INFO  [18:52:50.505] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
-## INFO  [18:52:50.525] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
-## INFO  [18:52:50.546] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
-## INFO  [18:52:50.571] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
-## INFO  [18:52:50.592] [mlr3] Finished benchmark
-## INFO  [18:52:50.606] [bbotk] Result of batch 20:
-## INFO  [18:52:50.607] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
-## INFO  [18:52:50.607] [bbotk]     1             7   0.9806452        0      0            0.083
-## INFO  [18:52:50.607] [bbotk]                                 uhash
-## INFO  [18:52:50.607] [bbotk]  16ebe019-be05-47f5-afa1-27d0c7ee8591
-## INFO  [18:52:50.614] [bbotk] Finished optimizing after 20 evaluation(s)
-## INFO  [18:52:50.614] [bbotk] Result:
-## INFO  [18:52:50.615] [bbotk]   mtry min.node.size learner_param_vals  x_domain classif.acc
-## INFO  [18:52:50.615] [bbotk]  &lt;int&gt;         &lt;int&gt;             &lt;list&gt;    &lt;list&gt;       &lt;num&gt;
-## INFO  [18:52:50.615] [bbotk]     13             9          &lt;list[7]&gt; &lt;list[2]&gt;   0.9814516</code></pre>
+<pre><code>## INFO  [18:57:56.819] [bbotk] Starting to optimize 2 parameter(s) with &#39;&lt;OptimizerBatchGridSearch&gt;&#39; and &#39;&lt;TerminatorEvals&gt; [n_evals=20, k=0]&#39;
+## INFO  [18:57:56.831] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:57:56.834] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:57:56.839] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:57:56.874] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:57:56.908] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:57:56.945] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:57:56.981] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:57:57.017] [mlr3] Finished benchmark
+## INFO  [18:57:57.031] [bbotk] Result of batch 1:
+## INFO  [18:57:57.032] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:57:57.032] [bbotk]    11            10   0.9806452        0      0            0.156
+## INFO  [18:57:57.032] [bbotk]                                 uhash
+## INFO  [18:57:57.032] [bbotk]  86dec2b5-d0ba-40a2-835e-aaaa1258545a
+## INFO  [18:57:57.033] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:57:57.036] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:57:57.041] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:57:57.066] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:57:57.094] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:57:57.120] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:57:57.145] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:57:57.170] [mlr3] Finished benchmark
+## INFO  [18:57:57.183] [bbotk] Result of batch 2:
+## INFO  [18:57:57.184] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:57:57.184] [bbotk]     3             4   0.9806452        0      0            0.108
+## INFO  [18:57:57.184] [bbotk]                                 uhash
+## INFO  [18:57:57.184] [bbotk]  7ffe2f94-aad9-4ddd-95b3-c7320c898dc5
+## INFO  [18:57:57.185] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:57:57.188] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:57:57.192] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:57:57.231] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:57:57.268] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:57:57.312] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:57:57.352] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:57:57.392] [mlr3] Finished benchmark
+## INFO  [18:57:57.405] [bbotk] Result of batch 3:
+## INFO  [18:57:57.406] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:57:57.406] [bbotk]    16             9   0.9790323        0      0            0.179
+## INFO  [18:57:57.406] [bbotk]                                 uhash
+## INFO  [18:57:57.406] [bbotk]  fa010b03-9fa9-4388-ac19-071eda4d9e33
+## INFO  [18:57:57.407] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:57:57.410] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:57:57.414] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:57:57.438] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:57:57.463] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:57:57.495] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:57:57.520] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:57:57.545] [mlr3] Finished benchmark
+## INFO  [18:57:57.558] [bbotk] Result of batch 4:
+## INFO  [18:57:57.559] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:57:57.559] [bbotk]     3             3   0.9806452        0      0            0.109
+## INFO  [18:57:57.559] [bbotk]                                 uhash
+## INFO  [18:57:57.559] [bbotk]  069d63c0-3a4b-42c1-9b65-c8ab3c37af9d
+## INFO  [18:57:57.560] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:57:57.563] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:57:57.567] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:57:57.607] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:57:57.644] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:57:57.689] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:57:57.730] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:57:57.771] [mlr3] Finished benchmark
+## INFO  [18:57:57.783] [bbotk] Result of batch 5:
+## INFO  [18:57:57.785] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:57:57.785] [bbotk]    16             4   0.9806452        0      0            0.182
+## INFO  [18:57:57.785] [bbotk]                                 uhash
+## INFO  [18:57:57.785] [bbotk]  380dc308-9088-4c61-b691-9342babb5e95
+## INFO  [18:57:57.786] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:57:57.788] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:57:57.793] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:57:57.825] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:57:57.868] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:57:57.901] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:57:57.934] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:57:57.965] [mlr3] Finished benchmark
+## INFO  [18:57:57.978] [bbotk] Result of batch 6:
+## INFO  [18:57:57.979] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:57:57.979] [bbotk]     8             8   0.9806452        0      0            0.151
+## INFO  [18:57:57.979] [bbotk]                                 uhash
+## INFO  [18:57:57.979] [bbotk]  da5aa5e2-eb27-4f38-a357-329be41830d1
+## INFO  [18:57:57.980] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:57:57.983] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:57:57.987] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:57:58.033] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:57:58.075] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:57:58.126] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:57:58.173] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:57:58.220] [mlr3] Finished benchmark
+## INFO  [18:57:58.233] [bbotk] Result of batch 7:
+## INFO  [18:57:58.234] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:57:58.234] [bbotk]    23             7   0.9798387        0      0            0.209
+## INFO  [18:57:58.234] [bbotk]                                 uhash
+## INFO  [18:57:58.234] [bbotk]  13cc0c2e-ef0d-4df0-b9bf-462dd41c4128
+## INFO  [18:57:58.235] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:57:58.238] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:57:58.242] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:57:58.287] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:57:58.328] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:57:58.379] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:57:58.426] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:57:58.473] [mlr3] Finished benchmark
+## INFO  [18:57:58.486] [bbotk] Result of batch 8:
+## INFO  [18:57:58.487] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:57:58.487] [bbotk]    21             2   0.9814516        0      0            0.209
+## INFO  [18:57:58.487] [bbotk]                                 uhash
+## INFO  [18:57:58.487] [bbotk]  ca9bfeb1-6840-4487-99e3-e1c7e967a922
+## INFO  [18:57:58.488] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:57:58.491] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:57:58.495] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:57:58.535] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:57:58.571] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:57:58.618] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:57:58.660] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:57:58.700] [mlr3] Finished benchmark
+## INFO  [18:57:58.713] [bbotk] Result of batch 9:
+## INFO  [18:57:58.714] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:57:58.714] [bbotk]    16             6   0.9806452        0      0            0.182
+## INFO  [18:57:58.714] [bbotk]                                 uhash
+## INFO  [18:57:58.714] [bbotk]  889402b4-2494-4b75-9578-c2335dfc47ed
+## INFO  [18:57:58.715] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:57:58.718] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:57:58.722] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:57:58.769] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:57:58.927] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:57:58.977] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:57:59.024] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:57:59.073] [mlr3] Finished benchmark
+## INFO  [18:57:59.086] [bbotk] Result of batch 10:
+## INFO  [18:57:59.087] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:57:59.087] [bbotk]    23             3   0.9814516        0      0            0.328
+## INFO  [18:57:59.087] [bbotk]                                 uhash
+## INFO  [18:57:59.087] [bbotk]  cb69cce5-c4e4-4325-a66e-cd52e34b0296
+## INFO  [18:57:59.088] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:57:59.091] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:57:59.095] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:57:59.139] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:57:59.180] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:57:59.225] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:57:59.270] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:57:59.315] [mlr3] Finished benchmark
+## INFO  [18:57:59.330] [bbotk] Result of batch 11:
+## INFO  [18:57:59.331] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:57:59.331] [bbotk]    21             7   0.9798387        0      0            0.203
+## INFO  [18:57:59.331] [bbotk]                                 uhash
+## INFO  [18:57:59.331] [bbotk]  83b6f2bd-fd8e-4b73-93ee-df291a88ed06
+## INFO  [18:57:59.332] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:57:59.335] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:57:59.340] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:57:59.374] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:57:59.412] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:57:59.446] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:57:59.479] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:57:59.511] [mlr3] Finished benchmark
+## INFO  [18:57:59.525] [bbotk] Result of batch 12:
+## INFO  [18:57:59.526] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:57:59.526] [bbotk]     8             4   0.9806452        0      0             0.15
+## INFO  [18:57:59.526] [bbotk]                                 uhash
+## INFO  [18:57:59.526] [bbotk]  f2bb183d-6de5-4407-9c80-598f3ccc2930
+## INFO  [18:57:59.527] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:57:59.530] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:57:59.534] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:57:59.581] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:57:59.623] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:57:59.672] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:57:59.720] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:57:59.767] [mlr3] Finished benchmark
+## INFO  [18:57:59.784] [bbotk] Result of batch 13:
+## INFO  [18:57:59.785] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:57:59.785] [bbotk]    23             5   0.9798387        0      0             0.21
+## INFO  [18:57:59.785] [bbotk]                                 uhash
+## INFO  [18:57:59.785] [bbotk]  add593f7-6449-422e-a1d2-1615fc9d857b
+## INFO  [18:57:59.786] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:57:59.789] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:57:59.793] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:57:59.825] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:57:59.855] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:57:59.889] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:57:59.922] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:57:59.954] [mlr3] Finished benchmark
+## INFO  [18:57:59.967] [bbotk] Result of batch 14:
+## INFO  [18:57:59.968] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:57:59.968] [bbotk]     8             2   0.9806452        0      0            0.142
+## INFO  [18:57:59.968] [bbotk]                                 uhash
+## INFO  [18:57:59.968] [bbotk]  87568d10-e67e-451b-ade8-f4a75dfe4ed6
+## INFO  [18:57:59.970] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:57:59.972] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:57:59.976] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:58:00.005] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:58:00.034] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:58:00.065] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:58:00.100] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:58:00.129] [mlr3] Finished benchmark
+## INFO  [18:58:00.142] [bbotk] Result of batch 15:
+## INFO  [18:58:00.143] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:58:00.143] [bbotk]     6             4   0.9806452        0      0            0.132
+## INFO  [18:58:00.143] [bbotk]                                 uhash
+## INFO  [18:58:00.143] [bbotk]  6b799549-91cd-4e7c-b6a5-97e931e2cfb1
+## INFO  [18:58:00.144] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:58:00.147] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:58:00.151] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:58:00.172] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:58:00.191] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:58:00.211] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:58:00.231] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:58:00.250] [mlr3] Finished benchmark
+## INFO  [18:58:00.263] [bbotk] Result of batch 16:
+## INFO  [18:58:00.264] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:58:00.264] [bbotk]     1             6   0.9806452        0      0             0.08
+## INFO  [18:58:00.264] [bbotk]                                 uhash
+## INFO  [18:58:00.264] [bbotk]  10bfde2a-99aa-44f7-af1a-e3ed414b7894
+## INFO  [18:58:00.265] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:58:00.268] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:58:00.272] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:58:00.292] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:58:00.316] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:58:00.337] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:58:00.356] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:58:00.375] [mlr3] Finished benchmark
+## INFO  [18:58:00.388] [bbotk] Result of batch 17:
+## INFO  [18:58:00.389] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:58:00.389] [bbotk]     1             2   0.9806452        0      0            0.081
+## INFO  [18:58:00.389] [bbotk]                                 uhash
+## INFO  [18:58:00.389] [bbotk]  ed88c50a-13fd-4bd5-8c7c-1d9aacd82d52
+## INFO  [18:58:00.390] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:58:00.393] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:58:00.397] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:58:00.429] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:58:00.459] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:58:00.492] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:58:00.524] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:58:00.560] [mlr3] Finished benchmark
+## INFO  [18:58:00.574] [bbotk] Result of batch 18:
+## INFO  [18:58:00.575] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:58:00.575] [bbotk]     8             6   0.9806452        0      0            0.145
+## INFO  [18:58:00.575] [bbotk]                                 uhash
+## INFO  [18:58:00.575] [bbotk]  2622e0c1-87dc-4e1a-bd22-7ce5daba4d55
+## INFO  [18:58:00.577] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:58:00.579] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:58:00.584] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:58:00.620] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:58:00.653] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:58:00.690] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:58:00.726] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:58:00.760] [mlr3] Finished benchmark
+## INFO  [18:58:00.774] [bbotk] Result of batch 19:
+## INFO  [18:58:00.775] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:58:00.775] [bbotk]    11             7   0.9806452        0      0            0.154
+## INFO  [18:58:00.775] [bbotk]                                 uhash
+## INFO  [18:58:00.775] [bbotk]  401e0f80-3ee2-4b65-8758-46c234ef4853
+## INFO  [18:58:00.776] [bbotk] Evaluating 1 configuration(s)
+## INFO  [18:58:00.779] [mlr3] Running benchmark with 5 resampling iterations
+## INFO  [18:58:00.784] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 1/5)
+## INFO  [18:58:00.834] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 2/5)
+## INFO  [18:58:00.875] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 3/5)
+## INFO  [18:58:00.922] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 4/5)
+## INFO  [18:58:00.969] [mlr3] Applying learner &#39;classif.ranger&#39; on task &#39;PreSex&#39; (iter 5/5)
+## INFO  [18:58:01.014] [mlr3] Finished benchmark
+## INFO  [18:58:01.027] [bbotk] Result of batch 20:
+## INFO  [18:58:01.028] [bbotk]  mtry min.node.size classif.acc warnings errors runtime_learners
+## INFO  [18:58:01.028] [bbotk]    21             3   0.9806452        0      0            0.205
+## INFO  [18:58:01.028] [bbotk]                                 uhash
+## INFO  [18:58:01.028] [bbotk]  12b8b33c-7779-4959-95da-ff8d2b0037d2
+## INFO  [18:58:01.035] [bbotk] Finished optimizing after 20 evaluation(s)
+## INFO  [18:58:01.035] [bbotk] Result:
+## INFO  [18:58:01.036] [bbotk]   mtry min.node.size learner_param_vals  x_domain classif.acc
+## INFO  [18:58:01.036] [bbotk]  &lt;int&gt;         &lt;int&gt;             &lt;list&gt;    &lt;list&gt;       &lt;num&gt;
+## INFO  [18:58:01.036] [bbotk]     21             2          &lt;list[7]&gt; &lt;list[2]&gt;   0.9814516</code></pre>
 <pre><code>##     mtry min.node.size learner_param_vals  x_domain classif.acc
 ##    &lt;int&gt;         &lt;int&gt;             &lt;list&gt;    &lt;list&gt;       &lt;num&gt;
-## 1:    13             9          &lt;list[7]&gt; &lt;list[2]&gt;   0.9814516</code></pre>
+## 1:    21             2          &lt;list[7]&gt; &lt;list[2]&gt;   0.9814516</code></pre>
 <pre class="r"><code># 获取最佳参数
 best_params &lt;- instance$result_learner_param_vals
 print(best_params)</code></pre>
@@ -443,10 +448,10 @@ print(best_params)</code></pre>
 ## [1] TRUE
 ## 
 ## $mtry
-## [1] 13
+## [1] 21
 ## 
 ## $min.node.size
-## [1] 9</code></pre>
+## [1] 2</code></pre>
 <pre class="r"><code># 使用最佳参数训练模型
 rf_learner$param_set$values &lt;- best_params
 rf_learner$train(sex_task)
@@ -459,30 +464,30 @@ setnames(importance, c(&quot;Feature&quot;, &quot;Importance&quot;))
 print(importance)</code></pre>
 <pre><code>##                    Feature   Importance
 ##                     &lt;char&gt;        &lt;num&gt;
-##  1:  NW_020869892.1_791056 291.55489896
-##  2:   NW_020870605.1_27103 125.72003728
-##  3:    NW_020871184.1_1572  56.64451534
-##  4: NW_020870091.1_1375545  51.85042718
-##  5:  NW_020872449.1_998527  28.99555194
-##  6:   NW_020870770.1_64668  11.46137665
-##  7:  NW_020868464.1_423800   5.40539002
-##  8: NW_020872622.1_1032359   2.48794277
-##  9:   NW_020869050.1_77499   2.48140552
-## 10:  NW_020868494.1_348609   2.23608209
-## 11:  NW_020870721.1_658002   1.35247580
-## 12:   NW_020872396.1_14640   1.27892594
-## 13:   NW_020870605.1_26371   1.16779698
-## 14:  NW_020872535.1_937428   1.05669785
-## 15:  NW_020871094.1_359648   0.95651083
-## 16:  NW_020870605.1_296954   0.62636110
-## 17:   NW_020870023.1_44774   0.60891028
-## 18:   NW_020870770.1_46798   0.11390237
-## 19:  NW_020869892.1_778639   0.10240764
-## 20:  NW_020871839.1_399750   0.08292550
-## 21:  NW_020869886.1_223326   0.02217173
-## 22:  NW_020871839.1_399752   0.02043451
-## 23:  NW_020870787.1_121276   0.02017241
-## 24:   NW_020872461.1_91390   0.01559327
+##  1:  NW_020869892.1_791056 3.886904e+02
+##  2:   NW_020870605.1_27103 9.229741e+01
+##  3: NW_020870091.1_1375545 6.841212e+01
+##  4:    NW_020871184.1_1572 1.155576e+01
+##  5:  NW_020872449.1_998527 1.128476e+01
+##  6:  NW_020868494.1_348609 3.552605e+00
+##  7: NW_020872622.1_1032359 3.341382e+00
+##  8:   NW_020870605.1_26371 2.952196e+00
+##  9:   NW_020869050.1_77499 2.845765e+00
+## 10:  NW_020872535.1_937428 2.550365e+00
+## 11:  NW_020870721.1_658002 1.993497e+00
+## 12:  NW_020871094.1_359648 1.886267e+00
+## 13:   NW_020872396.1_14640 1.802184e+00
+## 14:   NW_020870023.1_44774 1.431756e+00
+## 15:  NW_020870605.1_296954 1.137045e+00
+## 16:  NW_020869886.1_223326 3.991850e-02
+## 17:   NW_020872461.1_91390 1.865588e-02
+## 18:  NW_020871839.1_399752 1.123810e-02
+## 19:  NW_020869892.1_778639 3.333333e-03
+## 20:  NW_020871839.1_399750 6.666667e-04
+## 21:  NW_020868464.1_423800 0.000000e+00
+## 22:   NW_020870770.1_46798 0.000000e+00
+## 23:   NW_020870770.1_64668 0.000000e+00
+## 24:  NW_020870787.1_121276 0.000000e+00
 ##                    Feature   Importance</code></pre>
 <p>可视化随机森林的结果</p>
 <pre class="r"><code>library(ggparty)</code></pre>
